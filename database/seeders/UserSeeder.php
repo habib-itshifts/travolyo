@@ -14,18 +14,22 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name'      => 'Admin',
+                'first_name' => 'Admin',
                 'email'     => 'admin@travolyo.com',
                 'password'  => Hash::make('12345678'),
                 'user_type' => UserType::Admin,
+
             ],
             [
                 'name'      => 'Vendor',
+                'first_name' => 'Vendor',
                 'email'     => 'vendor@travolyo.com',
                 'password'  => Hash::make('12345678'),
                 'user_type' => UserType::Vendor,
             ],
             [
                 'name'      => 'Customer',
+                'first_name' => 'Customer',
                 'email'     => 'customer@travolyo.com',
                 'password'  => Hash::make('12345678'),
                 'user_type' => UserType::Customer,

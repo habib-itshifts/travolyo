@@ -27,6 +27,31 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Locale switcher — GET /locale/{locale}
+|--------------------------------------------------------------------------
+*/
+Route::get('/locale/{locale}', function (string $locale) {
+    if (array_key_exists($locale, config('language.supported', []))) {
+        session(['locale' => $locale]);
+    }
+    return redirect()->back();
+})->name('locale.switch');
+
+/*
+|--------------------------------------------------------------------------
+| Currency switcher — GET /currency/{code}
+|--------------------------------------------------------------------------
+*/
+Route::get('/currency/{code}', function (string $code) {
+    $code = strtoupper($code);
+    if (array_key_exists($code, config('currency.supported', []))) {
+        session(['currency' => $code]);
+    }
+    return redirect()->back();
+})->name('currency.switch');
+
 require __DIR__.'/auth.php';
 
 // Admin, Vendor, Customer panel routes are handled by their nwidart modules:
