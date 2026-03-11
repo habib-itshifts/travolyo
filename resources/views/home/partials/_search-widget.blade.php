@@ -1001,10 +1001,60 @@
     window.addEventListener('pageshow', resetSubmitState);
 
     if (flightForm && submitBtn && submitText) {
-        flightForm.addEventListener('submit', () => {
+        flightForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
             submitBtn.disabled = true;
             submitText.textContent = 'Searching...';
             submitBtn.classList.add('is-loading');
+
+            // Collect active pane fields only
+            const fd = new FormData(flightForm);
+            const payload = {
+                trip_type:      fd.get('trip_type'),
+                origin:         fd.get('origin'),
+                destination:    fd.get('destination'),
+                departure_date: fd.get('departure_date'),
+                return_date:    fd.get('return_date') || null,
+                adults:         parseInt(fd.get('adults'))   || 1,
+                children:       parseInt(fd.get('children')) || 0,
+                infants:        parseInt(fd.get('infants'))  || 0,
+                cabin_class:    fd.get('cabin_class'),
+                provider:       'duffel',
+            };
+
+            try {
+                const res  = await fetch('{{ route('api.flights.search') }}', {
+                    method:  'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                const data = await res.json();
+                console.log('Flight search response:', data);
+
+                // Redirect to the flights results page with search params in URL
+                const qs = new URLSearchParams({
+                    origin:         payload.origin         ?? '',
+                    destination:    payload.destination    ?? '',
+                    departure_date: payload.departure_date ?? '',
+                    trip_type:      payload.trip_type      ?? 'one_way',
+                    adults:         payload.adults         ?? 1,
+                    children:       payload.children       ?? 0,
+                    infants:        payload.infants        ?? 0,
+                    cabin_class:    payload.cabin_class    ?? 'ECONOMY',
+                    provider:       payload.provider       ?? 'duffel',
+                });
+                if (payload.return_date) qs.set('return_date', payload.return_date);
+                window.location.href = '{{ route('flights.index') }}?' + qs.toString();
+            } catch (err) {
+                console.error('Flight search error:', err);
+            } finally {
+                resetSubmitState();
+            }
         });
     }
 
