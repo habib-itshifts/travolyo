@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\LocationController;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,21 @@ use Illuminate\Support\Facades\Route;
 | Flight routes live in Modules/Flight/routes/api.php
 |--------------------------------------------------------------------------
 */
+
+/*
+|--------------------------------------------------------------------------
+| Auth (Sanctum token-based — for mobile app)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('auth')->name('api.auth.')->group(function () {
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+    Route::post('/login',    [AuthController::class, 'login'])->name('login');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        Route::get('/me',      [AuthController::class, 'me'])->name('me');
+    });
+});
 
 Route::get('/bookings/{code}', [BookingController::class, 'show'])->name('api.bookings.show');
 

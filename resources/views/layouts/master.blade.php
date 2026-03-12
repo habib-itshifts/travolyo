@@ -49,6 +49,11 @@
     {{-- Location AJAX (country / city / airport pickers) --}}
     <script src="{{ asset('assets/js/custom/location.js') }}"></script>
 
+    {{-- Auth Modal --}}
+    @guest
+        @include('layouts.partials._auth_modal')
+    @endguest
+
     {{-- Page-specific scripts --}}
     @stack('scripts')
 

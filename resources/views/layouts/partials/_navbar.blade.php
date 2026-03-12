@@ -111,15 +111,15 @@
                         </ul>
                     </div>
                 @else
-                    <a href="{{ route('login') }}"
-                       class="text-dark text-decoration-none d-flex align-items-center gap-1 small fw-500">
+                    <button type="button" onclick="openAuthModal('signin')"
+                            class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-1 small fw-500 p-0">
                         <i class="bi bi-person"></i> Sign in
-                    </a>
-                    <a href="{{ route('register') }}"
-                       class="btn btn-sm fw-500"
-                       style="background:#17C3CE;color:#fff;border-radius:50px;padding:.35rem 1rem;font-size:.85rem;border:none;">
+                    </button>
+                    <button type="button" onclick="openAuthModal('register')"
+                            class="btn btn-sm fw-500"
+                            style="background:#17C3CE;color:#fff;border-radius:50px;padding:.35rem 1rem;font-size:.85rem;border:none;">
                         Register
-                    </a>
+                    </button>
                 @endauth
             </div>
         </div>
