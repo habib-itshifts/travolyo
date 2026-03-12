@@ -259,6 +259,16 @@
         </div>`;
     }
 
+    // ── Provider badge ────────────────────────────────────────────
+    function providerBadge(provider) {
+        const map = {
+            'duffel':                    { label: 'Duffel',    bg: '#e8f0fe', color: '#1a56db' },
+            'travolyo_b2b_xml_agency':   { label: 'B2B',       bg: '#ecfdf5', color: '#059669' },
+        };
+        const p = map[provider] ?? { label: provider ?? 'Unknown', bg: '#f3f4f6', color: '#6b7280' };
+        return `<span style="font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:20px;background:${p.bg};color:${p.color};letter-spacing:.04em">${p.label}</span>`;
+    }
+
     // ── Render one card ───────────────────────────────────────────
     function renderCard(f) {
         const hasReturn = !!f.return_departure_at;
@@ -295,6 +305,7 @@
                         <div class="small text-muted mt-2 lh-sm">${f.airline_name ?? ''}</div>
                         <div class="text-muted" style="font-size:.72rem">Flt ${f.flight_number ?? ''}</div>
                         <div class="mt-1">${badgeHtml}</div>
+                        <div class="mt-1">${providerBadge(f.provider)}</div>
                     </div>
 
                     {{-- Legs --}}

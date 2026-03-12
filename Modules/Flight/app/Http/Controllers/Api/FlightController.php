@@ -2,11 +2,11 @@
 
 namespace Modules\Flight\Http\Controllers\Api;
 
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Modules\Flight\Actions\SearchFlightAction;
 use Modules\Flight\DTOs\SearchFlightDto;
-use Modules\Flight\Enums\FlightProviderEnum;
 use Modules\Flight\Exceptions\FlightException;
 use Modules\Flight\Http\Requests\SearchFlightRequest;
 use Modules\Flight\Resources\FlightOfferResource;
@@ -22,7 +22,6 @@ class FlightController extends Controller
                 departureDate: $request->input('departure_date'),
                 adults:        (int) $request->input('adults', 1),
                 cabinClass:    $request->input('cabin_class', 'ECONOMY'),
-                provider:      FlightProviderEnum::from($request->input('provider')),
                 returnDate:    $request->input('return_date'),
                 children:      (int) $request->input('children', 0),
                 infants:       (int) $request->input('infants', 0),
@@ -44,27 +43,27 @@ class FlightController extends Controller
         }
     }
 
-    public function prebook(): JsonResponse
+    public function prebook()//: JsonResponse
     {
         //
     }
 
-    public function checkout(): JsonResponse
+    public function checkout()//: JsonResponse
     {
         //
     }
 
-    public function pay(): JsonResponse
+    public function pay()//: JsonResponse
     {
         //
     }
 
-    public function order(string $orderId): JsonResponse
+    public function order(string $orderId)//: JsonResponse
     {
         //
     }
 
-    public function cancel(string $orderId): JsonResponse
+    public function cancel(string $orderId)//: JsonResponse
     {
         //
     }

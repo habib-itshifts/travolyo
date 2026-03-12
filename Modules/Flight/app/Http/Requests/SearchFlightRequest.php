@@ -3,7 +3,6 @@
 namespace Modules\Flight\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Modules\Flight\Enums\FlightProviderEnum;
 
 class SearchFlightRequest extends FormRequest
 {
@@ -24,7 +23,6 @@ class SearchFlightRequest extends FormRequest
             'children'       => ['nullable', 'integer', 'min:0', 'max:9'],
             'infants'        => ['nullable', 'integer', 'min:0', 'max:9'],
             'cabin_class'    => ['required', 'in:ECONOMY,PREMIUM_ECONOMY,BUSINESS,FIRST'],
-            'provider'       => ['required', 'in:' . implode(',', array_column(FlightProviderEnum::cases(), 'value'))],
         ];
     }
 
