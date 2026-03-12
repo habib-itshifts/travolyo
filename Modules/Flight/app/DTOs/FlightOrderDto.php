@@ -2,15 +2,15 @@
 
 namespace Modules\Flight\DTOs;
 
-use Modules\Flight\Enums\FlightProvider;
-use Modules\Flight\Enums\FlightOrderStatus;
+use Modules\Flight\Enums\FlightProviderEnum;
+use Modules\Flight\Enums\FlightOrderStatusEnum;
 
 class FlightOrderDto
 {
     public function __construct(
         public readonly string            $orderId,
-        public readonly FlightProvider    $provider,
-        public readonly FlightOrderStatus $status,
+        public readonly FlightProviderEnum    $provider,
+        public readonly FlightOrderStatusEnum $status,
         public readonly string            $origin,
         public readonly string            $destination,
         public readonly string            $departureAt,  // ISO 8601

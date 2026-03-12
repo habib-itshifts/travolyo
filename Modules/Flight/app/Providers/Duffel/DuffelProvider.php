@@ -9,8 +9,8 @@ use Modules\Flight\DTOs\FlightOrderDto;
 use Modules\Flight\DTOs\PayFlightDto;
 use Modules\Flight\DTOs\PrebookFlightDto;
 use Modules\Flight\DTOs\SearchFlightDto;
-use Modules\Flight\Enums\FlightOrderStatus;
-use Modules\Flight\Enums\FlightProvider;
+use Modules\Flight\Enums\FlightOrderStatusEnum;
+use Modules\Flight\Enums\FlightProviderEnum;
 use Modules\Flight\Exceptions\FlightException;
 use Modules\Flight\Providers\FlightProviderInterface;
 
@@ -79,7 +79,7 @@ class DuffelProvider implements FlightProviderInterface
         // Duffel: checkout is same as prebook (re-fetch offer to confirm price/availability)
         return $this->prebook(new PrebookFlightDto(
             offerId:  $dto->offerId,
-            provider: FlightProvider::Duffel,
+            provider: FlightProviderEnum::Duffel,
         ));
     }
 
@@ -209,8 +209,8 @@ class DuffelProvider implements FlightProviderInterface
 
         return new FlightOrderDto(
             orderId:           (string) ($data['id'] ?? ''),
-            provider:          FlightProvider::Duffel,
-            status:            FlightOrderStatus::Confirmed,
+            provider:          FlightProviderEnum::Duffel,
+            status:            FlightOrderStatusEnum::Confirmed,
             origin:            strtoupper((string) ($first['origin']['iata_code'] ?? '')),
             destination:       strtoupper((string) ($lastSeg['destination']['iata_code'] ?? '')),
             departureAt:       (string) ($first['departing_at'] ?? ''),

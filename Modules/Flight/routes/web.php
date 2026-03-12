@@ -1,5 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Flight\Http\Controllers\FlightController;
 
-// Flight module web routes (unused — API routes live in routes/api.php)
+Route::get('/flights', [FlightController::class, 'index'])->name('flights.index');

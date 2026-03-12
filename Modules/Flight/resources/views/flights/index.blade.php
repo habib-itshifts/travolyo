@@ -61,10 +61,10 @@
 .return-sep { border-left: 2px dashed #dee2e6; margin: 0 8px; flex-shrink: 0; }
 
 /* Price col */
-.price-col { min-width: 140px; }
+.price-col { min-width: 160px; max-width: 180px; }
 .price-amount { font-size: 1.4rem; font-weight: 700; color: var(--bs-primary); line-height: 1.1; }
 .price-cabin  { font-size: .75rem; color: #6c757d; margin-top: 2px; }
-.btn-select { padding: 8px 22px; font-size: .85rem; border-radius: 8px; font-weight: 600; }
+.btn-select { padding: 8px 0; font-size: .85rem; border-radius: 8px; font-weight: 600; width: 140px; }
 
 /* Skeleton */
 .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
@@ -287,7 +287,7 @@
              data-dep-time="${depTimeStr(f.departure_at)}"
              data-arr-time="${depTimeStr(f.arrival_at)}">
             <div class="flight-card__body">
-                <div class="d-flex align-items-center gap-3 flex-wrap flex-md-nowrap">
+                <div class="d-flex align-items-center gap-3 w-100">
 
                     {{-- Airline --}}
                     <div class="airline-col d-flex flex-column align-items-center text-center flex-shrink-0">
@@ -304,7 +304,7 @@
                     </div>
 
                     {{-- Price --}}
-                    <div class="price-col d-flex flex-column align-items-center align-items-md-end flex-shrink-0 text-center text-md-end">
+                    <div class="price-col d-flex flex-column align-items-center align-items-end flex-shrink-0 ms-auto text-end">
                         <div class="price-amount">${f.currency} ${parseFloat(f.total_amount).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2})}</div>
                         <div class="price-cabin">${f.cabin_class}</div>
                         <button class="btn btn-primary btn-select mt-3 js-select-flight w-100"

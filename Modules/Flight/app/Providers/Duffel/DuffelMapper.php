@@ -4,7 +4,7 @@ namespace Modules\Flight\Providers\Duffel;
 
 use Carbon\Carbon;
 use Modules\Flight\DTOs\FlightOfferDto;
-use Modules\Flight\Enums\FlightProvider;
+use Modules\Flight\Enums\FlightProviderEnum;
 
 class DuffelMapper
 {
@@ -69,7 +69,7 @@ class DuffelMapper
 
         return new FlightOfferDto(
             offerId:           (string) ($offer['id'] ?? ''),
-            provider:          FlightProvider::Duffel,
+            provider:          FlightProviderEnum::Duffel,
             origin:            $leg['dep_iata'],
             destination:       $leg['arr_iata'],
             departureAt:       $leg['dep_date'] . ' ' . $leg['dep_time'],

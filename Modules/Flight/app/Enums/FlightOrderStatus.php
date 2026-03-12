@@ -2,7 +2,7 @@
 
 namespace Modules\Flight\Enums;
 
-enum FlightOrderStatus: string
+enum FlightOrderStatusEnum: string
 {
     case Pending   = 'pending';
     case Confirmed = 'confirmed';

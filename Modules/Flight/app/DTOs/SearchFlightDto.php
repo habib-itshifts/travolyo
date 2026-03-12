@@ -2,7 +2,7 @@
 
 namespace Modules\Flight\DTOs;
 
-use Modules\Flight\Enums\FlightProvider;
+use Modules\Flight\Enums\FlightProviderEnum;
 
 class SearchFlightDto
 {
@@ -12,7 +12,7 @@ class SearchFlightDto
         public readonly string         $departureDate,   // Y-m-d
         public readonly int            $adults,
         public readonly string         $cabinClass,      // economy | business | first
-        public readonly FlightProvider $provider,
+        public readonly FlightProviderEnum $provider,
         public readonly ?string        $returnDate  = null, // null = one-way
         public readonly int            $children    = 0,
         public readonly int            $infants     = 0,

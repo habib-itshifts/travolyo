@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Flight\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 class FlightController extends Controller
 {
@@ -19,8 +20,6 @@ class FlightController extends Controller
             'trip_type', 'adults', 'children', 'infants', 'cabin_class', 'provider',
         ]);
 
-        
-
-        return view('flights.index', compact('params'));
+        return view('flight::flights.index', compact('params'));
     }
 }

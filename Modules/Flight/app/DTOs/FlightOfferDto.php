@@ -2,14 +2,14 @@
 
 namespace Modules\Flight\DTOs;
 
-use Modules\Flight\Enums\FlightProvider;
+use Modules\Flight\Enums\FlightProviderEnum;
 
 class FlightOfferDto
 {
     public function __construct(
         // Identity
         public readonly string         $offerId,
-        public readonly FlightProvider $provider,
+        public readonly FlightProviderEnum $provider,
 
         // Departure leg
         public readonly string         $origin,         // IATA  e.g. "DXB"

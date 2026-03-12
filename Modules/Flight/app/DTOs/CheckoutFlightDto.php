@@ -2,7 +2,7 @@
 
 namespace Modules\Flight\DTOs;
 
-use Modules\Flight\Enums\FlightProvider;
+use Modules\Flight\Enums\FlightProviderEnum;
 
 class CheckoutFlightDto
 {
@@ -11,7 +11,7 @@ class CheckoutFlightDto
      */
     public function __construct(
         public readonly string         $offerId,
-        public readonly FlightProvider $provider,
+        public readonly FlightProviderEnum $provider,
         public readonly array          $passengers,
     ) {}
 }
