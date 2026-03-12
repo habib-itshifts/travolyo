@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\LocationController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 | Flight routes live in Modules/Flight/routes/api.php
 |--------------------------------------------------------------------------
 */
+
+Route::get('/bookings/{code}', [BookingController::class, 'show'])->name('api.bookings.show');
 
 Route::prefix('locations')->group(function () {
     Route::get('/countries',        [LocationController::class, 'countries'])->name('api.locations.countries');

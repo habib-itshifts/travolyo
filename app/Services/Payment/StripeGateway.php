@@ -2,6 +2,7 @@
 
 namespace App\Services\Payment;
 
+use App\Enums\BookingObjectModelEnum;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Services\Payment\Contracts\PaymentGatewayInterface;
@@ -130,15 +131,15 @@ class StripeGateway implements PaymentGatewayInterface
 
     private function bookingTitle(Booking $booking): string
     {
-        if ($booking->object_model === 'flight') {
+        if ($booking->object_model === BookingObjectModelEnum::Flight->value) {
             $f = $booking->getJsonMeta('flight_details');
             $route = ($f['dep_iata'] ?? '') . ' → ' . ($f['arr_iata'] ?? '');
             return 'Flight Booking — ' . $route;
         }
 
         return match ($booking->object_model) {
-            'hotel' => 'Hotel Booking',
-            default => 'Travolyo Booking',
+            BookingObjectModelEnum::Hotel->value => 'Hotel Booking',
+            default                              => 'Travolyo Booking',
         };
     }
 

@@ -11,6 +11,7 @@ use Modules\Flight\DTOs\PrebookFlightDto;
 use Modules\Flight\DTOs\SearchFlightDto;
 use Modules\Flight\Enums\FlightProviderEnum;
 use Modules\Flight\Exceptions\FlightException;
+use App\Enums\BookingObjectModelEnum;
 use App\Models\Booking;
 use App\Services\Payment\PaymentService;
 use Modules\Flight\Http\Requests\CheckoutFlightRequest;
@@ -139,7 +140,7 @@ class FlightController extends Controller
 
         try {
             $booking = Booking::create([
-                'object_model' => 'flight',
+                'object_model' => BookingObjectModelEnum::Flight->value,
                 'customer_id'  => auth()->id(),
                 'status'       => Booking::DRAFT,
                 'total'        => $flight['price'],
