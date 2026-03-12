@@ -323,12 +323,15 @@
                             data-provider="${f.provider}"
                             data-dep-iata="${f.origin}"
                             data-arr-iata="${f.destination}"
-                            data-dep-time="${depTimeStr(f.departure_at)}"
-                            data-arr-time="${depTimeStr(f.arrival_at)}"
+                            data-dep-time="${f.flight_details?.[0]?.dep_time ?? depTimeStr(f.departure_at)}"
+                            data-dep-date="${f.flight_details?.[0]?.dep_date ?? ''}"
+                            data-arr-time="${f.flight_details?.[0]?.arr_time ?? depTimeStr(f.arrival_at)}"
+                            data-arr-date="${f.flight_details?.[0]?.arr_date ?? ''}"
                             data-duration="${f.duration ?? ''}"
                             data-stops="${f.stops}"
                             data-price="${f.total_amount}"
                             data-currency="${f.currency}"
+                            data-cabin-class="${f.cabin_class ?? 'ECONOMY'}"
                             data-airline-name="${f.airline_name ?? ''}"
                             data-airline-logo="${f.airline_logo ?? ''}">
                             Select
@@ -462,15 +465,61 @@
         el.addEventListener('change', filterCards);
     });
 
-    // ── Select button ─────────────────────────────────────────────
-    document.addEventListener('click', function (e) {
+    // ── Select button → prebook API → checkout page ──────────────
+    document.addEventListener('click', async function (e) {
         const btn = e.target.closest('.js-select-flight');
         if (!btn) return;
+
         btn.disabled    = true;
         btn.textContent = 'Please wait…';
-        // TODO: redirect to prebook/checkout
-        console.log('Selected offer:', btn.dataset.offerId, btn.dataset.provider);
-        setTimeout(() => { btn.disabled = false; btn.textContent = 'Select'; }, 1500);
+
+        const payload = {
+            offer_id:     btn.dataset.offerId,
+            provider:     btn.dataset.provider,
+            dep_iata:     btn.dataset.depIata,
+            arr_iata:     btn.dataset.arrIata,
+            dep_time:     btn.dataset.depTime,
+            dep_date:     btn.dataset.depDate,
+            arr_time:     btn.dataset.arrTime,
+            arr_date:     btn.dataset.arrDate,
+            duration:     btn.dataset.duration,
+            stops:        parseInt(btn.dataset.stops, 10),
+            price:        parseFloat(btn.dataset.price),
+            currency:     btn.dataset.currency,
+            cabin_class:  btn.dataset.cabinClass,
+            airline_name: btn.dataset.airlineName,
+            airline_logo: btn.dataset.airlineLogo,
+            trip_type:    params.trip_type    ?? 'one_way',
+            adults:       parseInt(params.adults    ?? 1, 10),
+            children:     parseInt(params.children  ?? 0, 10),
+            infants:      parseInt(params.infants   ?? 0, 10),
+        };
+
+        try {
+            const res  = await fetch('{{ route('api.flights.prebook') }}', {
+                method:  'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    'Accept':       'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.checkout_url) {
+                window.location.href = data.checkout_url;
+                return;
+            }
+
+            alert(data.message ?? 'Could not select this flight. Please try again.');
+        } catch {
+            alert('Network error. Please try again.');
+        }
+
+        btn.disabled    = false;
+        btn.textContent = 'Select';
     });
 
     loadFlights();
