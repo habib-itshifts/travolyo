@@ -2,7 +2,6 @@
 
 namespace Modules\Flight\Http\Controllers\Api;
 
-use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Modules\Flight\Actions\SearchFlightAction;
