@@ -16,6 +16,7 @@
         "spatie/laravel-medialibrary": "^11.0",
         "spatie/laravel-permission": "^6.10",
         "spatie/laravel-translatable": "^6.8",
+        "stripe/stripe-php": "^19.4",
         "torann/currency": "^1.1"
     },
     "require-dev": {

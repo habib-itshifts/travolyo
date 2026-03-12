@@ -11,6 +11,9 @@ use Modules\Flight\DTOs\PrebookFlightDto;
 use Modules\Flight\DTOs\SearchFlightDto;
 use Modules\Flight\Enums\FlightProviderEnum;
 use Modules\Flight\Exceptions\FlightException;
+use App\Models\Booking;
+use App\Services\Payment\PaymentService;
+use Modules\Flight\Http\Requests\CheckoutFlightRequest;
 use Modules\Flight\Http\Requests\PrebookFlightRequest;
 use Modules\Flight\Http\Requests\SearchFlightRequest;
 use Modules\Flight\Providers\Duffel\DuffelProvider;
@@ -102,6 +105,7 @@ class FlightController extends Controller
             ];
 
             $token = Str::uuid()->toString();
+            Cache::forget('flight_checkout_' . $token); // Clear any existing cache for this token just in case
             Cache::put('flight_checkout_' . $token, $checkoutData, now()->addMinutes(30));
 
             return response()->json([
@@ -119,9 +123,56 @@ class FlightController extends Controller
         }
     }
 
-    public function checkout(): JsonResponse
+    public function checkout(CheckoutFlightRequest $request): JsonResponse
     {
-        //
+        $validated = $request->validated();
+
+        // Retrieve the prebook data from cache using the token passed by the checkout page
+        $flight = Cache::get('flight_checkout_' . $validated['checkout_token']);
+
+        if (empty($flight)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Flight session expired. Please search and select your flight again.',
+            ], 422);
+        }
+
+        try {
+            $booking = Booking::create([
+                'object_model' => 'flight',
+                'customer_id'  => auth()->id(),
+                'status'       => Booking::DRAFT,
+                'total'        => $flight['price'],
+                'pay_now'      => $flight['price'],
+                'paid'         => 0,
+                'currency'     => $flight['currency'],
+                'first_name'   => $validated['passengers'][0]['first_name'],
+                'last_name'    => $validated['passengers'][0]['last_name'],
+                'email'        => $validated['contact_email'],
+                'phone'        => $validated['contact_phone'],
+            ]);
+
+            // Store flight details and passengers in booking meta
+            $booking->addMeta('flight_details', $flight);
+            $booking->addMeta('flight_passengers', $validated['passengers']);
+            $booking->addMeta('payment_gateway', $validated['payment_gateway']);
+
+            $result = PaymentService::gateway($validated['payment_gateway'])->initiate($booking);
+
+            // Invalidate the token so it can't be reused
+            Cache::forget('flight_checkout_' . $validated['checkout_token']);
+
+            return response()->json([
+                'success' => true,
+                'url'     => $result['url'],
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not initiate payment. Please try again.',
+            ], 500);
+        }
     }
 
     public function pay(): JsonResponse

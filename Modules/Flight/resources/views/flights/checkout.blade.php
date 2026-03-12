@@ -3,7 +3,7 @@
 @section('title', 'Complete Your Booking')
 
 @php
-    $fc       = session('flight_checkout', []);
+    $fc       = $fc ?? [];
     $adults   = (int) ($fc['adults']   ?? 1);
     $children = (int) ($fc['children'] ?? 0);
     $infants  = (int) ($fc['infants']  ?? 0);
@@ -534,6 +534,7 @@ document.getElementById('btnPay').addEventListener('click', function () {
     });
 
     const body = {
+        checkout_token:   '{{ $checkout_token }}',
         contact_email:    document.getElementById('contactEmail').value,
         contact_phone:    document.getElementById('contactPhone').value,
         payment_gateway:  document.querySelector('input[name="payment_gateway"]:checked')?.value ?? 'stripe',

@@ -34,9 +34,6 @@ class FlightController extends Controller
             return redirect()->route('flights.index');
         }
 
-        // Store in session so the view and any subsequent web requests can read it
-        session(['flight_checkout' => $fc]);
-
-        return view('flight::flights.checkout');
+        return view('flight::flights.checkout', ['fc' => $fc, 'checkout_token' => $token]);
     }
 }

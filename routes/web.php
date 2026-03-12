@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +53,31 @@ Route::get('/currency/{code}', function (string $code) {
     }
     return redirect()->back();
 })->name('currency.switch');
+
+/*
+|--------------------------------------------------------------------------
+| Booking detail
+|--------------------------------------------------------------------------
+*/
+Route::get('/bookings/{code}', [BookingController::class, 'show'])->name('bookings.show');
+
+/*
+|--------------------------------------------------------------------------
+| Payment returns & webhooks
+|--------------------------------------------------------------------------
+*/
+Route::prefix('payments')->name('payments.')->group(function () {
+    // Stripe
+    Route::get( '/stripe/return',   [PaymentController::class, 'stripeReturn'])  ->name('stripe.return');
+    Route::get( '/stripe/cancel',   [PaymentController::class, 'stripeCancel'])  ->name('stripe.cancel');
+    Route::post('/stripe/webhook',  [PaymentController::class, 'stripeWebhook']) ->name('stripe.webhook')
+         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+
+    // N-Genius
+    Route::get( '/ngenius/return',  [PaymentController::class, 'ngeniusReturn']) ->name('ngenius.return');
+    Route::post('/ngenius/webhook', [PaymentController::class, 'ngeniusWebhook'])->name('ngenius.webhook')
+         ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
+});
 
 require __DIR__.'/auth.php';
 
