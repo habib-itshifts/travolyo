@@ -2,29 +2,19 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Stripe
-    |--------------------------------------------------------------------------
-    */
     'stripe' => [
-        'secret_key'      => '',
-        'publishable_key' => '',
-        'webhook_secret'  => '',
+        'secret_key'      => env('STRIPE_SECRET_KEY', ''),
+        'publishable_key' => env('STRIPE_PUBLISHABLE_KEY', ''),
+        'webhook_secret'  => env('STRIPE_WEBHOOK_SECRET', ''),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | N-Genius (Network International)
-    |--------------------------------------------------------------------------
-    */
     'ngenius' => [
-        'api_key'        => '',
-        'outlet_ref'     => '',
-        'base_url'       => 'https://api-gateway.sandbox.ngenius-payments.com',
-        'currency'       => 'AED',
-        'webhook_secret' => '',
-        'exchange_rate'  => 4.17
+        'api_key'        => env('NGENIUS_API_KEY', ''),
+        'outlet_ref'     => env('NGENIUS_OUTLET_REF', ''),
+        'base_url'       => env('NGENIUS_BASE_URL', 'https://api-gateway.sandbox.ngenius-payments.com'),
+        'currency'       => env('NGENIUS_CURRENCY', 'AED'),
+        'webhook_secret' => env('NGENIUS_WEBHOOK_SECRET', ''),
+        'exchange_rate'  => env('NGENIUS_EXCHANGE_RATE', 4.17),
     ],
 
 ];
