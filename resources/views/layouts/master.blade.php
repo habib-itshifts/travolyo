@@ -12,6 +12,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Travolyo" />
     <link rel="apple-touch-icon" href="{{ asset('assets/logo/travolyo-logo.svg') }}" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <title>@yield('title', 'Travolyo') – Where Your Journey Takes Off</title>
 
