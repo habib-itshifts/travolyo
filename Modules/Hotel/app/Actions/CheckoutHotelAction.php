@@ -29,12 +29,10 @@ class CheckoutHotelAction
             throw HotelException::invalidDates();
         }
 
-        $nights = $checkIn->diffInDays($checkOut);
-
-        $room = HotelRoom::findOrFail((int) $hotel['room_id']);
+        $nights   = $checkIn->diffInDays($checkOut);
+        $provider = $hotel['provider'] ?? 'local';
 
         $booking = Booking::create([
-            'code'           => 'TRV-' . now()->format('Y') . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'object_model'   => 'hotel',
             'customer_id'    => $dto->customerId,
             'status'         => 'draft',
@@ -49,20 +47,39 @@ class CheckoutHotelAction
             'customer_notes' => $dto->specialRequests,
         ]);
 
-        BookingRoom::create([
-            'booking_id'      => $booking->id,
-            'hotel_room_id'   => $room->id,
-            'check_in'        => $checkIn->toDateString(),
-            'check_out'       => $checkOut->toDateString(),
-            'nights'          => $nights,
-            'adults'          => $hotel['adults'],
-            'children'        => $hotel['children'],
-            'unit_price'      => $hotel['unit_price'],
-            'total_price'     => $hotel['total_price'],
-            'extra_services'  => $dto->extraServices ?: null,
-            'special_requests'=> $dto->specialRequests,
-            'status'          => BookingRoomStatusEnum::Pending->value,
-        ]);
+        // Store hotel details in booking meta for confirmation page
+        $booking->addMeta('hotel_details', $hotel);
+        $booking->addMeta('payment_gateway', $dto->paymentGateway);
+
+        if ($dto->specialRequests) {
+            $booking->addMeta('special_requests', $dto->specialRequests);
+        }
+
+        if (! empty($dto->extraServices)) {
+            $booking->addMeta('extra_services', $dto->extraServices);
+        }
+
+        // Create BookingRoom record only for local hotel rooms (B2B rooms have no local DB record)
+        if ($provider === 'local') {
+            $room = HotelRoom::find((int) $hotel['room_id']);
+
+            if ($room) {
+                BookingRoom::create([
+                    'booking_id'       => $booking->id,
+                    'hotel_room_id'    => $room->id,
+                    'check_in'         => $checkIn->toDateString(),
+                    'check_out'        => $checkOut->toDateString(),
+                    'nights'           => $nights,
+                    'adults'           => $hotel['adults'],
+                    'children'         => $hotel['children'],
+                    'unit_price'       => $hotel['unit_price'],
+                    'total_price'      => $hotel['total_price'],
+                    'extra_services'   => $dto->extraServices ?: null,
+                    'special_requests' => $dto->specialRequests,
+                    'status'           => BookingRoomStatusEnum::Pending->value,
+                ]);
+            }
+        }
 
         $result = PaymentService::gateway($dto->paymentGateway)->initiate($booking);
 

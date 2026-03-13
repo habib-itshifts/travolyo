@@ -123,18 +123,38 @@
                 <div class="vr" style="height:20px;opacity:.2;"></div>
 
                 {{-- User --}}
-                <div class="d-flex align-items-center gap-2" style="cursor:pointer;">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
-                         style="width:32px;height:32px;background:linear-gradient(135deg,var(--clr-primary),var(--clr-primary-dark));font-size:12px;flex-shrink:0;">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                <div class="dropdown">
+                    <div class="d-flex align-items-center gap-2" style="cursor:pointer;" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
+                             style="width:32px;height:32px;background:linear-gradient(135deg,var(--clr-primary),var(--clr-primary-dark));font-size:12px;flex-shrink:0;">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                        <div class="d-none d-sm-block lh-sm">
+                            <p class="mb-0 fw-semibold text-dark" style="font-size:12px;">{{ auth()->user()->name }}</p>
+                            <p class="mb-0 text-muted" style="font-size:10px;">{{ auth()->user()->email }}</p>
+                        </div>
+                        <svg width="14" height="14" class="text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
                     </div>
-                    <div class="d-none d-sm-block lh-sm">
-                        <p class="mb-0 fw-semibold text-dark" style="font-size:12px;">{{ auth()->user()->name }}</p>
-                        <p class="mb-0 text-muted" style="font-size:10px;">{{ auth()->user()->email }}</p>
-                    </div>
-                    <svg width="14" height="14" class="text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 topbar-dropdown" style="min-width:180px;">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('profile.edit') }}">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                Change Password
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </header>

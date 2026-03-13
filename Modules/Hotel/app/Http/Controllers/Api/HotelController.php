@@ -22,9 +22,12 @@ use Modules\Hotel\Providers\TravolyoB2BLocal\TravolyoB2BLocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BNetStreaming\TravolyoB2BNetStreamingHotelProvider;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
+use Illuminate\Http\Request;
 
 class HotelController extends Controller
 {
+
+
     public function search(SearchHotelRequest $request): JsonResponse
     {
         try {
@@ -45,6 +48,72 @@ class HotelController extends Controller
             ], $e->getCode() ?: 502);
         }
     }
+
+    
+    /**
+     * Fetch available rooms for a specific B2B hotel.
+     * Called via AJAX from the hotel listing page when the user clicks "View Deal".
+     */
+    public function rooms(Request $request): JsonResponse
+    {
+        $request->validate([
+            'offer_id'  => 'required|string',
+            'city_code' => 'nullable|string',
+            'check_in'  => 'required|date_format:Y-m-d',
+            'check_out' => 'required|date_format:Y-m-d|after:check_in',
+            'adults'    => 'required|integer|min:1',
+            'children'  => 'nullable|integer|min:0',
+            'provider'  => 'required|string',
+        ]);
+
+        try {
+            $providerEnum = HotelProviderEnum::from($request->input('provider'));
+
+            $provider = match ($providerEnum) {
+                HotelProviderEnum::Local                  => new LocalHotelProvider(),
+                HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
+                HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
+            };
+
+            $rooms = $provider->getRooms(
+                offerId:  $request->input('offer_id'),
+                cityCode: $request->input('city_code', ''),
+                checkIn:  $request->input('check_in'),
+                checkOut: $request->input('check_out'),
+                adults:   (int) $request->input('adults', 1),
+                children: (int) $request->input('children', 0),
+            );
+
+            return response()->json([
+                'success' => true,
+                'count'   => count($rooms),
+                'data'    => collect($rooms)->map(fn ($r) => [
+                    'id'                => $r->roomId,
+                    'name'              => $r->name,
+                    'room_type'         => $r->roomType,
+                    'bed_configuration' => $r->bedConfiguration,
+                    'max_adults'        => $r->maxAdults,
+                    'max_children'      => $r->maxChildren,
+                    'base_price'        => $r->basePrice,
+                    'total_price'       => $r->totalPrice,
+                    'nights'            => $r->nights,
+                    'currency'          => $r->currency,
+                    'is_available'      => $r->isAvailable,
+                    'amenities'         => $r->amenityNames,
+                    'size_sqm'          => $r->sizeSqm,
+                    'description'       => $r->description,
+                ])->values(),
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not fetch rooms: ' . $e->getMessage(),
+            ], 502);
+        }
+    }
+
+   
 
     public function prebook(PrebookHotelRequest $request): JsonResponse
     {

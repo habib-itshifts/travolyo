@@ -2,35 +2,15 @@
 
 namespace Modules\Hotel\Providers\TravolyoB2BLocal;
 
-use Modules\Hotel\DTOs\HotelOfferDto;
-use Modules\Hotel\DTOs\HotelOrderDto;
-use Modules\Hotel\DTOs\PrebookHotelDto;
-use Modules\Hotel\DTOs\SearchHotelDto;
-use Modules\Hotel\Providers\HotelProviderInterface;
+use Modules\Hotel\Providers\TravolyoB2BBaseHotelProvider;
 
-class TravolyoB2BLocalHotelProvider implements HotelProviderInterface
+/**
+ * Handles hotels where source = "local" in the Travolyo B2B API response.
+ */
+class TravolyoB2BLocalHotelProvider extends TravolyoB2BBaseHotelProvider
 {
-    public function search(SearchHotelDto $dto): array
+    protected function sourceTag(): string
     {
-        // TODO: implement Travolyo B2B Local hotel search API
-        return [];
-    }
-
-    public function prebook(PrebookHotelDto $dto): HotelOfferDto
-    {
-        // TODO: implement Travolyo B2B Local prebook
-        throw new \RuntimeException('TravolyoB2BLocal hotel prebook not yet implemented.');
-    }
-
-    public function getOrder(string $orderId): HotelOrderDto
-    {
-        // TODO: implement
-        throw new \RuntimeException('TravolyoB2BLocal hotel getOrder not yet implemented.');
-    }
-
-    public function cancelOrder(string $orderId): bool
-    {
-        // TODO: implement
-        throw new \RuntimeException('TravolyoB2BLocal hotel cancelOrder not yet implemented.');
+        return 'local';
     }
 }

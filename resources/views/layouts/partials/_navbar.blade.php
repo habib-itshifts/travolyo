@@ -130,6 +130,13 @@
                             {{ auth()->user()->name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                            @if(auth()->user()->hasRole('customer'))
+                            <li>
+                                <a class="dropdown-item" href="{{ route('customer.dashboard') }}">
+                                    <i class="bi bi-person-lines-fill me-2"></i>My Dashboard
+                                </a>
+                            </li>
+                            @endif
                             @if(auth()->user()->hasRole('vendor'))
                             <li>
                                 <a class="dropdown-item" href="{{ route('vendor.dashboard') }}">

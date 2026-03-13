@@ -57,6 +57,18 @@ class LocalHotelProvider implements HotelProviderInterface
             ->all();
     }
 
+    public function getRooms(
+        string $offerId,
+        string $cityCode,
+        string $checkIn,
+        string $checkOut,
+        int    $adults,
+        int    $children,
+    ): array {
+        // Local hotels include rooms directly in search() results via LocalHotelMapper.
+        return [];
+    }
+
     public function prebook(PrebookHotelDto $dto): HotelOfferDto
     {
         $room = HotelRoom::active()
