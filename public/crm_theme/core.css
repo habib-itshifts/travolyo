@@ -1,0 +1,101 @@
+/*
+ * Travolyo CRM Theme — core.css
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Shared structural styles for Admin, Vendor, and Customer panels.
+ * CSS variables (--clr-*) are defined per-module in each master.blade.php.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+body {
+    font-family: 'Figtree', sans-serif;
+    background-color: var(--clr-page-bg, #f4f6fb);
+}
+
+/* ── Sidebar chrome ─────────────────────────────────────────────────────── */
+.sidebar-bg {
+    background-color: var(--clr-sidebar-bg, #0f1f38);
+}
+
+.sidebar-hover:hover {
+    background-color: var(--clr-sidebar-hover, rgba(255, 255, 255, 0.06));
+}
+
+/*
+ * Active nav item: accent border on the *start* side.
+ * border-inline-start flips automatically in RTL — no extra code needed.
+ */
+.sidebar-active {
+    background-color: var(--clr-sidebar-active, rgba(58, 181, 212, 0.15));
+    border-inline-start: 3px solid var(--clr-primary, #3ab5d4);
+    color: var(--clr-sidebar-text-act, #3ab5d4);
+}
+
+.sidebar-inactive {
+    border-inline-start: 3px solid transparent;
+}
+
+/* ── Nav section label ──────────────────────────────────────────────────── */
+.nav-section {
+    color: var(--clr-sidebar-section, #4b6080);
+    font-size: 0.68rem;
+    letter-spacing: .1em;
+}
+
+/* ── Version badge ──────────────────────────────────────────────────────── */
+.badge-version {
+    background: var(--clr-badge-bg, #2dd4bf);
+    color: #fff;
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────────── */
+.topbar-shadow {
+    box-shadow: 0 1px 0 0 #e5e7eb;
+}
+
+/* ── Sidebar nav links ──────────────────────────────────────────────────── */
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.625rem 0.6rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+/* ── Topbar Bootstrap dropdown overrides ────────────────────────────────── */
+.topbar-dropdown .dropdown-item.active,
+.topbar-dropdown .dropdown-item:active {
+    background-color: color-mix(in srgb, var(--clr-primary, #3ab5d4) 10%, transparent);
+    color: var(--clr-primary, #3ab5d4);
+}
+
+.topbar-dropdown .dropdown-menu {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+}
+
+/* ── Panel card ─────────────────────────────────────────────────────────── */
+.panel-card {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+
+/* ── Scrollbar: hide on sidebar ─────────────────────────────────────────── */
+.sidebar-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.sidebar-scroll::-webkit-scrollbar {
+    display: none;
+}

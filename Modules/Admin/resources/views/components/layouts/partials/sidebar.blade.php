@@ -2,7 +2,6 @@
     /*
      * Sidebar nav definition.
      * Labels use translation keys — __('admin.nav_*')
-     * Adding a new item: add an entry to $nav with route, label key, icon SVG path.
      */
     $nav = [
         [
@@ -69,35 +68,25 @@
 
     @if (isset($item['section']))
         {{-- Section divider label --}}
-        <p class="nav-section uppercase font-semibold ps-3 pt-5 pb-2 text-[10px]">{{ $item['section'] }}</p>
+        <p class="nav-section text-uppercase fw-semibold ps-3 pt-4 pb-1 mb-0" style="font-size:10px;letter-spacing:.1em;">{{ $item['section'] }}</p>
 
     @else
         @php $active = request()->routeIs(str_replace('.index', '.*', $item['route'])); @endphp
 
         @if (Route::has($item['route']))
-            {{--
-                ps-3 / pe-2.5  = logical padding (flips LTR ↔ RTL automatically)
-                sidebar-inactive sets a transparent border-inline-start so the
-                active border doesn't cause a layout shift.
-            --}}
             <a href="{{ route($item['route']) }}"
-               class="flex items-center justify-between ps-3 pe-2.5 py-2.5 rounded-lg transition-all text-[13px] font-medium group sidebar-inactive
-                      {{ $active ? 'sidebar-active' : 'text-[#7a90ab] sidebar-hover hover:text-white' }}">
-                <span class="flex items-center gap-3">
-                    <svg class="w-[17px] h-[17px] flex-shrink-0 transition-colors
-                                {{ $active ? 'text-[color:var(--clr-primary)]' : 'text-[#3a5070] group-hover:text-[#7a90ab]' }}"
+               class="sidebar-nav-link sidebar-inactive mb-0
+                      {{ $active ? 'sidebar-active' : 'sidebar-hover' }}"
+               style="color:{{ $active ? 'var(--clr-sidebar-text-act)' : 'var(--clr-sidebar-text)' }}; text-decoration:none;">
+                <span class="d-flex align-items-center gap-3">
+                    <svg style="width:17px;height:17px;flex-shrink:0;color:{{ $active ? 'var(--clr-primary)' : 'var(--clr-sidebar-icon)' }};"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         {!! $item['icon'] !!}
                     </svg>
                     <span>{{ $item['label'] }}</span>
                 </span>
                 @if ($item['has_sub'])
-                    {{--
-                        Chevron direction: in LTR it points right (›), in RTL it
-                        should point left (‹). rtl:rotate-180 handles this.
-                    --}}
-                    <svg class="w-3 h-3 rtl:rotate-180 transition-transform
-                                {{ $active ? 'text-[color:var(--clr-primary)]/60' : 'text-[#2a3f58] group-hover:text-[#3a5070]' }}"
+                    <svg style="width:12px;height:12px;color:{{ $active ? 'var(--clr-primary)' : 'var(--clr-sidebar-disabled)' }};"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
@@ -105,17 +94,17 @@
             </a>
         @else
             {{-- Route doesn't exist yet — rendered as a disabled span --}}
-            <span class="flex items-center justify-between ps-3 pe-2.5 py-2.5 rounded-lg text-[13px] cursor-not-allowed sidebar-inactive opacity-40"
-                  style="color: var(--clr-sidebar-disabled);">
-                <span class="flex items-center gap-3">
-                    <svg class="w-[17px] h-[17px] flex-shrink-0" style="color: var(--clr-sidebar-disabled);"
+            <span class="sidebar-nav-link sidebar-inactive mb-0 opacity-25"
+                  style="cursor:not-allowed;color:var(--clr-sidebar-disabled);">
+                <span class="d-flex align-items-center gap-3">
+                    <svg style="width:17px;height:17px;flex-shrink:0;color:var(--clr-sidebar-disabled);"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         {!! $item['icon'] !!}
                     </svg>
                     <span>{{ $item['label'] }}</span>
                 </span>
                 @if ($item['has_sub'])
-                    <svg class="w-3 h-3 rtl:rotate-180" style="color: var(--clr-sidebar-disabled);"
+                    <svg style="width:12px;height:12px;color:var(--clr-sidebar-disabled);"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
