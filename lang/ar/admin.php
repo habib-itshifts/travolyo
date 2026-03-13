@@ -21,13 +21,16 @@ return [
     // ── Sidebar navigation ───────────────────────────────────────────
     'nav_dashboard'            => 'لوحة التحكم',
     'nav_location'             => 'الموقع',
-    'nav_hotel'                => 'الفنادق',
+    
+    'nav_hotel_rooms'          => 'Hotel Rooms',
     'nav_tour'                 => 'الجولات',
     'nav_flight'               => 'الرحلات',
     'nav_bookings'             => 'الحجوزات',
     'nav_reviews'              => 'التقييمات',
     'nav_news'                 => 'الأخبار',
     'nav_media'                => 'الوسائط',
+    'nav_amenities'            => 'Amenities',
+    'nav_services'             => 'Services',
     'section_content'          => 'المحتوى',
 
     // ── Dashboard page ───────────────────────────────────────────────
@@ -57,3 +60,6 @@ return [
     'status_paid'              => 'مدفوع',
 
 ];
+
+
+

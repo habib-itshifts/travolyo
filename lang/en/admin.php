@@ -25,12 +25,15 @@ return [
     'nav_dashboard'            => 'Dashboard',
     'nav_location'             => 'Location',
     'nav_hotel'                => 'Hotel',
+    'nav_hotel_rooms'          => 'Hotel Rooms',
     'nav_tour'                 => 'Tour',
     'nav_flight'               => 'Flight',
     'nav_bookings'             => 'Bookings',
     'nav_reviews'              => 'Reviews',
     'nav_news'                 => 'News',
     'nav_media'                => 'Media',
+    'nav_amenities'            => 'Amenities',
+    'nav_services'             => 'Services',
     'section_content'          => 'Content',
 
     // ── Dashboard page ───────────────────────────────────────────────

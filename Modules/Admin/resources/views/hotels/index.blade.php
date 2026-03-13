@@ -103,9 +103,9 @@
                                 </td>
 
                                 <td>
-                                    <span class="badge bg-light text-dark border">
+                                    <a href="{{ route('admin.hotel-rooms.index', ['hotel_id' => $hotel->id]) }}" class="badge bg-light text-dark border text-decoration-none">
                                         {{ $hotel->rooms_count ?? $hotel->rooms()->count() }} rooms
-                                    </span>
+                                    </a>
                                 </td>
 
                                 <td>
@@ -148,6 +148,12 @@
                                                 </button>
                                             </form>
                                         @else
+                                            <a href="{{ route('admin.hotel-rooms.index', ['hotel_id' => $hotel->id]) }}"
+                                               class="btn btn-sm btn-outline-dark" title="Manage Rooms">
+                                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M5 7l1 12h12l1-12M8 7V5a1 1 0 011-1h6a1 1 0 011 1v2"/>
+                                                </svg>
+                                            </a>
                                             <a href="{{ route('admin.hotels.show', $hotel->id) }}"
                                                class="btn btn-sm btn-outline-secondary" title="View">
                                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
