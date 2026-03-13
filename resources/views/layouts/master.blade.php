@@ -11,7 +11,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Travolyo" />
-    <link rel="apple-touch-icon" href="{{ asset('assets/logo/travolyo-logo.svg') }}" />
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/favicon/favicon1.png') }}" />
+    <link rel="shortcut icon" href="{{ asset('assets/images/favicon/favicon1.png') }}" />
+    <link rel="apple-touch-icon" href="{{ asset('assets/images/favicon/favicon1.png') }}" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <title>@yield('title', 'Travolyo') – Where Your Journey Takes Off</title>
 
@@ -28,6 +31,72 @@
 
     {{-- Page-specific styles --}}
     @stack('styles')
+
+    <style>
+        :root {
+            --site-font-family: "Inter", sans-serif;
+        }
+
+        html,
+        body {
+            font-family: var(--site-font-family);
+        }
+
+        body,
+        body h1,
+        body h2,
+        body h3,
+        body h4,
+        body h5,
+        body h6,
+        body p,
+        body span,
+        body a,
+        body li,
+        body ul,
+        body ol,
+        body small,
+        body strong,
+        body em,
+        body label,
+        body div,
+        body section,
+        body article,
+        body aside,
+        body header,
+        body footer,
+        body main,
+        body nav,
+        body button,
+        body input,
+        body select,
+        body textarea,
+        body table,
+        body thead,
+        body tbody,
+        body tr,
+        body td,
+        body th,
+        .navbar,
+        .site-footer,
+        .dropdown-menu,
+        .dropdown-item,
+        .modal-content,
+        .modal-title,
+        .form-control,
+        .form-select,
+        .btn,
+        [class$="-page"],
+        [class*="-page "],
+        [class*="title"],
+        [class*="subtitle"],
+        [class*="heading"],
+        [class*="label"],
+        [class*="text"],
+        [class*="content"] {
+            font-family: var(--site-font-family) !important;
+        }
+    </style>
 </head>
 <body>
 

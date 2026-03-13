@@ -18,7 +18,7 @@
         </p>
 
         {{-- Search Widget --}}
-        @include('home.partials._search-widget')
+        @include('website.partials._search-widget')
 
         {{-- Quick Links --}}
         <div class="hero-quick-links mt-4">
