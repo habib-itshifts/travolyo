@@ -15,6 +15,7 @@ class HotelRoom extends Model
         'name',
         'slug',
         'room_type',
+        'currency',
         'image_id',
         'gallery',
         'bed_configuration',
@@ -34,6 +35,7 @@ class HotelRoom extends Model
     ];
 
     protected $casts = [
+        'currency'         => 'string',
         'image_id'         => 'integer',
         'bed_configuration' => 'array',
         'max_adults'        => 'integer',

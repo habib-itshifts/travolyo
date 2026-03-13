@@ -79,6 +79,12 @@
             'has_sub' => false,
             'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5-6h3m-9 9h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
         ],
+        [
+            'route'   => 'admin.currencies.index',
+            'label'   => __('admin.nav_currencies'),
+            'has_sub' => false,
+            'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 .895-4 2s1.79 2 4 2 4 .895 4 2-1.79 2-4 2m0-10V6m0 12v-2m0-8h.01M12 12h.01M12 16h.01"/>',
+        ],
     ];
 @endphp
 

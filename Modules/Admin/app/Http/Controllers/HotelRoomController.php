@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Models\Currency;
 use Modules\Admin\Models\MediaFile;
 use Modules\Hotel\Models\Amenity;
 use Modules\Hotel\Models\Hotel;
@@ -29,6 +30,7 @@ class HotelRoomController extends Controller
                     ->where(fn ($query) => $query->where('hotel_id', request('hotel_id'))),
             ],
             'room_type' => ['required', 'string', 'max:50'],
+            'currency' => ['required', 'string', 'size:3', Rule::in(array_keys(Currency::supported()))],
             'image_id' => ['nullable', 'integer', 'exists:media_files,id'],
             'gallery' => ['nullable', 'string'],
             'bed_configuration_text' => ['nullable', 'string', 'max:255'],
@@ -63,6 +65,11 @@ class HotelRoomController extends Controller
     protected function payload(Request $request, array $validated): array
     {
         $validated['slug'] = $validated['slug'] ?: Str::slug($validated['name']);
+        $supportedCurrencies = array_keys(Currency::supported());
+        $validated['currency'] = strtoupper((string) ($validated['currency'] ?? Currency::defaultCode()));
+        if (!in_array($validated['currency'], $supportedCurrencies, true)) {
+            $validated['currency'] = Currency::defaultCode();
+        }
         $imageId = (int) ($validated['image_id'] ?? 0);
         $galleryIds = $this->parseGalleryIds($validated['gallery'] ?? null);
         $mediaItems = MediaFile::query()->whereIn('id', array_values(array_unique(array_filter(array_merge(
@@ -114,10 +121,11 @@ class HotelRoomController extends Controller
     {
         $hotels = Hotel::query()->orderBy('name')->get(['id', 'name']);
         $amenities = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
+        $currencies = Currency::supported();
         $selectedHotelId = $request->integer('hotel_id') ?: null;
         $lockedHotelId = $selectedHotelId;
 
-        return view('admin::hotel-rooms.create', compact('hotels', 'amenities', 'selectedHotelId', 'lockedHotelId'));
+        return view('admin::hotel-rooms.create', compact('hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -138,10 +146,11 @@ class HotelRoomController extends Controller
         $hotelRoom->load('amenities');
         $hotels = Hotel::query()->orderBy('name')->get(['id', 'name']);
         $amenities = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
+        $currencies = Currency::supported();
         $selectedHotelId = $hotelRoom->hotel_id;
         $lockedHotelId = null;
 
-        return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'amenities', 'selectedHotelId', 'lockedHotelId'));
+        return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
     }
 
     public function update(Request $request, HotelRoom $hotelRoom): RedirectResponse

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\AmenityController;
+use Modules\Admin\Http\Controllers\CurrencyController;
 use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\HotelController;
 use Modules\Admin\Http\Controllers\HotelRoomController;
@@ -33,4 +34,9 @@ Route::prefix('admin')
         Route::post('services', [ServiceController::class, 'store'])->name('services.store');
         Route::put('services/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::delete('services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+        Route::get('currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+        Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+        Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
+        Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
     });

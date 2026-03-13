@@ -34,6 +34,7 @@ return [
     'nav_media'                => 'Media',
     'nav_amenities'            => 'Amenities',
     'nav_services'             => 'Services',
+    'nav_currencies'           => 'Currencies',
     'section_content'          => 'Content',
 
     // ── Dashboard page ───────────────────────────────────────────────

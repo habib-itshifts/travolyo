@@ -72,7 +72,7 @@
                                 </td>
                                 <td class="text-capitalize">{{ $room->room_type }}</td>
                                 <td>{{ $room->max_adults }}A / {{ $room->max_children }}C / {{ $room->max_occupancy }} Total</td>
-                                <td>${{ number_format((float) $room->base_price, 2) }}</td>
+                                <td>{{ strtoupper($room->currency ?? 'USD') }} {{ number_format((float) $room->base_price, 2) }}</td>
                                 <td>{{ $room->quantity }}</td>
                                 <td>
                                     <span class="badge rounded-pill {{ $room->is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">

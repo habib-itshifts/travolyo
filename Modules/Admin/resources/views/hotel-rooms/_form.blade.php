@@ -5,6 +5,7 @@
     $bedConfiguration = old('bed_configuration_text', isset($hotelRoom) ? implode(', ', (array) $hotelRoom->bed_configuration) : '');
     $lockedHotelId = $lockedHotelId ?? null;
     $selectedHotelValue = old('hotel_id', $selectedHotelId ?? '');
+    $selectedCurrency = old('currency', $hotelRoom->currency ?? \App\Models\Currency::defaultCode());
     $roomImageId = old('image_id', $hotelRoom->image_id ?? '');
     $roomGalleryValue = (string) old('gallery', $hotelRoom->gallery ?? '');
     $resolveMediaUrl = function ($mediaId) {
@@ -179,6 +180,17 @@
                 <div class="card-body p-4">
                     <h6 class="fw-semibold mb-3">Pricing & Status</h6>
                     <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Currency</label>
+                            <select name="currency" class="form-select @error('currency') is-invalid @enderror">
+                                @foreach (($currencies ?? \App\Models\Currency::supported()) as $code => $currency)
+                                    <option value="{{ $code }}" {{ strtoupper((string) $selectedCurrency) === strtoupper((string) $code) ? 'selected' : '' }}>
+                                        {{ $currency['label'] ?? $code }} - {{ $currency['name'] ?? $code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Base Price</label>
                             <input type="number" min="0" step="0.01" name="base_price" value="{{ old('base_price', $hotelRoom->base_price ?? '') }}" class="form-control @error('base_price') is-invalid @enderror">
