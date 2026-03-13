@@ -1,0 +1,54 @@
+{
+    "name": "Travolyo",
+    "short_name": "Travolyo",
+    "description": "Discover amazing hotels, resorts, and destinations around the world at the best prices",
+    "start_url": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#ffffff",
+    "theme_color": "#17C3CE",
+    "lang": "en",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/assets/images/logo/travolyo-logo.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/logofull.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "screenshots": [],
+    "categories": ["travel", "business"],
+    "shortcuts": [
+        {
+            "name": "Activities",
+            "short_name": "Activities",
+            "url": "/activities",
+            "description": "Browse travel activities"
+        },
+        {
+            "name": "Hotels",
+            "short_name": "Hotels",
+            "url": "/hotels",
+            "description": "Search and book hotels"
+        },
+        {
+            "name": "Flights",
+            "short_name": "Flights",
+            "url": "/flights",
+            "description": "Search and book flights"
+        }
+    ]
+}
