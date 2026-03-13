@@ -27,7 +27,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->index(['hotel_deal_id', 'travel_date_start', 'travel_date_end']);
+            $table->index(['hotel_deal_id', 'travel_date_start', 'travel_date_end'], 'hdr_deal_travel_dates_idx');
         });
     }
 
