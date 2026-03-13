@@ -77,7 +77,7 @@
 {{-- Search widget --}}
 <div class="bg-white border-bottom py-3 shadow-sm">
     <div class="container">
-        @include('home.partials._search-widget', ['activeTab' => 'flights'])
+        @include('website.partials._search-widget', ['activeTab' => 'flights'])
     </div>
 </div>
 
