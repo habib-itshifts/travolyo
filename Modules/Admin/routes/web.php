@@ -7,6 +7,7 @@ use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\HotelController;
 use Modules\Admin\Http\Controllers\HotelRoomController;
 use Modules\Admin\Http\Controllers\MediaController;
+use Modules\Admin\Http\Controllers\ProfileController;
 use Modules\Admin\Http\Controllers\ServiceController;
 
 Route::prefix('admin')
@@ -14,6 +15,11 @@ Route::prefix('admin')
     ->middleware(['auth', 'verified', 'admin'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Profile
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
         // Media
         Route::get('/media', [MediaController::class, 'index'])->name('media.index');

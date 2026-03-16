@@ -17,11 +17,32 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRoles, SoftDeletes, HasApiTokens;
 
     protected $fillable = [
+        // Identity
         'first_name',
+        'last_name',
         'name',
+        'username',
         'email',
         'password',
+        'gender',
+        'birthday',
+        'avatar',
+        'nationality',
         'user_type',
+        // Contact
+        'phone',
+        'phone_country_code',
+        'whatsapp_number',
+        // Address
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state',
+        'country',
+        'zip_code',
+        // Business / Vendor
+        'business_name',
+        'tax_number',
     ];
 
     protected $hidden = [
@@ -35,6 +56,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'user_type'         => UserType::class,
+            'birthday'          => 'date',
         ];
     }
 
