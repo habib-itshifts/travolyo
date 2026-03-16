@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Currency;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
@@ -57,7 +58,7 @@ Route::get('/locale/{locale}', function (string $locale) {
 */
 Route::get('/currency/{code}', function (string $code) {
     $code = strtoupper($code);
-    if (array_key_exists($code, config('currency.supported', []))) {
+    if (array_key_exists($code, Currency::supported())) {
         session(['currency' => $code]);
     }
     return redirect()->back();

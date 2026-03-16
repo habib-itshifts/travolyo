@@ -123,8 +123,8 @@
 
                 {{-- Currency dropdown --}}
                 @php
-                    $currencies      = config('currency.supported');
-                    $activeCurrency  = session('currency', config('currency.default'));
+                    $currencies      = \App\Models\Currency::supported();
+                    $activeCurrency  = session('currency', \App\Models\Currency::defaultCode());
                     $currentCurrency = $currencies[$activeCurrency] ?? reset($currencies);
                 @endphp
                 <div class="dropdown topbar-dropdown">
