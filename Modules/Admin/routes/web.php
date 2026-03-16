@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\AmenityController;
+use Modules\Admin\Http\Controllers\ActivityController;
 use Modules\Admin\Http\Controllers\BlogController;
 use Modules\Admin\Http\Controllers\BlogCategoryController;
 use Modules\Admin\Http\Controllers\BlogTagController;
@@ -43,6 +44,7 @@ Route::prefix('admin')
         Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
         Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
 
+        Route::resource('activities', ActivityController::class)->except(['show']);
         Route::resource('blogs', BlogController::class)->except(['show']);
         Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
         Route::resource('blog-tags', BlogTagController::class)->except(['show']);

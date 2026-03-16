@@ -5,9 +5,28 @@
 @push('styles')
 <style>
     .blog-hero {
-        background: linear-gradient(135deg, #0f766e 0%, #164e63 100%);
+        position: relative;
+        overflow: hidden;
+        background-image: url('{{ asset('assets/images/website/blogs/blog.jpg') }}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         color: #fff;
-        padding: 88px 0 72px;
+        padding: 120px 0 110px;
+        min-height: 520px;
+        display: flex;
+        align-items: center;
+    }
+    .blog-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.22) 0%, rgba(15, 23, 42, 0.3) 100%);
+        pointer-events: none;
+    }
+    .blog-hero .container {
+        position: relative;
+        z-index: 1;
     }
     .blog-page-section {
         padding: 72px 0;

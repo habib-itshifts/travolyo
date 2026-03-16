@@ -97,14 +97,18 @@
 
                     <div class="mb-4">
                         <label class="form-label fw-semibold" style="font-size:13px;">Tags</label>
-                        <select name="tag_ids[]" class="form-select @error('tag_ids') is-invalid @enderror" multiple size="5">
-                            @foreach ($tags as $tag)
-                                <option value="{{ $tag->id }}" {{ in_array($tag->id, $activeTagIds, true) ? 'selected' : '' }}>
-                                    {{ $tag->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="form-text">Hold Ctrl to select multiple existing tags.</div>
+                        <div class="tag-checkbox-list @error('tag_ids') is-invalid @enderror">
+                            @forelse ($tags as $tag)
+                                <label class="tag-checkbox-item">
+                                    <input type="checkbox" name="tag_ids[]" value="{{ $tag->id }}"
+                                           {{ in_array($tag->id, $activeTagIds, true) ? 'checked' : '' }}>
+                                    <span>{{ $tag->name }}</span>
+                                </label>
+                            @empty
+                                <div class="text-muted small">No tags available yet.</div>
+                            @endforelse
+                        </div>
+                        <div class="form-text">Select one or more existing tags.</div>
                         @error('tag_ids') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
@@ -187,6 +191,33 @@
     .media-picker-icon {
         font-size: 54px;
         line-height: 1;
+    }
+    .tag-checkbox-list {
+        max-height: 220px;
+        overflow-y: auto;
+        border: 1px solid #dbe3ef;
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #fff;
+    }
+    .tag-checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 2px;
+        margin: 0;
+        font-size: 14px;
+        color: #334155;
+        cursor: pointer;
+    }
+    .tag-checkbox-item + .tag-checkbox-item {
+        border-top: 1px solid #eef2f7;
+    }
+    .tag-checkbox-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--clr-primary);
+        flex-shrink: 0;
     }
 </style>
 @endpush

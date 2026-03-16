@@ -56,6 +56,26 @@
         padding: 24px;
         box-shadow: 0 16px 38px rgba(15, 23, 42, 0.07);
     }
+    .recent-blog-link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: #0f172a;
+        text-decoration: none;
+    }
+    .recent-blog-thumb {
+        width: 88px;
+        height: 72px;
+        border-radius: 14px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #cbd5e1, #e2e8f0);
+    }
+    .recent-blog-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 </style>
 @endpush
 
@@ -140,10 +160,17 @@
                     <h2 class="h5 fw-bold mb-3">Recent Blogs</h2>
                     <div class="d-grid gap-3">
                         @foreach ($recentBlogs as $recentBlog)
-                            <a href="{{ route('blogs.show', $recentBlog) }}" class="text-decoration-none text-dark">
-                                <div class="fw-semibold">{{ $recentBlog->title }}</div>
-                                <div class="small text-muted">
-                                    {{ ($recentBlog->published_at ?? $recentBlog->created_at)?->format('d M Y') }}
+                            <a href="{{ route('blogs.show', $recentBlog) }}" class="recent-blog-link">
+                                <div class="recent-blog-thumb">
+                                    @if ($recentBlog->image_url)
+                                        <img src="{{ $recentBlog->image_url }}" alt="{{ $recentBlog->title }}">
+                                    @endif
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">{{ $recentBlog->title }}</div>
+                                    <div class="small text-muted">
+                                        {{ ($recentBlog->published_at ?? $recentBlog->created_at)?->format('d M Y') }}
+                                    </div>
                                 </div>
                             </a>
                         @endforeach

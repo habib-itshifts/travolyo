@@ -23,7 +23,7 @@
                 <ul class="footer-links">
                     <li><a href="{{ Route::has('about') ? route('about') : '#' }}">About Us</a></li>
                     <li><a href="{{ Route::has('careers') ? route('careers') : '#' }}">Careers</a></li>
-                    <li><a href="#">Press</a></li>
+                    <li><a href="{{ Route::has('press') ? route('press') : '#' }}">Press</a></li>
                 </ul>
             </div>
 

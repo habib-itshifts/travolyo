@@ -3,5 +3,6 @@
     "Vendor": true,
     "Customer": true,
     "Flight": true,
-    "Hotel": true
+    "Hotel": true,
+    "Activity": true
 }

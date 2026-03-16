@@ -9,6 +9,19 @@ use Illuminate\View\View;
 
 class BlogController extends Controller
 {
+    public function press(): View
+    {
+        $latestBlogs = Blog::query()
+            ->with(['image', 'author', 'category'])
+            ->published()
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit(4)
+            ->get();
+
+        return view('website.press', compact('latestBlogs'));
+    }
+
     public function index(): View
     {
         $query = Blog::query()
@@ -66,7 +79,7 @@ class BlogController extends Controller
             ->get();
 
         $recentBlogs = Blog::query()
-            ->with('category')
+            ->with(['image', 'category'])
             ->published()
             ->whereKeyNot($blog->id)
             ->orderByDesc('published_at')

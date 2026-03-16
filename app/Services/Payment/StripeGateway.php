@@ -64,6 +64,10 @@ class StripeGateway implements PaymentGatewayInterface
             return redirect('/');
         }
 
+        if ($request->boolean('cancelled')) {
+            return redirect($booking->getDetailUrl())->with('error', 'Payment was cancelled.');
+        }
+
         // Already finalised (e.g. webhook arrived first)
         if (in_array($booking->status, [Booking::COMPLETED, Booking::CONFIRMED, Booking::CANCELLED], true)) {
             return redirect($booking->getDetailUrl());
@@ -139,6 +143,7 @@ class StripeGateway implements PaymentGatewayInterface
 
         return match ($booking->object_model) {
             BookingObjectModelEnum::Hotel->value => 'Hotel Booking',
+            BookingObjectModelEnum::Activity->value => 'Activity Booking',
             default                              => 'Travolyo Booking',
         };
     }

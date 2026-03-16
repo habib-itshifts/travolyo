@@ -21,6 +21,7 @@ Route::view('/contact-us', 'website.contact-us')->name('contact');
 Route::view('/careers', 'website.careers')->name('careers');
 Route::view('/help-center', 'website.help-center')->name('help');
 Route::view('/faqs', 'website.faqs')->name('faqs');
+Route::get('/press', [BlogController::class, 'press'])->name('press');
 Route::view('/privacy-policy', 'website.privacy-policy')->name('privacy');
 Route::view('/terms-of-services', 'website.terms-of-services')->name('terms');
 Route::view('/cookies-policy', 'website.cookies-policy')->name('cookies');
