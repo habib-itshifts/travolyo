@@ -1,8 +1,8 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
     <div class="container">
         @php
-            $currencies = config('currency.supported', []);
-            $activeCurrencyCode = session('currency', config('currency.default'));
+            $currencies = \App\Models\Currency::supported();
+            $activeCurrencyCode = session('currency', \App\Models\Currency::defaultCode());
             $activeCurrency = $currencies[$activeCurrencyCode] ?? reset($currencies);
 
             $languages = config('language.supported', []);
