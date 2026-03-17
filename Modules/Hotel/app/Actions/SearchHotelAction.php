@@ -54,9 +54,9 @@ class SearchHotelAction
     {
         return match ($provider) {
             HotelProviderEnum::Local                  => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
-            HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2BTassPro     => new TravolyoB2BTassProHotelProvider(),
+            // HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
+            // HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
+            // HotelProviderEnum::TravolyoB2BTassPro     => new TravolyoB2BTassProHotelProvider(),
         };
     }
 }

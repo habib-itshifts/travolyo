@@ -3,6 +3,7 @@
 namespace Modules\Hotel\Actions;
 
 use App\Models\Booking;
+use App\Models\User;
 use App\Services\Payment\PaymentService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -10,6 +11,7 @@ use Modules\Hotel\DTOs\CheckoutHotelDto;
 use Modules\Hotel\Enums\BookingRoomStatusEnum;
 use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Models\BookingRoom;
+use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
 
 class CheckoutHotelAction
@@ -32,20 +34,51 @@ class CheckoutHotelAction
         $nights   = $checkIn->diffInDays($checkOut);
         $provider = $hotel['provider'] ?? 'local';
 
+        // Resolve vendor + commission from the hotel's owner (local hotels only)
+        $vendorId         = null;
+        $commissionType   = null;
+        $commissionRate   = null;
+
+        if ($provider === 'local' && ! empty($hotel['offer_id'])) {
+            $hotelModel = Hotel::find((int) $hotel['offer_id']);
+            if ($hotelModel?->author_id) {
+                $vendorId = $hotelModel->author_id;
+                $vendor   = User::find($vendorId);
+                if ($vendor) {
+                    $commissionType = $vendor->vendor_commission_type;
+                    $commissionRate = $vendor->vendor_commission_amount;
+                }
+            }
+        }
+
         $booking = Booking::create([
-            'object_model'   => 'hotel',
-            'customer_id'    => $dto->customerId,
-            'status'         => 'draft',
-            'total'          => $hotel['total_price'],
-            'pay_now'        => $hotel['total_price'],
-            'paid'           => 0,
-            'currency'       => $hotel['currency'],
-            'first_name'     => $dto->firstName,
-            'last_name'      => $dto->lastName,
-            'email'          => $dto->email,
-            'phone'          => $dto->phone,
-            'customer_notes' => $dto->specialRequests,
+            'object_model'    => 'hotel',
+            'object_id'       => $provider === 'local' ? (int) ($hotel['offer_id'] ?? null) : null,
+            'author_id'       => $dto->customerId,   // self-service: customer is the author
+            'customer_id'     => $dto->customerId,
+            'vendor_id'       => $vendorId,
+            'status'          => 'draft',
+            'start_date'      => $checkIn,
+            'end_date'        => $checkOut,
+            'total_guests'    => ($hotel['adults'] ?? 1) + ($hotel['children'] ?? 0),
+            'currency'        => $hotel['currency'],
+            'total'           => $hotel['total_price'],
+            'pay_now'         => $hotel['total_price'],
+            'paid'            => 0,
+            'commission_type'   => $commissionType,
+            'commission'        => $commissionRate,
+            'first_name'      => $dto->firstName,
+            'last_name'       => $dto->lastName,
+            'email'           => $dto->email,
+            'phone'           => $dto->phone,
+            'customer_notes'  => $dto->specialRequests,
         ]);
+
+        // Calculate commission_amount and vendor_amount now that total is set
+        if ($commissionType && $commissionRate) {
+            $booking->applyCommission();
+            $booking->save();
+        }
 
         // Store hotel details in booking meta for confirmation page
         $booking->addMeta('hotel_details', $hotel);

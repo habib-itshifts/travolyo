@@ -30,7 +30,11 @@ class BookingController extends Controller
         if ($booking->object_model === BookingObjectModelEnum::Hotel->value) {
             $hotel   = $booking->getJsonMeta('hotel_details');
             $gateway = $booking->getMeta('payment_gateway', '');
-            $nights  = (int) ($hotel['nights'] ?? 1);
+
+            // Calculate nights from actual dates — hotel_details doesn't store a 'nights' key
+            $nights = (isset($hotel['check_in'], $hotel['check_out']))
+                ? max(1, (int) Carbon::parse($hotel['check_in'])->diffInDays($hotel['check_out']))
+                : 1;
 
             $bookingData = [
                 'code'                  => $booking->code,
@@ -38,7 +42,7 @@ class BookingController extends Controller
                 'payment_status'        => $booking->payment?->status ?? '',
                 'hotel_name'            => $hotel['hotel_name'] ?? $hotel['name'] ?? '-',
                 'hotel_address'         => $hotel['hotel_address'] ?? $hotel['address'] ?? '',
-                'room_type'             => $hotel['room_type'] ?? $hotel['room_type_name'] ?? '-',
+                'room_type'             => $hotel['room_name'] ?? $hotel['room_type'] ?? $hotel['room_type_name'] ?? '-',
                 'meal_basis'            => $hotel['meal_basis'] ?? $hotel['meal_basis_name'] ?? '',
                 'check_in'              => isset($hotel['check_in'])  ? Carbon::parse($hotel['check_in'])  : null,
                 'check_out'             => isset($hotel['check_out']) ? Carbon::parse($hotel['check_out']) : null,
