@@ -16,7 +16,7 @@ class HotelSeeder extends Seeder
         $hotels = [
             [
                 'hotel' => [
-                    'user_id'           => $vendor?->id,
+                    'author_id'         => $vendor?->id,
                     'name'              => 'Grand Palace Hotel',
                     'slug'              => 'grand-palace-hotel',
                     'star_rating'       => 5,
@@ -89,7 +89,7 @@ class HotelSeeder extends Seeder
             ],
             [
                 'hotel' => [
-                    'user_id'           => $vendor?->id,
+                    'author_id'         => $vendor?->id,
                     'name'              => 'Sunset Beach Resort',
                     'slug'              => 'sunset-beach-resort',
                     'star_rating'       => 4,

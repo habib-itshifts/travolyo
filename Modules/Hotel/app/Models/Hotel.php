@@ -15,7 +15,7 @@ class Hotel extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'author_id',
         'name',
         'slug',
         'star_rating',
@@ -253,9 +253,9 @@ class Hotel extends Model
     }
 
     // Relationships
-    public function owner(): BelongsTo
+    public function author(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'author_id');
     }
 
     public function featuredMedia(): BelongsTo

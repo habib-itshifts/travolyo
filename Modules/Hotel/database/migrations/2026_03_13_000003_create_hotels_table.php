@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
 
             // Ownership — admin or vendor
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('author_id')->nullable()->constrained('users')->nullOnDelete();
 
             // Basic info
             $table->string('name', 191);

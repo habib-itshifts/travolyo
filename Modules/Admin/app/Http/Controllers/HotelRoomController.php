@@ -2,114 +2,55 @@
 
 namespace Modules\Admin\Http\Controllers;
 
+use App\Models\Currency;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use App\Models\Currency;
-use Modules\Admin\Models\MediaFile;
+use Modules\Hotel\Actions\SaveHotelRoomAction;
+use Modules\Hotel\Http\Requests\Admin\StoreHotelRoomRequest;
+use Modules\Hotel\Http\Requests\Admin\UpdateHotelRoomRequest;
 use Modules\Hotel\Models\Amenity;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
 
+/**
+ * Admin HotelRoomController
+ *
+ * Thin HTTP layer — all business logic lives in SaveHotelRoomAction.
+ * The controller handles:
+ *  - Route ↔ view wiring (index, create, edit, destroy)
+ *  - Injecting StoreHotelRoomRequest / UpdateHotelRoomRequest for validation
+ *  - Delegating create/update to SaveHotelRoomAction
+ *
+ * Admin sees all rooms for all hotels. The Vendor equivalent is scoped to
+ * rooms belonging to the authenticated vendor's own hotels only.
+ */
 class HotelRoomController extends Controller
 {
-    protected function rules(?HotelRoom $room = null): array
-    {
-        return [
-            'hotel_id' => ['required', 'integer', 'exists:hotels,id'],
-            'name' => ['required', 'string', 'max:191'],
-            'slug' => [
-                'nullable',
-                'string',
-                'max:191',
-                Rule::unique('hotel_rooms', 'slug')
-                    ->ignore($room?->id)
-                    ->where(fn ($query) => $query->where('hotel_id', request('hotel_id'))),
-            ],
-            'room_type' => ['required', 'string', 'max:50'],
-            'currency' => ['required', 'string', 'size:3', Rule::in(array_keys(Currency::supported()))],
-            'image_id' => ['nullable', 'integer', 'exists:media_files,id'],
-            'gallery' => ['nullable', 'string'],
-            'bed_configuration_text' => ['nullable', 'string', 'max:255'],
-            'max_adults' => ['required', 'integer', 'min:1', 'max:20'],
-            'max_children' => ['nullable', 'integer', 'min:0', 'max:20'],
-            'max_occupancy' => ['required', 'integer', 'min:1', 'max:20'],
-            'size_sqm' => ['nullable', 'numeric', 'min:0'],
-            'floor' => ['nullable', 'string', 'max:20'],
-            'view_type' => ['nullable', 'string', 'max:50'],
-            'description' => ['nullable', 'string'],
-            'base_price' => ['required', 'numeric', 'min:0'],
-            'extra_adult_price' => ['nullable', 'numeric', 'min:0'],
-            'extra_child_price' => ['nullable', 'numeric', 'min:0'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'is_active' => ['nullable', 'boolean'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
-            'amenity_ids' => ['nullable', 'array'],
-            'amenity_ids.*' => ['integer', 'exists:amenities,id'],
-        ];
-    }
+    public function __construct(private readonly SaveHotelRoomAction $saveRoom) {}
 
-    protected function parseGalleryIds(?string $value): array
-    {
-        return collect(explode(',', (string) $value))
-            ->map(fn ($id) => (int) trim($id))
-            ->filter(fn (int $id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
-    }
+    // -------------------------------------------------------------------------
+    // Index
+    // -------------------------------------------------------------------------
 
-    protected function payload(Request $request, array $validated): array
-    {
-        $validated['slug'] = $validated['slug'] ?: Str::slug($validated['name']);
-        $supportedCurrencies = array_keys(Currency::supported());
-        $validated['currency'] = strtoupper((string) ($validated['currency'] ?? Currency::defaultCode()));
-        if (!in_array($validated['currency'], $supportedCurrencies, true)) {
-            $validated['currency'] = Currency::defaultCode();
-        }
-        $imageId = (int) ($validated['image_id'] ?? 0);
-        $galleryIds = $this->parseGalleryIds($validated['gallery'] ?? null);
-        $mediaItems = MediaFile::query()->whereIn('id', array_values(array_unique(array_filter(array_merge(
-            $imageId ? [$imageId] : [],
-            $galleryIds
-        )))))->pluck('id')->all();
-
-        $validated['image_id'] = in_array($imageId, $mediaItems, true) ? $imageId : null;
-        $validated['gallery'] = collect($galleryIds)
-            ->filter(fn (int $id) => in_array($id, $mediaItems, true))
-            ->implode(',');
-        $validated['bed_configuration'] = collect(explode(',', (string) ($validated['bed_configuration_text'] ?? '')))
-            ->map(fn ($item) => trim($item))
-            ->filter()
-            ->values()
-            ->all();
-        $validated['max_children'] = $validated['max_children'] ?? 0;
-        $validated['extra_adult_price'] = $validated['extra_adult_price'] ?? 0;
-        $validated['extra_child_price'] = $validated['extra_child_price'] ?? 0;
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
-        $validated['is_active'] = $request->boolean('is_active');
-
-        unset($validated['bed_configuration_text']);
-
-        return $validated;
-    }
-
+    /**
+     * List all rooms with optional hotel filter and name/type search.
+     * The hotel dropdown allows the admin to drill into a single hotel's rooms.
+     */
     public function index(Request $request): View
     {
+        // All hotels for the filter dropdown — admin has no ownership restriction.
         $hotels = Hotel::query()->orderBy('name')->get(['id', 'name']);
+
         $rooms = HotelRoom::query()
             ->with(['hotel'])
-            ->when($request->filled('hotel_id'), fn ($query) => $query->where('hotel_id', (int) $request->hotel_id))
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $query->where(function ($inner) use ($request) {
-                    $inner->where('name', 'like', '%' . $request->search . '%')
-                        ->orWhere('room_type', 'like', '%' . $request->search . '%')
-                        ->orWhere('slug', 'like', '%' . $request->search . '%');
-                });
-            })
+            ->when($request->filled('hotel_id'), fn ($q) => $q->where('hotel_id', (int) $request->hotel_id))
+            ->when($request->filled('search'), fn ($q) => $q->where(function ($inner) use ($request) {
+                $inner->where('name',      'like', '%' . $request->search . '%')
+                      ->orWhere('room_type', 'like', '%' . $request->search . '%')
+                      ->orWhere('slug',      'like', '%' . $request->search . '%');
+            }))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -117,54 +58,84 @@ class HotelRoomController extends Controller
         return view('admin::hotel-rooms.index', compact('rooms', 'hotels'));
     }
 
+    // -------------------------------------------------------------------------
+    // Create
+    // -------------------------------------------------------------------------
+
+    /**
+     * Show the create-room form.
+     * If hotel_id is in the query string (from "Manage Rooms" on the hotels
+     * index), the hotel select is pre-selected and locked to that hotel.
+     */
     public function create(Request $request): View
     {
-        $hotels = Hotel::query()->orderBy('name')->get(['id', 'name']);
-        $amenities = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
-        $currencies = Currency::supported();
+        $hotels          = Hotel::query()->orderBy('name')->get(['id', 'name']);
+        $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
+        $currencies      = Currency::supported();
         $selectedHotelId = $request->integer('hotel_id') ?: null;
-        $lockedHotelId = $selectedHotelId;
+        // A non-null $lockedHotelId renders the hotel select as disabled with a hidden input.
+        $lockedHotelId   = $selectedHotelId;
 
         return view('admin::hotel-rooms.create', compact('hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
     }
 
-    public function store(Request $request): RedirectResponse
+    /**
+     * Persist a new room.
+     *
+     * StoreHotelRoomRequest handles validation.
+     * is_active comes from a checkbox so it is not always present in validated()
+     * — handle it explicitly via $request->boolean().
+     */
+    public function store(StoreHotelRoomRequest $request): RedirectResponse
     {
-        $validated = $request->validate($this->rules());
-        $validated = $this->payload($request, $validated);
+        $data              = $request->validated();
+        $data['is_active'] = $request->boolean('is_active');
 
-        $room = HotelRoom::create($validated);
-        $room->amenities()->sync($request->input('amenity_ids', []));
+        $room = $this->saveRoom->execute($data);
 
         return redirect()
             ->route('admin.hotel-rooms.index', ['hotel_id' => $room->hotel_id])
-            ->with('success', 'Room created successfully.');
+            ->with('success', 'Room "' . $room->name . '" created successfully.');
     }
+
+    // -------------------------------------------------------------------------
+    // Edit / Update
+    // -------------------------------------------------------------------------
 
     public function edit(HotelRoom $hotelRoom): View
     {
         $hotelRoom->load('amenities');
-        $hotels = Hotel::query()->orderBy('name')->get(['id', 'name']);
-        $amenities = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
-        $currencies = Currency::supported();
+
+        $hotels          = Hotel::query()->orderBy('name')->get(['id', 'name']);
+        $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
+        $currencies      = Currency::supported();
         $selectedHotelId = $hotelRoom->hotel_id;
-        $lockedHotelId = null;
+        $lockedHotelId   = null;  // on edit the admin may reassign the room to a different hotel
 
         return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
     }
 
-    public function update(Request $request, HotelRoom $hotelRoom): RedirectResponse
+    /**
+     * Update an existing room.
+     *
+     * UpdateHotelRoomRequest overrides the slug rule to ignore the current room;
+     * all other rules are inherited from StoreHotelRoomRequest.
+     */
+    public function update(UpdateHotelRoomRequest $request, HotelRoom $hotelRoom): RedirectResponse
     {
-        $validated = $request->validate($this->rules($hotelRoom));
-        $validated = $this->payload($request, $validated);
+        $data              = $request->validated();
+        $data['is_active'] = $request->boolean('is_active');
 
-        $hotelRoom->update($validated);
-        $hotelRoom->amenities()->sync($request->input('amenity_ids', []));
+        $this->saveRoom->execute($data, $hotelRoom);
 
         return redirect()
             ->route('admin.hotel-rooms.index', ['hotel_id' => $hotelRoom->hotel_id])
-            ->with('success', 'Room updated successfully.');
+            ->with('success', 'Room "' . $hotelRoom->name . '" updated successfully.');
     }
+
+    // -------------------------------------------------------------------------
+    // Delete
+    // -------------------------------------------------------------------------
 
     public function destroy(HotelRoom $hotelRoom): RedirectResponse
     {
