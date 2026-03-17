@@ -4,7 +4,10 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserType;
+use App\Enums\VendorStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Vendor\Models\VendorDocument;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -43,6 +46,7 @@ class User extends Authenticatable
         // Business / Vendor
         'business_name',
         'tax_number',
+        'vendor_status',
     ];
 
     protected $hidden = [
@@ -57,6 +61,7 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'user_type'         => UserType::class,
             'birthday'          => 'date',
+            'vendor_status'     => VendorStatusEnum::class,
         ];
     }
 
@@ -73,5 +78,10 @@ class User extends Authenticatable
     public function isCustomer(): bool
     {
         return $this->user_type === UserType::Customer;
+    }
+
+    public function vendorDocuments(): HasMany
+    {
+        return $this->hasMany(VendorDocument::class);
     }
 }

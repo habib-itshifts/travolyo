@@ -2,7 +2,9 @@
 
 namespace Modules\Customer\Http\Controllers;
 
+use App\Enums\VendorStatusEnum;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -53,4 +55,17 @@ class CustomerController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy($id) {}
+
+    public function requestVendor(): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if ($user->vendor_status !== null) {
+            return back();
+        }
+
+        $user->update(['vendor_status' => VendorStatusEnum::Pending]);
+
+        return back()->with('success', 'Your vendor account request has been sent to admin for approval.');
+    }
 }

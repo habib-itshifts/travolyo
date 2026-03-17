@@ -9,6 +9,7 @@ use Modules\Admin\Http\Controllers\HotelRoomController;
 use Modules\Admin\Http\Controllers\MediaController;
 use Modules\Admin\Http\Controllers\ProfileController;
 use Modules\Admin\Http\Controllers\ServiceController;
+use Modules\Admin\Http\Controllers\VendorRequestController;
 
 Route::prefix('admin')
     ->name('admin.')
@@ -20,6 +21,16 @@ Route::prefix('admin')
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+        // Vendor Requests
+        Route::get('vendor-requests', [VendorRequestController::class, 'index'])->name('vendor-requests.index');
+        Route::post('vendor-requests/{user}/approve', [VendorRequestController::class, 'approve'])->name('vendor-requests.approve');
+        Route::post('vendor-requests/{user}/reject', [VendorRequestController::class, 'reject'])->name('vendor-requests.reject');
+        Route::get('vendor-requests/{user}/documents', [VendorRequestController::class, 'documents'])->name('vendor-requests.documents');
+        Route::get('vendor-requests/documents/{document}/download', [VendorRequestController::class, 'downloadDocument'])->name('vendor-requests.documents.download');
+        Route::post('vendor-requests/documents/{document}/approve', [VendorRequestController::class, 'approveDocument'])->name('vendor-requests.documents.approve');
+        Route::post('vendor-requests/documents/{document}/reject', [VendorRequestController::class, 'rejectDocument'])->name('vendor-requests.documents.reject');
+        Route::post('vendor-requests/{user}/verify', [VendorRequestController::class, 'verify'])->name('vendor-requests.verify');
 
         // Media
         Route::get('/media', [MediaController::class, 'index'])->name('media.index');

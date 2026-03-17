@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Customer\Http\Controllers\CustomerController;
 use Modules\Customer\Http\Controllers\DashboardController;
 use Modules\Customer\Http\Controllers\ProfileController;
 
@@ -9,6 +10,9 @@ Route::prefix('customer')
     ->middleware(['auth', 'verified', 'customer'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Vendor request
+        Route::post('/request-vendor', [CustomerController::class, 'requestVendor'])->name('request-vendor');
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

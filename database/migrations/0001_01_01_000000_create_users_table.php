@@ -48,8 +48,8 @@ return new class extends Migration
             $table->string('business_name')->nullable();           // Registered business or brand name (vendors)
             $table->string('vendor_commission_type')->nullable();  // Commission structure: 'percentage' | 'fixed'
             $table->decimal('vendor_commission_amount', 10, 2)->default(0); // Commission rate or flat fee amount
-            $table->boolean('is_vendor_verified')->default(false); // Admin has verified vendor documents/identity
-            $table->timestamp('vendor_verified_at')->nullable();   // Timestamp of when vendor verification was approved
+            $table->string('vendor_status')->nullable();           // null | pending | approved | docs_submitted | verified | rejected
+            $table->timestamp('vendor_verified_at')->nullable();   // Timestamp of when vendor was fully verified
             $table->string('tax_number')->nullable();              // VAT / GST / NTN registration number
 
             // ─── Financial ───────────────────────────────────────────────────

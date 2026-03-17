@@ -28,8 +28,10 @@
                     <p class="text-muted small mb-1">{{ $user->email }}</p>
                     <div class="d-flex gap-2">
                         <span class="badge rounded-pill" style="background:rgba(22,163,74,0.12);color:#15803d;font-size:11px;">Vendor</span>
-                        @if($user->is_vendor_verified)
+                        @if($user->vendor_status === \App\Enums\VendorStatusEnum::Verified)
                             <span class="badge rounded-pill" style="background:rgba(22,163,74,0.12);color:#15803d;font-size:11px;">✓ Verified</span>
+                        @elseif($user->vendor_status === \App\Enums\VendorStatusEnum::DocsSubmitted)
+                            <span class="badge rounded-pill" style="background:rgba(99,102,241,0.12);color:#4f46e5;font-size:11px;">Documents Under Review</span>
                         @else
                             <span class="badge rounded-pill" style="background:rgba(234,179,8,0.12);color:#a16207;font-size:11px;">Pending Verification</span>
                         @endif

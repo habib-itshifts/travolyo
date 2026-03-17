@@ -39,15 +39,33 @@
                 </a>
 
                 {{-- Become a Vendor CTA --}}
-                @if(!auth()->user()->is_vendor_verified)
-                    <a href="#" class="btn btn-sm btn-warning d-inline-flex align-items-center gap-1 fw-semibold"
-                       style="font-size:12px;">
+                @php $vs = auth()->user()->vendor_status; @endphp
+                @if($vs === null)
+                    <form method="POST" action="{{ route('customer.request-vendor') }}" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-sm btn-warning d-inline-flex align-items-center gap-1 fw-semibold"
+                                style="font-size:12px;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Become a Vendor
+                        </button>
+                    </form>
+                @elseif($vs === \App\Enums\VendorStatusEnum::Pending)
+                    <span class="btn btn-sm d-inline-flex align-items-center gap-1 fw-semibold"
+                          style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);font-size:12px;cursor:default;">
                         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Become a Vendor
-                    </a>
+                        Request sent — pending admin approval
+                    </span>
+                @elseif($vs === \App\Enums\VendorStatusEnum::Rejected)
+                    <span class="btn btn-sm d-inline-flex align-items-center gap-1 fw-semibold"
+                          style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);font-size:12px;cursor:default;">
+                        Request rejected
+                    </span>
                 @endif
             </div>
         </div>
