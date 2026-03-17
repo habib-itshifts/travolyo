@@ -38,7 +38,9 @@ class VendorRequestController extends Controller
     {
         $user->update([
             'vendor_status' => VendorStatusEnum::Approved,
+            'user_type' => 'vendor',
         ]);
+
 
         // Assign vendor role so the portal unlocks
         $user->syncRoles(['vendor']);

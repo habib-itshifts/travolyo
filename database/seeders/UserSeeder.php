@@ -26,6 +26,7 @@ class UserSeeder extends Seeder
                 'email'     => 'vendor@travolyo.com',
                 'password'  => Hash::make('12345678'),
                 'user_type' => UserType::Vendor,
+                'vendor_status' => 'verified',
             ],
             [
                 'name'      => 'Customer',
