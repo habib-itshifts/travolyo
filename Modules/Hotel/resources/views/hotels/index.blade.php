@@ -131,6 +131,9 @@
                 <input type="radio" name="providerFilter" class="provider-filter" value="all" checked> All
             </label>
             <label class="filter-pill">
+                <input type="radio" name="providerFilter" class="provider-filter" value="local"> Local
+            </label>
+            <label class="filter-pill">
                 <input type="radio" name="providerFilter" class="provider-filter" value="travolyo_b2b_local"> B2B Local
             </label>
             <label class="filter-pill">
@@ -520,29 +523,31 @@
         const bsModal = new bootstrap.Modal(document.getElementById('hotelModal'));
         bsModal.show();
 
-        // Fetch rooms from B2B API
-        try {
-            const res = await fetch(roomsUrl, {
-                method:  'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept':       'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                },
-                body: JSON.stringify({
-                    offer_id:  hotel.id,
-                    city_code: hotel.city ?? '',
-                    check_in:  params.check_in  ?? '',
-                    check_out: params.check_out ?? '',
-                    adults:    parseInt(params.adults   ?? 1, 10),
-                    children:  parseInt(params.children ?? 0, 10),
-                    provider:  hotel.provider,
-                }),
-            });
-            const data = await res.json();
-            hotel.rooms = (data.success && data.data?.length) ? data.data : [];
-        } catch {
-            hotel.rooms = [];
+        // Local hotels already have rooms embedded from the search response — skip the API call
+        if (hotel.provider !== 'local') {
+            try {
+                const res = await fetch(roomsUrl, {
+                    method:  'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    },
+                    body: JSON.stringify({
+                        offer_id:  hotel.id,
+                        city_code: hotel.city ?? '',
+                        check_in:  params.check_in  ?? '',
+                        check_out: params.check_out ?? '',
+                        adults:    parseInt(params.adults   ?? 1, 10),
+                        children:  parseInt(params.children ?? 0, 10),
+                        provider:  hotel.provider,
+                    }),
+                });
+                const data = await res.json();
+                hotel.rooms = (data.success && data.data?.length) ? data.data : (hotel.rooms ?? []);
+            } catch {
+                // keep whatever rooms were in the search result
+            }
         }
 
         renderModal(hotel);

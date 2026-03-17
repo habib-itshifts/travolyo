@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\UserType;
 use App\Enums\VendorStatusEnum;
+use App\Models\Booking;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Vendor\Models\VendorDocument;
@@ -46,6 +47,8 @@ class User extends Authenticatable
         // Business / Vendor
         'business_name',
         'tax_number',
+        'vendor_commission_type',
+        'vendor_commission_amount',
         'vendor_status',
     ];
 
@@ -83,5 +86,15 @@ class User extends Authenticatable
     public function vendorDocuments(): HasMany
     {
         return $this->hasMany(VendorDocument::class);
+    }
+
+    public function bookingsAsVendor(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'vendor_id');
+    }
+
+    public function bookingsAsCustomer(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'customer_id');
     }
 }

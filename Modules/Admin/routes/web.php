@@ -14,6 +14,8 @@ use Modules\Admin\Http\Controllers\HotelScrapingController;
 use Modules\Admin\Http\Controllers\MediaController;
 use Modules\Admin\Http\Controllers\ProfileController;
 use Modules\Admin\Http\Controllers\ServiceController;
+use Modules\Admin\Http\Controllers\CustomerController;
+use Modules\Admin\Http\Controllers\VendorController;
 use Modules\Admin\Http\Controllers\VendorRequestController;
 
 Route::prefix('admin')
@@ -63,6 +65,10 @@ Route::prefix('admin')
         Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
         Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
         Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+
+        // Users — Vendors & Customers
+        Route::resource('vendors', VendorController::class)->only(['index', 'show', 'edit', 'update']);
+        Route::resource('customers', CustomerController::class)->only(['index', 'show', 'edit', 'update']);
 
         Route::resource('activities', ActivityController::class)->except(['show']);
         Route::resource('blogs', BlogController::class)->except(['show']);
