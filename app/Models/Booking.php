@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BookingObjectModelEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,13 +11,12 @@ use Illuminate\Support\Str;
 
 class Booking extends Model
 {
-    // ── Status constants ──────────────────────────────────────────
-    const DRAFT          = 'draft';
-    const UNPAID         = 'unpaid';
-    const CONFIRMED      = 'confirmed';
-    const COMPLETED      = 'completed';
-    const PAID           = 'paid';
-    const CANCELLED      = 'cancelled';
+    const DRAFT = 'draft';
+    const UNPAID = 'unpaid';
+    const CONFIRMED = 'confirmed';
+    const COMPLETED = 'completed';
+    const PAID = 'paid';
+    const CANCELLED = 'cancelled';
     const BOOKING_FAILED = 'booking_failed';
 
     protected $table = 'bookings';
@@ -28,12 +28,11 @@ class Booking extends Model
     ];
 
     protected $casts = [
-        'total'   => 'float',
+        'total' => 'float',
         'pay_now' => 'float',
-        'paid'    => 'float',
+        'paid' => 'float',
     ];
 
-    // ── Boot: auto-generate code ──────────────────────────────────
     protected static function boot(): void
     {
         parent::boot();
@@ -45,7 +44,6 @@ class Booking extends Model
         });
     }
 
-    // ── Relationships ─────────────────────────────────────────────
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_id');
@@ -66,10 +64,10 @@ class Booking extends Model
         return $this->hasMany(BookingMeta::class);
     }
 
-    // ── Meta helpers ──────────────────────────────────────────────
     public function getMeta(string $name, mixed $default = null): mixed
     {
         $item = $this->metaItems()->where('name', $name)->first();
+
         return $item ? $item->val : $default;
     }
 
@@ -79,6 +77,7 @@ class Booking extends Model
         if (empty($val)) {
             return [];
         }
+
         return is_array($val) ? $val : (json_decode($val, true) ?: []);
     }
 
@@ -86,7 +85,7 @@ class Booking extends Model
     {
         $this->metaItems()->create([
             'name' => $name,
-            'val'  => is_array($val) ? json_encode($val) : (string) $val,
+            'val' => is_array($val) ? json_encode($val) : (string) $val,
         ]);
     }
 
@@ -96,15 +95,14 @@ class Booking extends Model
 
         $this->metaItems()->updateOrCreate(
             ['name' => $name],
-            ['val'  => $encoded]
+            ['val' => $encoded]
         );
     }
 
-    // ── Status helpers ────────────────────────────────────────────
     public function markAsPaid(): void
     {
         $this->status = self::COMPLETED;
-        $this->paid   = $this->pay_now;
+        $this->paid = $this->pay_now;
         $this->save();
     }
 
@@ -114,9 +112,12 @@ class Booking extends Model
         $this->save();
     }
 
-    // ── URL helper ────────────────────────────────────────────────
     public function getDetailUrl(): string
     {
+        if ($this->object_model === BookingObjectModelEnum::Activity->value) {
+            return route('activities.booking.detail', ['code' => $this->code]);
+        }
+
         return route('bookings.show', ['code' => $this->code]);
     }
 }

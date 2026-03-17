@@ -31,6 +31,13 @@ class NGeniusGateway implements PaymentGatewayInterface
         $token    = $this->requestAccessToken();
         $currency = $this->resolveCurrency($booking);
         $amount   = (int) round($booking->pay_now * 100); // minor units
+        $redirectUrl = $this->buildCallbackUrl(route('payments.ngenius.return', [], false), [
+            'c' => $booking->code,
+        ]);
+        $cancelUrl = $this->buildCallbackUrl(route('payments.ngenius.return', [], false), [
+            'c' => $booking->code,
+            'cancelled' => 1,
+        ]);
 
         $payload = [
             'action' => 'SALE',
@@ -41,8 +48,8 @@ class NGeniusGateway implements PaymentGatewayInterface
             'merchantOrderReference' => $booking->code,
             'emailAddress'           => $booking->email ?? '',
             'merchantAttributes'     => [
-                'redirectUrl' => route('payments.ngenius.return') . '?c=' . $booking->code,
-                'cancelUrl'   => route('payments.ngenius.return') . '?c=' . $booking->code . '&cancelled=1',
+                'redirectUrl' => $redirectUrl,
+                'cancelUrl'   => $cancelUrl,
             ],
         ];
 
@@ -112,16 +119,13 @@ class NGeniusGateway implements PaymentGatewayInterface
             return redirect($booking->getDetailUrl())->with('error', 'Could not verify payment. Please contact support.');
         }
 
-        $state = strtoupper((string) ($order['state'] ?? ''));
-        $booking->updateMeta('ngenius_order_state', $state);
+        $state = $this->applyOrderStatus($booking, $order);
 
-        if (in_array($state, ['PURCHASED', 'CAPTURED', 'PAID', 'AUTHORISED', 'AUTHORIZED'], true)) {
-            $this->markPaid($booking, $order);
+        if ($state === 'paid') {
             return redirect($booking->getDetailUrl())->with('success', 'Payment confirmed! Your booking is complete.');
         }
 
-        if (in_array($state, ['FAILED', 'DECLINED', 'CANCELLED', 'EXPIRED'], true)) {
-            $booking->markAsPaymentFailed();
+        if ($state === 'failed') {
             return redirect($booking->getDetailUrl())->with('error', 'Payment failed. Please try again.');
         }
 
@@ -150,15 +154,25 @@ class NGeniusGateway implements PaymentGatewayInterface
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 400);
         }
 
-        $state = strtoupper((string) ($order['state'] ?? ''));
-
-        if (in_array($state, ['PURCHASED', 'CAPTURED', 'PAID', 'AUTHORISED', 'AUTHORIZED'], true)) {
-            $this->markPaid($booking, $order);
-        } elseif (in_array($state, ['FAILED', 'DECLINED', 'CANCELLED', 'EXPIRED'], true)) {
-            $booking->markAsPaymentFailed();
-        }
+        $this->applyOrderStatus($booking, $order);
 
         return response()->json(['status' => 'ok']);
+    }
+
+    public function syncBookingStatus(Booking $booking): bool
+    {
+        if (! in_array($booking->status, [Booking::DRAFT, Booking::UNPAID, Booking::BOOKING_FAILED], true)) {
+            return in_array($booking->status, [Booking::COMPLETED, Booking::CONFIRMED], true);
+        }
+
+        $orderRef = (string) $booking->getMeta('ngenius_order_ref', '');
+        if ($orderRef === '') {
+            return false;
+        }
+
+        $order = $this->retrieveOrder($orderRef);
+
+        return $this->applyOrderStatus($booking, $order) === 'paid';
     }
 
     // ── Private helpers ───────────────────────────────────────────
@@ -175,6 +189,56 @@ class NGeniusGateway implements PaymentGatewayInterface
             ->update(['status' => 'completed', 'logs' => json_encode($order)]);
 
         $booking->markAsPaid();
+    }
+
+    private function applyOrderStatus(Booking $booking, array $order): string
+    {
+        $states = $this->extractStates($order);
+        $booking->updateMeta('ngenius_order_state', implode(',', $states));
+
+        $paidStates = ['PURCHASED', 'CAPTURED', 'PAID', 'AUTHORISED', 'AUTHORIZED'];
+        $failedStates = ['FAILED', 'DECLINED', 'CANCELLED', 'EXPIRED'];
+
+        if (count(array_intersect($states, $paidStates)) > 0) {
+            $this->markPaid($booking, $order);
+            return 'paid';
+        }
+
+        if (count(array_intersect($states, $failedStates)) > 0) {
+            if (! in_array($booking->status, [Booking::COMPLETED, Booking::CONFIRMED], true)) {
+                $booking->markAsPaymentFailed();
+            }
+
+            Payment::where('booking_id', $booking->id)
+                ->where('payment_gateway', 'ngenius')
+                ->where('status', 'draft')
+                ->update(['status' => 'failed', 'logs' => json_encode($order)]);
+
+            return 'failed';
+        }
+
+        return 'pending';
+    }
+
+    private function extractStates(array $payload): array
+    {
+        $states = [];
+        $walker = function (mixed $value, ?string $key = null) use (&$states, &$walker): void {
+            if (is_array($value)) {
+                foreach ($value as $childKey => $childValue) {
+                    $walker($childValue, is_string($childKey) ? $childKey : null);
+                }
+                return;
+            }
+
+            if ($key === 'state' && is_string($value) && trim($value) !== '') {
+                $states[] = strtoupper(trim($value));
+            }
+        };
+
+        $walker($payload);
+
+        return array_values(array_unique($states));
     }
 
     private function requestAccessToken(): string
@@ -238,5 +302,28 @@ class NGeniusGateway implements PaymentGatewayInterface
 
         $computed = base64_encode(hash_hmac('sha256', $request->getContent(), $secret, true));
         return hash_equals($computed, $signature);
+    }
+
+    private function buildCallbackUrl(string $path, array $query = []): string
+    {
+        $baseUrl = trim((string) (config('payment.ngenius.callback_base_url') ?: config('app.url', '')));
+        $baseUrl = rtrim($baseUrl, '/');
+
+        if ($baseUrl === '') {
+            throw new \RuntimeException('N-Genius callback base URL is missing. Set NGENIUS_CALLBACK_BASE_URL or APP_URL.');
+        }
+
+        if (! preg_match('#^https?://#i', $baseUrl)) {
+            $baseUrl = 'http://' . ltrim($baseUrl, '/');
+        }
+
+        $scheme = (string) parse_url($baseUrl, PHP_URL_SCHEME);
+        if (! in_array(strtolower($scheme), ['http', 'https'], true)) {
+            throw new \RuntimeException('N-Genius callback base URL must start with http:// or https://');
+        }
+
+        $queryString = http_build_query(array_filter($query, fn ($value) => $value !== null && $value !== ''));
+
+        return $baseUrl . '/' . ltrim($path, '/') . ($queryString !== '' ? '?' . $queryString : '');
     }
 }

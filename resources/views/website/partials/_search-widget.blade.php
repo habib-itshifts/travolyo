@@ -18,7 +18,7 @@
                 <i class="bi bi-airplane me-2"></i>Flights
             </button>
         </li>
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <button type="button" class="search-tab-btn {{ in_array($activeTab, ['home']) ? 'active' : '' }}" data-tab="home">
                 <i class="bi bi-house me-2"></i>Home &amp; Apts
             </button>
@@ -27,7 +27,7 @@
             <button type="button" class="search-tab-btn {{ $activeTab === 'events' ? 'active' : '' }}" data-tab="events">
                 <i class="bi bi-calendar-event me-2"></i>Events
             </button>
-        </li>
+        </li> -->
         <li class="nav-item">
             <button type="button" class="search-tab-btn {{ $activeTab === 'activities' ? 'active' : '' }}" data-tab="activities">
                 <i class="bi bi-compass me-2"></i>Activities
@@ -376,7 +376,7 @@
             {{-- ── Activities Pane ── --}}
             <div data-tab-pane="activities" class="{{ $activeTab !== 'activities' ? 'd-none' : '' }}">
                 <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-muted small mb-1">City</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-geo-alt input-icon"></i>
@@ -385,13 +385,22 @@
                                    placeholder="e.g. Dubai" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
                         </div>
                     </div>
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-4">
                         <label class="form-label text-muted small mb-1">Date</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-calendar3 input-icon"></i>
                             <input type="date" class="form-control search-input" name="activity_date"
                                    value="{{ request('activity_date', now()->format('Y-m-d')) }}"
                                    {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label text-muted small mb-1">Participants</label>
+                        <div class="input-icon-wrap">
+                            <i class="bi bi-people input-icon"></i>
+                            <input type="number" class="form-control search-input" name="participants"
+                                   min="1" max="20" value="{{ max(1, (int) request('participants', 1)) }}"
+                                   placeholder="1" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
                         </div>
                     </div>
                 </div>
@@ -1008,8 +1017,32 @@
             submitText.textContent = 'Searching...';
             submitBtn.classList.add('is-loading');
 
-            // Collect active pane fields only
             const fd = new FormData(flightForm);
+
+            if (activeTopTab === 'activities') {
+                try {
+                    const qs = new URLSearchParams();
+                    const city = String(fd.get('city') || '').trim();
+                    const activityDate = String(fd.get('activity_date') || '').trim();
+                    const participants = Math.max(1, parseInt(fd.get('participants') || '1', 10));
+
+                    if (city) {
+                        qs.set('city', city);
+                    }
+                    if (activityDate) {
+                        qs.set('activity_date', activityDate);
+                    }
+                    qs.set('participants', String(participants));
+
+                    const targetUrl = "{{ Route::has('activities.index') ? route('activities.index') : '#' }}";
+                    window.location.href = qs.toString() ? `${targetUrl}?${qs.toString()}` : targetUrl;
+                    return;
+                } finally {
+                    resetSubmitState();
+                }
+            }
+
+            // Collect active pane fields only
             const payload = {
                 trip_type:      fd.get('trip_type'),
                 origin:         fd.get('origin'),

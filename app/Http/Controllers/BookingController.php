@@ -5,18 +5,19 @@ namespace App\Http\Controllers;
 use App\Enums\BookingObjectModelEnum;
 use App\Models\Booking;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class BookingController extends Controller
 {
-    public function show(string $code): View
+    public function show(string $code): View|RedirectResponse
     {
         $booking = Booking::where('code', $code)->firstOrFail();
 
         // ── Flight ───────────────────────────────────────────────
         if ($booking->object_model === BookingObjectModelEnum::Flight->value) {
             $passengers = $booking->getJsonMeta('flight_passengers') ?: [];
-            $orderRef   = $booking->getMeta('flight_pnr') ?: '';
+            $orderRef = $booking->getMeta('flight_pnr') ?: '';
 
             return view('flight::flights.confirmation', compact('booking', 'passengers', 'orderRef'));
         }
@@ -57,6 +58,11 @@ class BookingController extends Controller
             return view('bookings.confirmation', compact('booking', 'bookingData'));
         }
 
+         // ── Activity ────────────────────────────────────────────────
+        if ($booking->object_model === BookingObjectModelEnum::Activity->value) {
+            return redirect()->route('activities.booking.detail', ['code' => $booking->code]);
+        }
+            
         // ── Fallback ─────────────────────────────────────────────
         return view('bookings.show', compact('booking'));
     }

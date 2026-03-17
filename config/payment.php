@@ -12,6 +12,7 @@ return [
         'api_key'        => env('NGENIUS_API_KEY', ''),
         'outlet_ref'     => env('NGENIUS_OUTLET_REF', ''),
         'base_url'       => env('NGENIUS_BASE_URL', 'https://api-gateway.sandbox.ngenius-payments.com'),
+        'callback_base_url' => env('NGENIUS_CALLBACK_BASE_URL', env('APP_URL', '')),
         'currency'       => env('NGENIUS_CURRENCY', 'AED'),
         'webhook_secret' => env('NGENIUS_WEBHOOK_SECRET', ''),
         'exchange_rate'  => env('NGENIUS_EXCHANGE_RATE', 4.17),

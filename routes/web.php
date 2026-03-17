@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Currency;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
@@ -20,9 +21,12 @@ Route::view('/contact-us', 'website.contact-us')->name('contact');
 Route::view('/careers', 'website.careers')->name('careers');
 Route::view('/help-center', 'website.help-center')->name('help');
 Route::view('/faqs', 'website.faqs')->name('faqs');
+Route::get('/press', [BlogController::class, 'press'])->name('press');
 Route::view('/privacy-policy', 'website.privacy-policy')->name('privacy');
 Route::view('/terms-of-services', 'website.terms-of-services')->name('terms');
 Route::view('/cookies-policy', 'website.cookies-policy')->name('cookies');
+Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/{blog:slug}', [BlogController::class, 'show'])->name('blogs.show');
 
 /*
 |--------------------------------------------------------------------------

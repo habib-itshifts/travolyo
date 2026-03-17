@@ -50,14 +50,14 @@
                     </a>
                 </li>
                 <li class="nav-item dropdown nav-item-about">
-                    <a class="nav-link px-3 dropdown-toggle {{ request()->routeIs('about') ? 'nav-link--active' : '' }}"
+                    <a class="nav-link px-3 dropdown-toggle {{ request()->routeIs('about') || request()->routeIs('blogs.*') ? 'nav-link--active' : '' }}"
                        href="{{ Route::has('about') ? route('about') : '#' }}"
                        id="aboutDropdown"
                        aria-expanded="false">
                         About Us
                     </a>
                     <ul class="dropdown-menu nav-about-dropdown shadow-sm border-0 rounded-0" aria-labelledby="aboutDropdown">
-                        <li><a class="dropdown-item" href="#">Blogs</a></li>
+                        <li><a class="dropdown-item" href="{{ Route::has('blogs.index') ? route('blogs.index') : '#' }}">Blogs</a></li>
                     </ul>
                 </li>
                 <li class="nav-item">
