@@ -22,6 +22,12 @@
             'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
         ],
         [
+            'route'   => 'vendor.activities.index',
+            'label'   => 'Activities',
+            'has_sub' => true,
+            'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01"/>',
+        ],
+        [
             'route'   => 'vendor.flights.index',
             'label'   => 'Flights',
             'has_sub' => true,

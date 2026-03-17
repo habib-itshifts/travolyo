@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\MediaController;
+use Modules\Vendor\Http\Controllers\ActivityController;
 use Modules\Vendor\Http\Controllers\DashboardController;
 use Modules\Vendor\Http\Controllers\HotelController;
 use Modules\Vendor\Http\Controllers\HotelRoomController;
@@ -33,6 +34,12 @@ Route::prefix('vendor')
 
         // Hotel Rooms — scoped to rooms of the vendor's own hotels.
         Route::resource('hotel-rooms', HotelRoomController::class)->except(['show']);
+
+        // ─── Activities ───────────────────────────────────────────────────────
+        // Vendor CRUD for activities. Scoped to activities owned by the authenticated
+        // vendor (author_id = auth()->id()). Status is always forced to "pending"
+        // by SaveActivityAction — admin must approve before an activity goes live.
+        Route::resource('activities', ActivityController::class)->except(['show']);
 
         // ─── Media browser API ────────────────────────────────────────────────
         // Vendors need to pick images for their hotels and rooms. We reuse the
