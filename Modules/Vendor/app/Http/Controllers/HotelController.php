@@ -43,6 +43,7 @@ class HotelController extends Controller
     public function index(Request $request): View
     {
         $hotels = Hotel::query()
+            ->with('author:id,name')
             ->where('author_id', auth()->id())   // ownership scope
             ->when($request->search, fn ($q) => $q->where('name', 'like', '%' . $request->search . '%'))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))

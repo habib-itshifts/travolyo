@@ -41,6 +41,7 @@ class HotelController extends Controller
     public function index(Request $request): View
     {
         $hotels = Hotel::withTrashed()
+            ->with('author:id,name')
             ->when($request->search, fn ($q) => $q->where('name', 'like', '%' . $request->search . '%'))
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->when($request->city,   fn ($q) => $q->where('city',   'like', '%' . $request->city . '%'))

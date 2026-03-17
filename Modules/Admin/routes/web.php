@@ -10,6 +10,7 @@ use Modules\Admin\Http\Controllers\CurrencyController;
 use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\HotelController;
 use Modules\Admin\Http\Controllers\HotelRoomController;
+use Modules\Admin\Http\Controllers\HotelScrapingController;
 use Modules\Admin\Http\Controllers\MediaController;
 use Modules\Admin\Http\Controllers\ProfileController;
 use Modules\Admin\Http\Controllers\ServiceController;
@@ -43,6 +44,8 @@ Route::prefix('admin')
         Route::post('/media/folder', [MediaController::class, 'folder'])->name('media.folder');
 
         // Hotels
+        Route::get('hotels/scrape', [HotelScrapingController::class, 'create'])->name('hotels.scraping.create');
+        Route::post('hotels/scrape', [HotelScrapingController::class, 'store'])->name('hotels.scraping.store');
         Route::resource('hotels', HotelController::class);
         Route::post('hotels/{id}/restore', [HotelController::class, 'restore'])->name('hotels.restore');
         Route::resource('hotel-rooms', HotelRoomController::class)->except(['show']);

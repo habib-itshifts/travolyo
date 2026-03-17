@@ -6,6 +6,7 @@ use Modules\Vendor\Http\Controllers\ActivityController;
 use Modules\Vendor\Http\Controllers\DashboardController;
 use Modules\Vendor\Http\Controllers\HotelController;
 use Modules\Vendor\Http\Controllers\HotelRoomController;
+use Modules\Vendor\Http\Controllers\HotelScrapingController;
 use Modules\Vendor\Http\Controllers\ProfileController;
 use Modules\Vendor\Http\Controllers\VendorDocumentController;
 
@@ -30,6 +31,8 @@ Route::prefix('vendor')
         // Vendor CRUD for hotels. Scoped to hotels owned by the authenticated
         // vendor (author_id = auth()->id()). Status is always forced to "draft"
         // by SaveHotelAction — admin must approve before a hotel goes live.
+        Route::get('hotels/scrape', [HotelScrapingController::class, 'create'])->name('hotels.scraping.create');
+        Route::post('hotels/scrape', [HotelScrapingController::class, 'store'])->name('hotels.scraping.store');
         Route::resource('hotels', HotelController::class);
 
         // Hotel Rooms — scoped to rooms of the vendor's own hotels.

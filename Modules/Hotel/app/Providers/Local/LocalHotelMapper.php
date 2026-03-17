@@ -12,6 +12,13 @@ class LocalHotelMapper
 {
     public function toOfferDto(Hotel $hotel, int $nights, string $currency): HotelOfferDto
     {
+        $images = collect([$hotel->featured_image_url, $hotel->banner_image_url])
+            ->merge($hotel->gallery_urls ?? [])
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         $rooms = $hotel->rooms
             ->filter(fn (HotelRoom $r) => $r->is_active)
             ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $currency))
@@ -34,7 +41,7 @@ class LocalHotelMapper
             checkOutTime:     $hotel->check_out_time,
             latitude:         $hotel->latitude ? (float) $hotel->latitude : null,
             longitude:        $hotel->longitude ? (float) $hotel->longitude : null,
-            images:           [],  // media handled by spatie/medialibrary
+            images:           $images,
             amenityNames:     $hotel->amenities->pluck('name')->all(),
             serviceNames:     $hotel->services->pluck('name')->all(),
             lowestPrice:      (float) $lowestPrice,
@@ -47,6 +54,13 @@ class LocalHotelMapper
 
     public function toRoomOfferDto(HotelRoom $room, int $nights, string $currency): HotelRoomOfferDto
     {
+        $images = collect([$room->image_url])
+            ->merge($room->gallery_urls)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         return new HotelRoomOfferDto(
             roomId:           (string) $room->id,
             name:             $room->name,
@@ -63,6 +77,7 @@ class LocalHotelMapper
             sizeSqm:          $room->size_sqm ? (float) $room->size_sqm : null,
             viewType:         $room->view_type,
             description:      $room->description,
+            images:           $images,
         );
     }
 }

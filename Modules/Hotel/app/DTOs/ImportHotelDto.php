@@ -1,0 +1,83 @@
+<?php
+
+namespace Modules\Hotel\DTOs;
+
+class ImportHotelDto
+{
+    public function __construct(
+        public readonly string $name,
+        public readonly ?string $slug,
+        public readonly ?string $scrapingUrl,
+        public readonly ?int $starRating,
+        public readonly ?string $shortDescription,
+        public readonly ?string $description,
+        public readonly ?string $featuredImageUrl,
+        public readonly ?string $bannerImageUrl,
+        public readonly array $galleryUrls,
+        public readonly ?string $videoUrl,
+        public readonly string $address,
+        public readonly string $city,
+        public readonly ?string $state,
+        public readonly string $country,
+        public readonly ?string $postalCode,
+        public readonly ?float $latitude,
+        public readonly ?float $longitude,
+        public readonly ?string $email,
+        public readonly ?string $phone,
+        public readonly ?string $website,
+        public readonly ?string $checkInTime,
+        public readonly ?string $checkOutTime,
+        public readonly ?float $basePrice,
+        public readonly ?float $salePrice,
+        public readonly ?int $minDayBeforeBooking,
+        public readonly ?int $minDayStays,
+        public readonly array $policies,
+        public readonly array $nearbyPlaces,
+        public readonly array $extraPrices,
+        public readonly array $amenityIds,
+        public readonly array $serviceIds,
+        public readonly ?string $status = null,
+        public readonly bool $isFeatured = false,
+        public readonly int $sortOrder = 0,
+    ) {}
+
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'scraping_url' => $this->scrapingUrl,
+            'star_rating' => $this->starRating,
+            'short_description' => $this->shortDescription,
+            'description' => $this->description,
+            'featured_image_url' => $this->featuredImageUrl,
+            'banner_image_url' => $this->bannerImageUrl,
+            'gallery_urls' => $this->galleryUrls,
+            'video_url' => $this->videoUrl,
+            'address' => $this->address,
+            'city' => $this->city,
+            'state' => $this->state,
+            'country' => $this->country,
+            'postal_code' => $this->postalCode,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
+            'email' => $this->email,
+            'phone' => $this->phone,
+            'website' => $this->website,
+            'check_in_time' => $this->checkInTime,
+            'check_out_time' => $this->checkOutTime,
+            'base_price' => $this->basePrice,
+            'sale_price' => $this->salePrice,
+            'min_day_before_booking' => $this->minDayBeforeBooking,
+            'min_day_stays' => $this->minDayStays,
+            'policies' => $this->policies,
+            'nearby_places' => $this->nearbyPlaces,
+            'extra_prices' => $this->extraPrices,
+            'amenity_ids' => $this->amenityIds,
+            'service_ids' => $this->serviceIds,
+            'status' => $this->status,
+            'is_featured' => $this->isFeatured,
+            'sort_order' => $this->sortOrder,
+        ];
+    }
+}

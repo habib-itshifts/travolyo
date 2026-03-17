@@ -22,6 +22,12 @@
             'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
         ],
         [
+            'route'   => 'vendor.hotels.scraping.create',
+            'label'   => 'Scrape Hotel',
+            'has_sub' => false,
+            'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5-6h3m-9 9h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
+        ],
+        [
             'route'   => 'vendor.activities.index',
             'label'   => 'Activities',
             'has_sub' => true,

@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'hotel_scraping' => [
+        'endpoint' => env('HOTEL_SCRAPING_ENDPOINT', 'http://165.227.135.158:3000/api/scrape'),
+        'timeout' => env('HOTEL_SCRAPING_TIMEOUT', 120),
+        'fallback_country' => env('HOTEL_SCRAPING_FALLBACK_COUNTRY', 'AE'),
+        'fallback_city' => env('HOTEL_SCRAPING_FALLBACK_CITY', 'Unknown'),
+    ],
+
 ];

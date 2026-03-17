@@ -100,6 +100,9 @@ class SaveHotelAction
             $data['image_id']        ?? null,
             $data['banner_image_id'] ?? null,
             $data['gallery']         ?? null,
+            $data['featured_image_url'] ?? null,
+            $data['banner_image_url'] ?? null,
+            $data['gallery_urls'] ?? null,
         );
 
         // Convert the raw repeater arrays into clean, normalised JSON-safe arrays.
@@ -126,12 +129,20 @@ class SaveHotelAction
      * @param  string|null $gallery       Comma-separated string of gallery IDs.
      * @return array [imageId, bannerImageId, galleryStr, featuredUrl, bannerUrl, galleryUrls]
      */
-    private function resolveMedia(mixed $imageId, mixed $bannerImageId, ?string $gallery): array
+    private function resolveMedia(
+        mixed $imageId,
+        mixed $bannerImageId,
+        ?string $gallery,
+        ?string $featuredImageUrl = null,
+        ?string $bannerImageUrl = null,
+        mixed $galleryUrls = null,
+    ): array
     {
         // Normalise every incoming ID to a positive int or null.
         $imageId       = (int) $imageId > 0       ? (int) $imageId       : null;
         $bannerImageId = (int) $bannerImageId > 0 ? (int) $bannerImageId : null;
         $galleryIds    = $this->parseGalleryIds($gallery);
+        $externalGalleryUrls = $this->normalizeGalleryUrls($galleryUrls);
 
         // Collect all referenced IDs so we can hit the DB in one query.
         $allIds = array_values(array_unique(array_filter(array_merge(
@@ -159,10 +170,32 @@ class SaveHotelAction
             $resolvedImage,                                                  // image_id (int|null)
             $resolvedBanner,                                                 // banner_image_id (int|null)
             $resolvedGallery ? implode(',', $resolvedGallery) : null,       // gallery (comma string|null)
-            $path($resolvedImage),                                           // featured_image_url
-            $path($resolvedBanner),                                          // banner_image_url
-            array_values(array_filter(array_map($path, $resolvedGallery))), // gallery_urls (array)
+            $path($resolvedImage) ?: $this->normalizeUrl($featuredImageUrl), // featured_image_url
+            $path($resolvedBanner) ?: $this->normalizeUrl($bannerImageUrl),  // banner_image_url
+            array_values(array_filter(array_map($path, $resolvedGallery))) ?: $externalGalleryUrls, // gallery_urls (array)
         ];
+    }
+
+    private function normalizeGalleryUrls(mixed $value): array
+    {
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            $value = is_array($decoded) ? $decoded : explode(',', $value);
+        }
+
+        return collect(is_array($value) ? $value : [])
+            ->map(fn ($url) => $this->normalizeUrl($url))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function normalizeUrl(mixed $value): ?string
+    {
+        $url = trim((string) $value);
+
+        return $url !== '' && filter_var($url, FILTER_VALIDATE_URL) ? $url : null;
     }
 
     /**

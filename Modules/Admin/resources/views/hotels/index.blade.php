@@ -6,13 +6,21 @@
             <h5 class="fw-bold mb-0 text-dark">Hotels</h5>
             <p class="text-muted mb-0" style="font-size:13px;">Manage all hotels in the system</p>
         </div>
-        <a href="{{ route('admin.hotels.create') }}" class="btn btn-sm text-white d-inline-flex align-items-center gap-2"
-           style="background:var(--clr-primary);border-radius:var(--radius-btn);">
-            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Add New Hotel
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.hotels.scraping.create') }}" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-2">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5-6h3m-9 9h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                Scrape Hotel
+            </a>
+            <a href="{{ route('admin.hotels.create') }}" class="btn btn-sm text-white d-inline-flex align-items-center gap-2"
+               style="background:var(--clr-primary);border-radius:var(--radius-btn);">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add New Hotel
+            </a>
+        </div>
     </div>
 
     {{-- Filters --}}
@@ -69,16 +77,21 @@
                                 <td class="ps-4 text-muted">{{ $hotel->id }}</td>
 
                                 <td>
-                                    <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ route('admin.hotels.show', $hotel->id) }}" class="d-flex align-items-center gap-2 text-decoration-none">
                                         <div class="rounded-2 d-flex align-items-center justify-content-center flex-shrink-0 text-white fw-bold"
                                              style="width:36px;height:36px;background:var(--clr-primary);font-size:12px;">
                                             {{ strtoupper(substr($hotel->name, 0, 2)) }}
                                         </div>
                                         <div>
-                                            <p class="mb-0 fw-semibold text-dark">{{ $hotel->name }}</p>
-                                            <p class="mb-0 text-muted" style="font-size:11px;">{{ $hotel->slug }}</p>
+                                            <p class="mb-0 fw-semibold text-dark" style="line-height:1.2;" title="{{ $hotel->name }}">{{ Str::limit($hotel->name, 28) }}</p>
+                                            <p class="mb-0 text-muted" style="font-size:11px;line-height:1.2;" title="{{ $hotel->short_description ?: $hotel->description }}">
+                                                {{ Str::limit($hotel->short_description ?: $hotel->description ?: $hotel->slug, 30) }}
+                                            </p>
+                                            <p class="mb-0 text-muted" style="font-size:10px;line-height:1.2;" title="{{ $hotel->author?->name ?? 'Unknown' }}">
+                                                Added by: {{ Str::limit($hotel->author?->name ?? 'Unknown', 18) }}
+                                            </p>
                                         </div>
-                                    </div>
+                                    </a>
                                 </td>
 
                                 <td>
@@ -187,8 +200,11 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                     </svg>
                                     <p class="mb-0">No hotels found.</p>
-                                    <a href="{{ route('admin.hotels.create') }}" class="btn btn-sm mt-2"
-                                       style="background:var(--clr-primary);color:#fff;">Add First Hotel</a>
+                                    <div class="d-flex justify-content-center gap-2 mt-2">
+                                        <a href="{{ route('admin.hotels.scraping.create') }}" class="btn btn-sm btn-outline-dark">Scrape Hotel</a>
+                                        <a href="{{ route('admin.hotels.create') }}" class="btn btn-sm"
+                                           style="background:var(--clr-primary);color:#fff;">Add First Hotel</a>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse

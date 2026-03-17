@@ -44,8 +44,35 @@
 
     $amenitiesByCategory = $amenities->groupBy('category');
     $servicesByCategory  = $services->groupBy('category');
-    $selectedAmenities   = $isEdit ? $hotel->amenities->pluck('id')->toArray() : old('amenity_ids', []);
-    $selectedServices    = $isEdit ? $hotel->services->pluck('id')->toArray() : old('service_ids', []);
+    $normalizeMultiSelect = function ($value): array {
+        if (is_array($value)) {
+            return array_values(array_filter($value, fn ($item) => $item !== null && $item !== ''));
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return array_values(array_filter($decoded, fn ($item) => $item !== null && $item !== ''));
+            }
+
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return [];
+            }
+
+            return array_values(array_filter(array_map('trim', explode(',', $value)), fn ($item) => $item !== ''));
+        }
+
+        if ($value instanceof \Illuminate\Support\Collection) {
+            return $value->filter(fn ($item) => $item !== null && $item !== '')->values()->all();
+        }
+
+        return [];
+    };
+    $selectedAmenities = $normalizeMultiSelect(old('amenity_ids', $isEdit ? $hotel->amenities->pluck('id')->all() : []));
+    $selectedServices = $normalizeMultiSelect(old('service_ids', $isEdit ? $hotel->services->pluck('id')->all() : []));
+    $selectedPaymentMethods = $normalizeMultiSelect(old('payment_methods', $hotel->payment_methods ?? []));
+    $selectedLanguages = $normalizeMultiSelect(old('languages_spoken', $hotel->languages_spoken ?? []));
 
     $featuredImageId = old('image_id', $hotel->image_id ?? '');
     $bannerImageId   = old('banner_image_id', $hotel->banner_image_id ?? '');
@@ -413,10 +440,10 @@
                             @error('website') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold d-block mb-2" style="font-size:13px;">Payment Methods</label>
-                            <div class="d-flex flex-wrap gap-3">
+                                <label class="form-label fw-semibold d-block mb-2" style="font-size:13px;">Payment Methods</label>
+                                <div class="d-flex flex-wrap gap-3">
                                 @foreach ($paymentOptions as $value => $label)
-                                    @php $checked = in_array($value, old('payment_methods', $hotel->payment_methods ?? [])); @endphp
+                                    @php $checked = in_array($value, $selectedPaymentMethods, true); @endphp
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="payment_methods[]" value="{{ $value }}" id="pm_{{ $value }}" {{ $checked ? 'checked' : '' }}>
                                         <label class="form-check-label" for="pm_{{ $value }}" style="font-size:13px;">{{ $label }}</label>
@@ -428,7 +455,7 @@
                             <label class="form-label fw-semibold d-block mb-2" style="font-size:13px;">Languages Spoken</label>
                             <div class="d-flex flex-wrap gap-3">
                                 @foreach ($languageOptions as $value => $label)
-                                    @php $checked = in_array($value, old('languages_spoken', $hotel->languages_spoken ?? [])); @endphp
+                                    @php $checked = in_array($value, $selectedLanguages, true); @endphp
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="languages_spoken[]" value="{{ $value }}" id="lang_{{ $value }}" {{ $checked ? 'checked' : '' }}>
                                         <label class="form-check-label" for="lang_{{ $value }}" style="font-size:13px;">{{ $label }}</label>

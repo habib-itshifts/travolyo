@@ -11,6 +11,11 @@
             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M5 7l1 12h12l1-12M9 11v4m6-4v4M8 7V5a1 1 0 011-1h6a1 1 0 011 1v2"/>',
         ],
         [
+            'route' => 'admin.hotels.scraping.create',
+            'label' => 'Scrape Hotel',
+            'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5-6h3m-9 9h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
+        ],
+        [
             'route' => 'admin.amenities.index',
             'label' => __('admin.nav_amenities'),
             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',

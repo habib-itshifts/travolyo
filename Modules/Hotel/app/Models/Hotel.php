@@ -18,6 +18,7 @@ class Hotel extends Model
         'author_id',
         'name',
         'slug',
+        'scraping_url',
         'star_rating',
         'description',
         'short_description',
@@ -57,6 +58,7 @@ class Hotel extends Model
 
     protected $casts = [
         'star_rating'      => 'integer',
+        'scraping_url'     => 'string',
         'image_id'         => 'integer',
         'banner_image_id'  => 'integer',
         'latitude'         => 'decimal:8',
