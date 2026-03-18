@@ -14,8 +14,11 @@ class SearchHotelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'destination' => ['required_without:city', 'string', 'max:100'],
-            'city'        => ['required_without:destination', 'string', 'max:100'],
+            'destination' => ['nullable', 'required_without:city', 'string', 'max:100'],
+            'city'        => ['nullable', 'required_without:destination', 'string', 'max:100'],
+            'country'     => ['nullable', 'string', 'max:100'],
+            'country_code'=> ['nullable', 'string', 'max:10'],
+            'location'    => ['nullable', 'string', 'max:50'],
             'check_in'    => ['required', 'date', 'after_or_equal:today'],
             'check_out'   => ['required', 'date', 'after:check_in'],
             'adults'      => ['required', 'integer', 'min:1', 'max:20'],
