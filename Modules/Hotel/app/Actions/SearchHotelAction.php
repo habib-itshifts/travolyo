@@ -9,6 +9,7 @@ use Modules\Hotel\Providers\Local\LocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BLocal\TravolyoB2BLocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BNetStreaming\TravolyoB2BNetStreamingHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BTassPro\TravolyoB2BTassProHotelProvider;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 
 class SearchHotelAction
 {
@@ -54,9 +55,11 @@ class SearchHotelAction
     {
         return match ($provider) {
             HotelProviderEnum::Local                  => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
-            HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2BTassPro     => new TravolyoB2BTassProHotelProvider(),
+            // HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
+            // HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
+            // HotelProviderEnum::TravolyoB2BTassPro     => new TravolyoB2BTassProHotelProvider(),
+            HotelProviderEnum::Hyperguest             => new HyperguestHotelProvider(),
+            default => throw new \RuntimeException("Provider [{$provider->value}] is not enabled."), // caught by try/catch in handle()
         };
     }
 }

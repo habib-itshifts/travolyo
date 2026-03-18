@@ -151,6 +151,8 @@ class FlightController extends Controller
                 'last_name'    => $validated['passengers'][0]['last_name'],
                 'email'        => $validated['contact_email'],
                 'phone'        => $validated['contact_phone'],
+                'source'       => $flight['provider'] ?? null,
+                'platform'     => Booking::detectPlatform(),
             ]);
 
             // Store flight details and passengers in booking meta

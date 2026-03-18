@@ -1,0 +1,177 @@
+{
+  "content": {
+    "status": "Confirmed",
+    "dates": {
+      "from": "2024-06-10",
+      "to": "2024-06-12"
+    },
+    "meta": [
+      {
+        "key": "Source",
+        "value": "Travolyo"
+      }
+    ],
+    "payment": {
+      "type": "credit_card",
+      "chargeAmount": {
+        "price": 343.2,
+        "currency": "USD"
+      }
+    },
+    "prices": {
+      "net": {
+        "price": 308.88,
+        "currency": "USD",
+        "taxes": [
+          {
+            "description": "VAT 10% (Included in price)",
+            "amount": 30.88,
+            "currency": "USD",
+            "relation": "included",
+            "scope": "per_person",
+            "frequency": "per_night"
+          }
+        ]
+      },
+      "sell": {
+        "price": 343.2,
+        "currency": "USD",
+        "taxes": [
+          {
+            "description": "VAT 10% (Included in price)",
+            "amount": 31.2,
+            "currency": "USD",
+            "relation": "included",
+            "scope": "per_person",
+            "frequency": "per_night"
+          }
+        ]
+      },
+      "commission": {
+        "price": 34.32,
+        "currency": "USD"
+      },
+      "bar": {
+        "price": 343.2,
+        "currency": "USD"
+      },
+      "fees": []
+    },
+    "nightlyBreakdown": [
+      {
+        "date": "2024-06-10",
+        "prices": {
+          "net": { "price": 154.44, "currency": "USD", "taxes": [] },
+          "sell": { "price": 171.6, "currency": "USD", "taxes": [] },
+          "commission": { "price": 17.16, "currency": "USD" },
+          "bar": { "price": 171.6, "currency": "USD" },
+          "fees": []
+        }
+      },
+      {
+        "date": "2024-06-11",
+        "prices": {
+          "net": { "price": 154.44, "currency": "USD", "taxes": [] },
+          "sell": { "price": 171.6, "currency": "USD", "taxes": [] },
+          "commission": { "price": 17.16, "currency": "USD" },
+          "bar": { "price": 171.6, "currency": "USD" },
+          "fees": []
+        }
+      }
+    ]
+  },
+  "rooms": [
+    {
+      "cancellationPolicy": [
+        {
+          "policyId": 49285,
+          "startDate": "2024-06-05 03:00:00",
+          "endDate": "2024-06-10 03:00:00",
+          "price": {
+            "amount": 343.2,
+            "currency": "USD"
+          }
+        }
+      ],
+      "guests": [
+        {
+          "guestId": 34671,
+          "birthDate": "1990-01-01",
+          "name": { "first": "Mock", "last": "Guest" },
+          "contact": {
+            "address": "N/A",
+            "city": "N/A",
+            "country": "N/A",
+            "nationality": "N/A",
+            "email": "mock@travolyo.com",
+            "phone": "N/A",
+            "state": "N/A",
+            "zip": "N/A"
+          },
+          "title": "MR",
+          "age": 34
+        }
+      ],
+      "specialRequests": [],
+      "remarks": [
+        "This is a mock booking confirmation from the Hyperguest JSON fixture.",
+        "Replace this fixture with the live Hyperguest API when credentials are available."
+      ],
+      "reference": {
+        "property": "MOCK-PROPERTY-REF"
+      },
+      "itemId": 99001,
+      "roomId": 99101,
+      "ratePlanId": 99201,
+      "roomCode": "DBL",
+      "rateCode": "BAR",
+      "status": "Confirmed",
+      "board": "RO",
+      "financialModel": {
+        "keys": [
+          { "key": "Net Price",   "order": 1, "value": "308.88 USD" },
+          { "key": "Bar Price",   "order": 2, "value": "343.20 USD" },
+          { "key": "Commission",  "order": 3, "value": "34.32 USD"  },
+          { "key": "Total Charge","order": 4, "value": "343.20 USD" }
+        ],
+        "type": "default"
+      },
+      "propertyId": 10001,
+      "prices": {
+        "net":        { "price": 308.88, "currency": "USD", "taxes": [] },
+        "sell":       { "price": 343.20, "currency": "USD", "taxes": [] },
+        "commission": { "price": 34.32,  "currency": "USD" },
+        "bar":        { "price": 343.20, "currency": "USD" },
+        "fees": []
+      },
+      "payment": {
+        "type": "credit_card",
+        "chargeAmount": { "price": 343.2, "currency": "USD" }
+      }
+    }
+  ],
+  "bookingId": 113421,
+  "reference": {
+    "agency": "travolyo-mock-001"
+  },
+  "leadGuest": {
+    "guestId": 34671,
+    "birthDate": "1990-01-01",
+    "name": { "first": "Mock", "last": "Guest" },
+    "contact": {
+      "address": "N/A",
+      "city": "N/A",
+      "country": "N/A",
+      "nationality": "N/A",
+      "email": "mock@travolyo.com",
+      "phone": "N/A",
+      "state": "N/A",
+      "zip": "N/A"
+    },
+    "title": "MR",
+    "age": 34
+  },
+  "transactions": [],
+  "propertyId": 10001,
+  "timestamp": "2024-06-01T10:00:00.000Z"
+}

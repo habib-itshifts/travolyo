@@ -221,9 +221,10 @@
 <script>
 (function () {
 
-    const params    = @json($params);
-    const searchUrl = '{{ route('api.hotels.search') }}';
-    const prebookUrl= '{{ route('api.hotels.prebook') }}';
+    const params      = @json($params);
+    const isLoggedIn  = {{ auth()->check() ? 'true' : 'false' }};
+    const searchUrl   = '{{ route('api.hotels.search') }}';
+    const prebookUrl  = '{{ route('api.hotels.prebook') }}';
     const loading   = document.getElementById('hotel-loading');
     const offersEl  = document.getElementById('hotel-offers');
     const errorEl   = document.getElementById('hotel-error');
@@ -557,6 +558,12 @@
     document.addEventListener('click', async function (e) {
         const btn = e.target.closest('.js-select-room');
         if (!btn) return;
+
+        if (!isLoggedIn) {
+            bootstrap.Modal.getInstance(document.getElementById('hotelModal'))?.hide();
+            window.openAuthModal('signin');
+            return;
+        }
 
         btn.disabled    = true;
         btn.textContent = 'Please wait…';

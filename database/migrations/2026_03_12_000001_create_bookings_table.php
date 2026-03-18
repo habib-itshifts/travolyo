@@ -65,6 +65,10 @@ return new class extends Migration
             $table->string('zip_code', 20)->nullable();
             $table->string('country', 100)->nullable();
 
+            // Origin tracking
+            $table->string('source', 50)->nullable();    // local | hyperguest | duffel | b2b | ...
+            $table->string('platform', 20)->nullable();  // web | mobile
+
             // Notes
             $table->text('customer_notes')->nullable();
 

@@ -20,6 +20,7 @@ use Modules\Hotel\Http\Requests\SearchHotelRequest;
 use Modules\Hotel\Providers\Local\LocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BLocal\TravolyoB2BLocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BNetStreaming\TravolyoB2BNetStreamingHotelProvider;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
 use Illuminate\Http\Request;
@@ -73,6 +74,8 @@ class HotelController extends Controller
                 HotelProviderEnum::Local                  => new LocalHotelProvider(),
                 HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
                 HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
+                HotelProviderEnum::Hyperguest             => new HyperguestHotelProvider(),
+                default                                   => throw new \InvalidArgumentException("Provider [{$providerEnum->value}] does not support room fetching."),
             };
 
             $rooms = $provider->getRooms(

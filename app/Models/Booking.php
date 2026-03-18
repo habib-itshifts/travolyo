@@ -46,6 +46,7 @@ class Booking extends Model
         'first_name', 'last_name', 'email', 'phone',
         'address', 'city', 'state', 'zip_code', 'country',
         'customer_notes',
+        'source', 'platform',
         'create_user', 'update_user',
     ];
 
@@ -190,6 +191,23 @@ class Booking extends Model
     {
         $this->status = self::BOOKING_FAILED;
         $this->save();
+    }
+
+    /**
+     * Detect platform (web|mobile) from X-Platform header, falling back to User-Agent.
+     */
+    public static function detectPlatform(): string
+    {
+        $header = request()->header('X-Platform');
+        if ($header && in_array(strtolower($header), ['mobile', 'web'])) {
+            return strtolower($header);
+        }
+
+        $ua = strtolower(request()->userAgent() ?? '');
+
+        return (str_contains($ua, 'mobile') || str_contains($ua, 'android') || str_contains($ua, 'iphone'))
+            ? 'mobile'
+            : 'web';
     }
 
     public function getDetailUrl(): string
