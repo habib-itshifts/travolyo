@@ -224,6 +224,7 @@
     position: absolute;
     width: 100%;
 }
+
 .hotel-destination-card__content {
     align-items: flex-end;
     color: #fff;
