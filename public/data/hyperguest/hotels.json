@@ -3,6 +3,7 @@
   "hotels": [
     {
       "hotel_id": "HG001",
+      "property_id": 10001,
       "name": "Grand Hyperguest Dubai",
       "star_rating": 5,
       "city": "Dubai",
@@ -23,6 +24,8 @@
       "rooms": [
         {
           "room_id": "HG001-R001",
+          "room_code": "DBL",
+          "rate_code": "RO",
           "name": "Deluxe King Room",
           "room_type": "standard",
           "bed_configuration": {"king": 1},
@@ -45,6 +48,8 @@
         },
         {
           "room_id": "HG001-R002",
+          "room_code": "TWN",
+          "rate_code": "BB",
           "name": "Superior Twin Room",
           "room_type": "standard",
           "bed_configuration": {"twin": 2},
@@ -67,6 +72,8 @@
         },
         {
           "room_id": "HG001-R003",
+          "room_code": "STE",
+          "rate_code": "BB",
           "name": "Executive Suite",
           "room_type": "suite",
           "bed_configuration": {"king": 1},
@@ -91,6 +98,7 @@
     },
     {
       "hotel_id": "HG002",
+      "property_id": 10002,
       "name": "Cityscape Boutique Hotel Dubai",
       "star_rating": 4,
       "city": "Dubai",
@@ -110,6 +118,8 @@
       "rooms": [
         {
           "room_id": "HG002-R001",
+          "room_code": "DBL",
+          "rate_code": "RO",
           "name": "Classic Double Room",
           "room_type": "standard",
           "bed_configuration": {"double": 1},
@@ -132,6 +142,8 @@
         },
         {
           "room_id": "HG002-R002",
+          "room_code": "DBL",
+          "rate_code": "BB",
           "name": "Deluxe Room with Burj View",
           "room_type": "deluxe",
           "bed_configuration": {"king": 1},
@@ -154,6 +166,8 @@
         },
         {
           "room_id": "HG002-R003",
+          "room_code": "STE",
+          "rate_code": "BB",
           "name": "Junior Suite",
           "room_type": "suite",
           "bed_configuration": {"king": 1},
@@ -178,6 +192,7 @@
     },
     {
       "hotel_id": "HG003",
+      "property_id": 10003,
       "name": "Desert Oasis Resort & Spa",
       "star_rating": 5,
       "city": "Dubai",
@@ -197,6 +212,8 @@
       "rooms": [
         {
           "room_id": "HG003-R001",
+          "room_code": "VIL",
+          "rate_code": "HB",
           "name": "Garden Villa",
           "room_type": "villa",
           "bed_configuration": {"king": 1},
@@ -219,6 +236,8 @@
         },
         {
           "room_id": "HG003-R002",
+          "room_code": "DBL",
+          "rate_code": "BB",
           "name": "Deluxe Resort Room",
           "room_type": "standard",
           "bed_configuration": {"king": 1},
@@ -243,6 +262,7 @@
     },
     {
       "hotel_id": "HG004",
+      "property_id": 10004,
       "name": "Harbour View Hotel",
       "star_rating": 3,
       "city": "Dubai",
@@ -261,6 +281,8 @@
       "rooms": [
         {
           "room_id": "HG004-R001",
+          "room_code": "SGL",
+          "rate_code": "RO",
           "name": "Standard Single Room",
           "room_type": "standard",
           "bed_configuration": {"single": 1},
@@ -283,6 +305,8 @@
         },
         {
           "room_id": "HG004-R002",
+          "room_code": "DBL",
+          "rate_code": "RO",
           "name": "Standard Double Room",
           "room_type": "standard",
           "bed_configuration": {"double": 1},

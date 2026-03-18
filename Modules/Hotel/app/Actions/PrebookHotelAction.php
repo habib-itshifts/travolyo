@@ -9,6 +9,7 @@ use Modules\Hotel\Providers\HotelProviderInterface;
 use Modules\Hotel\Providers\Local\LocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BLocal\TravolyoB2BLocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2BNetStreaming\TravolyoB2BNetStreamingHotelProvider;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 
 class PrebookHotelAction
 {
@@ -23,6 +24,8 @@ class PrebookHotelAction
             HotelProviderEnum::Local                  => new LocalHotelProvider(),
             HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
             HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
+            HotelProviderEnum::Hyperguest             => new HyperguestHotelProvider(),
+            default => throw new \RuntimeException("Provider [{$provider->value}] is not supported for prebook."),
         };
     }
 }

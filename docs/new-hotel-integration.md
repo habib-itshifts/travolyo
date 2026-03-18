@@ -1,6 +1,6 @@
 # Hotel Module — Integration Guide
 
-> **Last updated:** 2026-03-18
+> **Last updated:** 2026-03-18 (prebook + booking added)
 > **Purpose:** Reference for anyone adding a new hotel provider so you don't need to re-study the module from scratch.
 
 ---
@@ -131,7 +131,73 @@ When credentials arrive, replace `HyperguestHotelProvider::loadData()` with an H
 }
 ```
 
-### 4.5 How search works (mock)
+### 4.5 Booking request structure (Hyperguest API)
+
+`POST https://[book endpoint domain]/2.0/booking/create`
+
+```json
+{
+  "dates":        { "from": "YYYY-MM-DD", "to": "YYYY-MM-DD" },
+  "propertyId":   10001,
+  "leadGuest": {
+    "birthDate": "1990-01-01",
+    "title": "MR",
+    "name":    { "first": "...", "last": "..." },
+    "contact": { "address": "...", "city": "...", "country": "...",
+                 "email": "...", "phone": "...", "state": "...", "zip": "..." }
+  },
+  "reference": { "agency": "travolyo-<uid>" },
+  "rooms": [{
+    "roomCode":      "DBL",
+    "rateCode":      "BAR",
+    "expectedPrice": { "amount": 343.20, "currency": "USD" },
+    "guests":        [{ "birthDate": "...", "name": {...}, "title": "MR" }],
+    "specialRequests": ["..."]
+  }],
+  "meta":         [{ "key": "Source", "value": "Travolyo" }],
+  "isTest":       true,
+  "groupBooking": false
+}
+```
+
+### 4.6 Booking response structure
+
+Key fields extracted and stored in `Booking` meta:
+
+| Meta key | Source in response | Purpose |
+|---|---|---|
+| `hyperguest_booking_id` | `bookingId` | Supplier booking reference |
+| `hyperguest_status` | `content.status` | "Confirmed" / "Pending" / "Failed" |
+| `hyperguest_cancellation_policy` | `rooms[0].cancellationPolicy` | Array of penalty windows |
+| `hyperguest_remarks` | `rooms[0].remarks` | Important messages to show the guest |
+| `hyperguest_booking` | full response | Complete raw response for auditing |
+
+Key price fields in response:
+- `content.prices.sell.price` — total sell price (overrides our cached price)
+- `content.prices.net.price`  — net price (cost to us)
+- `content.prices.commission.price` — our commission
+
+### 4.7 Room ID encoding
+
+Each `HotelRoomOfferDto::$roomId` is a **base64-encoded JSON string** containing:
+
+```json
+{
+  "hotel_id":    "HG001",
+  "property_id": 10001,
+  "room_id":     "HG001-R001",
+  "room_code":   "DBL",
+  "rate_code":   "BAR",
+  "price":       250.00,
+  "currency":    "USD",
+  "meal_plan":   "Room Only"
+}
+```
+
+These keys flow through `search → prebook → checkout → book()` as an opaque string.
+Decode with `HyperguestHotelMapper::decodeBookingKey($roomId)`.
+
+### 4.8 How search works (mock)
 
 1. `SearchHotelAction` includes `HotelProviderEnum::Hyperguest` in its provider loop.
 2. `HyperguestHotelProvider::search()` calls `loadData()` → reads JSON file.
@@ -140,7 +206,7 @@ When credentials arrive, replace `HyperguestHotelProvider::loadData()` with an H
 5. Price filters (`price_min` / `price_max`) are applied against `lowestPrice`.
 6. Returns `HotelOfferDto[]` — same shape as every other provider.
 
-### 4.6 Switching to the live API
+### 4.9 Switching to the live API
 
 When the Hyperguest API credentials are ready:
 

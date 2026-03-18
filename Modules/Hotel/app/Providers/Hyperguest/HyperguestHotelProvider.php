@@ -5,39 +5,42 @@ namespace Modules\Hotel\Providers\Hyperguest;
 use Carbon\Carbon;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
-use Modules\Hotel\DTOs\HotelRoomOfferDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
 use Modules\Hotel\DTOs\SearchHotelDto;
+use Modules\Hotel\Enums\HotelProviderEnum;
 use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Providers\HotelProviderInterface;
 
 /**
  * Hyperguest hotel provider.
  *
- * Currently reads from a local JSON fixture at public/data/hyperguest/hotels.json.
- * When the live Hyperguest API credentials are available, replace loadData() with
- * an HTTP call to the Hyperguest REST API — the rest of the provider stays the same.
+ * Mock mode  → reads from public/data/hyperguest/hotels.json
+ *              and public/data/hyperguest/booking_response.json.
+ *
+ * Live mode  → replace loadData() / callBookingApi() with Http:: calls to:
+ *              POST https://[search domain]/2.0/search
+ *              POST https://[book  domain]/2.0/booking/create
  */
 class HyperguestHotelProvider implements HotelProviderInterface
 {
     private HyperguestHotelMapper $mapper;
-
-    /** Absolute path to the mock JSON file. */
-    private string $dataPath;
+    private string $hotelsPath;
+    private string $bookingResponsePath;
 
     public function __construct()
     {
-        $this->mapper   = new HyperguestHotelMapper();
-        $this->dataPath = public_path('data/hyperguest/hotels.json');
+        $this->mapper              = new HyperguestHotelMapper();
+        $this->hotelsPath          = public_path('data/hyperguest/hotels.json');
+        $this->bookingResponsePath = public_path('data/hyperguest/booking_response.json');
     }
 
     // -------------------------------------------------------------------------
-    // Interface implementation
+    // HotelProviderInterface
     // -------------------------------------------------------------------------
 
     public function search(SearchHotelDto $dto): array
     {
-        $hotels = $this->loadData();
+        $hotels = $this->loadHotels();
         $nights = $dto->nights();
 
         return collect($hotels)
@@ -49,10 +52,9 @@ class HyperguestHotelProvider implements HotelProviderInterface
     }
 
     /**
-     * Hyperguest rooms are already embedded in the search result, so this is a
-     * convenience method that re-loads the JSON and returns only the rooms for
-     * the requested hotel — useful when the front-end calls /api/hotels/rooms
-     * with provider=hyperguest.
+     * Return rooms for a specific hotel.
+     * Hyperguest rooms are embedded in the search result; this is a convenience
+     * lookup for the /api/hotels/rooms endpoint.
      */
     public function getRooms(
         string $offerId,
@@ -62,71 +64,222 @@ class HyperguestHotelProvider implements HotelProviderInterface
         int    $adults,
         int    $children,
     ): array {
-        $hotel = $this->findHotel($offerId);
-
-        $nights = (int) Carbon::parse($checkIn)->diffInDays($checkOut);
+        $hotel  = $this->findHotel($offerId);
+        $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
 
         return collect($hotel['rooms'] ?? [])
-            ->map(fn (array $room) => $this->mapper->toRoomOfferDto($room, max($nights, 1), 'USD'))
+            ->map(fn (array $room) => $this->mapper->toRoomOfferDto($room, $nights, 'USD', $hotel))
             ->values()
             ->all();
     }
 
     /**
-     * For the JSON-based mock we simply re-read the data and return the offer.
-     * When moving to the live API, call the Hyperguest "prebook" endpoint here.
+     * Validate that the requested room still exists and is available.
+     * Decodes the booking key and re-reads the JSON to confirm.
+     * When live API is available: call the Hyperguest rate-check endpoint here.
      */
     public function prebook(PrebookHotelDto $dto): HotelOfferDto
     {
-        $hotel  = $this->findHotel($dto->offerId);
-        $nights = (int) Carbon::parse($dto->checkIn)->diffInDays($dto->checkOut);
+        // Decode the opaque roomId back to hotel/room keys
+        $keys = $this->mapper->decodeBookingKey($dto->roomId);
 
-        return $this->mapper->toOfferDto($hotel, max($nights, 1), $dto->currency);
+        $hotel  = $this->findHotel($keys['hotel_id']);
+        $nights = max((int) Carbon::parse($dto->checkIn)->diffInDays($dto->checkOut), 1);
+
+        // Verify the specific room is still available
+        $rawRoom = collect($hotel['rooms'] ?? [])
+            ->firstWhere('room_id', $keys['room_id']);
+
+        if (! $rawRoom || empty($rawRoom['rates']['is_available'])) {
+            throw HotelException::roomUnavailable();
+        }
+
+        return $this->mapper->toOfferDto($hotel, $nights, $dto->currency);
     }
 
     /**
-     * Not yet backed by the live Hyperguest API.
-     * Bookings made through Hyperguest will be tracked in the local Booking table
-     * with provider=hyperguest in the meta; implement getOrder() once the API is available.
+     * Call the Hyperguest booking API (mocked from JSON fixture).
+     *
+     * Builds the exact Hyperguest POST /2.0/booking/create payload
+     * so that swapping the mock for a live Http:: call is trivial.
+     *
+     * @param  array  $checkoutData  Cached data from prebook step
+     * @param  array  $guest         Guest details from CheckoutHotelDto
+     * @return array                 Full Hyperguest booking response
+     */
+    public function book(array $checkoutData, array $guest): array
+    {
+        $keys = $this->mapper->decodeBookingKey($checkoutData['room_id']);
+
+        // Build the payload that mirrors the live API request
+        $payload = [
+            'dates' => [
+                'from' => $checkoutData['check_in'],
+                'to'   => $checkoutData['check_out'],
+            ],
+            'propertyId' => $keys['property_id'],
+            'leadGuest'  => [
+                'birthDate' => $guest['birth_date'] ?? '1990-01-01',
+                'contact'   => [
+                    'address' => $guest['address']  ?? 'N/A',
+                    'city'    => $guest['city']      ?? 'N/A',
+                    'country' => $guest['country']   ?? 'N/A',
+                    'email'   => $guest['email'],
+                    'phone'   => $guest['phone'],
+                    'state'   => $guest['state']     ?? 'N/A',
+                    'zip'     => $guest['zip']        ?? 'N/A',
+                ],
+                'name' => [
+                    'first' => $guest['first_name'],
+                    'last'  => $guest['last_name'],
+                ],
+                'title' => $guest['title'] ?? 'MR',
+            ],
+            'reference' => [
+                'agency' => 'travolyo-' . uniqid(),
+            ],
+            'rooms' => [
+                [
+                    'roomCode'      => $keys['room_code'],
+                    'rateCode'      => $keys['rate_code'],
+                    'expectedPrice' => [
+                        'amount'   => $checkoutData['total_price'],
+                        'currency' => $checkoutData['currency'],
+                    ],
+                    'guests' => [
+                        [
+                            'birthDate' => $guest['birth_date'] ?? '1990-01-01',
+                            'name'      => [
+                                'first' => $guest['first_name'],
+                                'last'  => $guest['last_name'],
+                            ],
+                            'title' => $guest['title'] ?? 'MR',
+                        ],
+                    ],
+                    'specialRequests' => $checkoutData['special_requests']
+                        ? [$checkoutData['special_requests']]
+                        : [],
+                ],
+            ],
+            'meta' => [
+                ['key' => 'Source', 'value' => 'Travolyo'],
+            ],
+            'isTest'       => true,   // set to false when going live
+            'groupBooking' => false,
+        ];
+
+        // ---------------------------------------------------------------
+        // MOCK: return fixture response (replace with Http:: when live)
+        // ---------------------------------------------------------------
+        $response = $this->loadBookingResponse();
+
+        // Stamp dynamic values from the actual request into the mock response
+        $response['reference']              = $payload['reference'];
+        $response['content']['dates']       = $payload['dates'];
+        $response['leadGuest']['name']      = $payload['leadGuest']['name'];
+        $response['leadGuest']['contact']['email'] = $guest['email'];
+        $response['leadGuest']['contact']['phone'] = $guest['phone'];
+
+        if (! empty($response['rooms'][0])) {
+            $response['rooms'][0]['roomCode'] = $keys['room_code'];
+            $response['rooms'][0]['rateCode'] = $keys['rate_code'];
+            $response['rooms'][0]['propertyId'] = $keys['property_id'];
+        }
+
+        // Store the payload in the response so it can be logged / audited
+        $response['_request_payload'] = $payload;
+
+        return $response;
+    }
+
+    /**
+     * Retrieve a Hyperguest booking by our internal booking reference.
+     * Currently reads from the local Booking meta (no live API call yet).
      */
     public function getOrder(string $orderId): HotelOrderDto
     {
-        throw new \RuntimeException('Hyperguest getOrder() is not yet implemented.');
+        $booking = \App\Models\Booking::with('meta')
+            ->where('code', $orderId)
+            ->where('object_model', 'hotel')
+            ->firstOrFail();
+
+        $meta     = $booking->getMeta('hotel_details') ?? [];
+        $hgData   = $booking->getMeta('hyperguest_booking') ?? [];
+
+        return new HotelOrderDto(
+            orderId:         $booking->code,
+            provider:        HotelProviderEnum::Hyperguest,
+            hotelName:       $meta['hotel_name']  ?? 'N/A',
+            roomName:        $meta['room_name']   ?? 'N/A',
+            checkIn:         $booking->start_date->toDateString(),
+            checkOut:        $booking->end_date->toDateString(),
+            nights:          $booking->start_date->diffInDays($booking->end_date),
+            adults:          $meta['adults']      ?? 1,
+            children:        $meta['children']    ?? 0,
+            totalPrice:      (float) $booking->total,
+            currency:        $booking->currency,
+            status:          $hgData['content']['status'] ?? $booking->status,
+            guestFirstName:  $booking->first_name,
+            guestLastName:   $booking->last_name,
+            guestEmail:      $booking->email,
+            guestPhone:      $booking->phone,
+            specialRequests: $booking->customer_notes,
+        );
     }
 
     /**
-     * Not yet backed by the live Hyperguest API.
+     * Cancel a Hyperguest booking.
+     * Currently updates only the local Booking record.
+     * When live: call DELETE /2.0/booking/{bookingId} first, then update locally.
      */
     public function cancelOrder(string $orderId): bool
     {
-        throw new \RuntimeException('Hyperguest cancelOrder() is not yet implemented.');
+        $booking = \App\Models\Booking::where('code', $orderId)
+            ->where('object_model', 'hotel')
+            ->firstOrFail();
+
+        $booking->update(['status' => 'cancelled']);
+
+        return true;
     }
 
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
-    /** Load and decode the JSON fixture. */
-    private function loadData(): array
+    private function loadHotels(): array
     {
-        if (! file_exists($this->dataPath)) {
-            throw new \RuntimeException("Hyperguest data file not found at [{$this->dataPath}].");
+        if (! file_exists($this->hotelsPath)) {
+            throw new \RuntimeException("Hyperguest hotels fixture not found at [{$this->hotelsPath}].");
         }
 
-        $contents = file_get_contents($this->dataPath);
-        $decoded  = json_decode($contents, true);
+        $decoded = json_decode(file_get_contents($this->hotelsPath), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Hyperguest data file contains invalid JSON: ' . json_last_error_msg());
+            throw new \RuntimeException('Hyperguest hotels.json is invalid: ' . json_last_error_msg());
         }
 
         return $decoded['hotels'] ?? [];
     }
 
-    /** Find a single hotel by hotel_id or throw. */
+    private function loadBookingResponse(): array
+    {
+        if (! file_exists($this->bookingResponsePath)) {
+            throw new \RuntimeException("Hyperguest booking fixture not found at [{$this->bookingResponsePath}].");
+        }
+
+        $decoded = json_decode(file_get_contents($this->bookingResponsePath), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException('Hyperguest booking_response.json is invalid: ' . json_last_error_msg());
+        }
+
+        return $decoded;
+    }
+
     private function findHotel(string $hotelId): array
     {
-        $hotel = collect($this->loadData())->firstWhere('hotel_id', $hotelId);
+        $hotel = collect($this->loadHotels())->firstWhere('hotel_id', $hotelId);
 
         if (! $hotel) {
             throw HotelException::notFound(0);
@@ -135,15 +288,9 @@ class HyperguestHotelProvider implements HotelProviderInterface
         return $hotel;
     }
 
-    /** Case-insensitive city match + optional star-rating filter. */
     private function matchesSearch(array $hotel, SearchHotelDto $dto): bool
     {
-        $cityMatch = str_contains(
-            mb_strtolower($hotel['city'] ?? ''),
-            mb_strtolower($dto->city),
-        );
-
-        if (! $cityMatch) {
+        if (! str_contains(mb_strtolower($hotel['city'] ?? ''), mb_strtolower($dto->city))) {
             return false;
         }
 
@@ -154,7 +301,6 @@ class HyperguestHotelProvider implements HotelProviderInterface
         return true;
     }
 
-    /** Apply price_min / price_max filter against the offer's lowestPrice. */
     private function matchesPriceFilter(HotelOfferDto $offer, SearchHotelDto $dto): bool
     {
         if ($dto->priceMin !== null && $offer->lowestPrice < $dto->priceMin) {
