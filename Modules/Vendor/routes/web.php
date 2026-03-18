@@ -7,6 +7,7 @@ use Modules\Vendor\Http\Controllers\DashboardController;
 use Modules\Vendor\Http\Controllers\HotelController;
 use Modules\Vendor\Http\Controllers\HotelRoomController;
 use Modules\Vendor\Http\Controllers\HotelScrapingController;
+use Modules\Vendor\Http\Controllers\BookingController;
 use Modules\Vendor\Http\Controllers\ProfileController;
 use Modules\Vendor\Http\Controllers\VendorDocumentController;
 
@@ -43,6 +44,9 @@ Route::prefix('vendor')
         // vendor (author_id = auth()->id()). Status is always forced to "pending"
         // by SaveActivityAction — admin must approve before an activity goes live.
         Route::resource('activities', ActivityController::class)->except(['show']);
+
+        // Bookings
+        Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
 
         // ─── Media browser API ────────────────────────────────────────────────
         // Vendors need to pick images for their hotels and rooms. We reuse the

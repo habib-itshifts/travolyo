@@ -16,6 +16,7 @@ use Modules\Admin\Http\Controllers\ProfileController;
 use Modules\Admin\Http\Controllers\ServiceController;
 use Modules\Admin\Http\Controllers\CustomerController;
 use Modules\Admin\Http\Controllers\VendorController;
+use Modules\Admin\Http\Controllers\BookingController;
 use Modules\Admin\Http\Controllers\VendorRequestController;
 
 Route::prefix('admin')
@@ -69,6 +70,9 @@ Route::prefix('admin')
         // Users — Vendors & Customers
         Route::resource('vendors', VendorController::class)->only(['index', 'show', 'edit', 'update']);
         Route::resource('customers', CustomerController::class)->only(['index', 'show', 'edit', 'update']);
+
+        // Bookings
+        Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
 
         Route::resource('activities', ActivityController::class)->except(['show']);
         Route::resource('blogs', BlogController::class)->except(['show']);
