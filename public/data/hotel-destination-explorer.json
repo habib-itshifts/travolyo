@@ -1,0 +1,66 @@
+{
+  "title": "Explore Hotels by Destination",
+  "description": "Switch between curated destination collections and reopen the hotel listing with the same travel dates and guest mix.",
+  "tabs": [
+    {
+      "key": "popular_in_uae",
+      "label": "Popular in UAE",
+      "items": [
+        { "label": "Dubai", "meta": "City stays", "image": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&q=80", "city": "Dubai", "country": "UAE", "country_code": "AE", "location": "DXB" },
+        { "label": "Abu Dhabi", "meta": "Capital escapes", "image": "https://images.unsplash.com/photo-1591604129939-f1efa4d9f7fa?w=1200&q=80", "city": "Abu Dhabi", "country": "UAE", "country_code": "AE", "location": "AUH" },
+        { "label": "Ras Al Khaimah", "meta": "Mountain resorts", "image": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=80", "city": "Ras Al Khaimah", "country": "UAE", "country_code": "AE", "location": "RKT" },
+        { "label": "Sharjah", "meta": "Coastal culture", "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80", "city": "Sharjah", "country": "UAE", "country_code": "AE", "location": "SHJ" },
+        { "label": "Fujairah", "meta": "Beach diving", "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80", "city": "Fujairah", "country": "UAE", "country_code": "AE", "location": "FJR" },
+        { "label": "Al Ain", "meta": "Garden oasis", "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&q=80", "city": "Al Ain", "country": "UAE", "country_code": "AE", "location": "AAN" }
+      ]
+    },
+    {
+      "key": "middle_east",
+      "label": "Middle East",
+      "items": [
+        { "label": "Riyadh", "meta": "Business hubs", "image": "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=1200&q=80", "city": "Riyadh", "country": "Saudi Arabia", "country_code": "SA", "location": "RUH" },
+        { "label": "Jeddah", "meta": "Red Sea stays", "image": "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?w=1200&q=80", "city": "Jeddah", "country": "Saudi Arabia", "country_code": "SA", "location": "JED" },
+        { "label": "Doha", "meta": "Waterfront hotels", "image": "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=1200&q=80", "city": "Doha", "country": "Qatar", "country_code": "QA", "location": "DOH" },
+        { "label": "Muscat", "meta": "Relaxed luxury", "image": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&q=80", "city": "Muscat", "country": "Oman", "country_code": "OM", "location": "MCT" },
+        { "label": "Kuwait City", "meta": "Urban waterfront", "image": "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?w=1200&q=80", "city": "Kuwait City", "country": "Kuwait", "country_code": "KW", "location": "KWI" },
+        { "label": "Bahrain", "meta": "Island breaks", "image": "https://images.unsplash.com/photo-1493558103817-58b2924bce98?w=1200&q=80", "destination": "Bahrain", "country": "Bahrain", "country_code": "BH" }
+      ]
+    },
+    {
+      "key": "asia_pacific",
+      "label": "Asia Pacific",
+      "items": [
+        { "label": "Bangkok", "meta": "City nights", "image": "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1200&q=80", "city": "Bangkok", "country": "Thailand", "country_code": "TH", "location": "BKK" },
+        { "label": "Singapore", "meta": "Skyline stays", "image": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&q=80", "city": "Singapore", "country": "Singapore", "country_code": "SG", "location": "SIN" },
+        { "label": "Kuala Lumpur", "meta": "Downtown picks", "image": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=1200&q=80", "city": "Kuala Lumpur", "country": "Malaysia", "country_code": "MY", "location": "KUL" },
+        { "label": "Bali", "meta": "Island retreats", "image": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80", "city": "Bali", "country": "Indonesia", "country_code": "ID", "location": "DPS" },
+        { "label": "Tokyo", "meta": "Modern classics", "image": "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1200&q=80", "city": "Tokyo", "country": "Japan", "country_code": "JP", "location": "TYO" },
+        { "label": "Hong Kong", "meta": "Harbour views", "image": "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=1200&q=80", "destination": "Hong Kong", "country": "Hong Kong", "country_code": "HK" }
+      ]
+    },
+    {
+      "key": "europe",
+      "label": "Europe",
+      "items": [
+        { "label": "Paris", "meta": "City icons", "image": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80", "city": "Paris", "country": "France", "country_code": "FR", "location": "PAR" },
+        { "label": "London", "meta": "Classic stays", "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&q=80", "city": "London", "country": "United Kingdom", "country_code": "GB", "location": "LON" },
+        { "label": "Rome", "meta": "Historic escapes", "image": "https://images.unsplash.com/photo-1529260830199-42c24126f198?w=1200&q=80", "city": "Rome", "country": "Italy", "country_code": "IT", "location": "ROM" },
+        { "label": "Barcelona", "meta": "Design hotels", "image": "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=1200&q=80", "city": "Barcelona", "country": "Spain", "country_code": "ES", "location": "BCN" },
+        { "label": "Prague", "meta": "Old town charm", "image": "https://images.unsplash.com/photo-1519677100203-a0e668c92439?w=1200&q=80", "city": "Prague", "country": "Czech Republic", "country_code": "CZ", "location": "PRG" },
+        { "label": "Santorini", "meta": "Island sunsets", "image": "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=1200&q=80", "destination": "Santorini", "country": "Greece", "country_code": "GR" }
+      ]
+    },
+    {
+      "key": "beach_escapes",
+      "label": "Beach Escapes",
+      "items": [
+        { "label": "Maldives", "meta": "Overwater villas", "image": "https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=1200&q=80", "destination": "Maldives", "country": "Maldives", "country_code": "MV" },
+        { "label": "Phuket", "meta": "Andaman breaks", "image": "https://images.unsplash.com/photo-1468413253725-0d5181091126?w=1200&q=80", "city": "Phuket", "country": "Thailand", "country_code": "TH", "location": "HKT" },
+        { "label": "Zanzibar", "meta": "Indian Ocean", "image": "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?w=1200&q=80", "destination": "Zanzibar", "country": "Tanzania", "country_code": "TZ" },
+        { "label": "Bali", "meta": "Resort hideaways", "image": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=1200&q=80", "city": "Bali", "country": "Indonesia", "country_code": "ID", "location": "DPS" },
+        { "label": "Koh Samui", "meta": "Tropical stays", "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&q=80", "destination": "Koh Samui", "country": "Thailand", "country_code": "TH" },
+        { "label": "Langkawi", "meta": "Island nature", "image": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1200&q=80", "city": "Langkawi", "country": "Malaysia", "country_code": "MY", "location": "LGK" }
+      ]
+    }
+  ]
+}

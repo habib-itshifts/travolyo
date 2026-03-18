@@ -4,6 +4,7 @@
       "key": "top_cities_to_book",
       "label": "Top Cities to Book",
       "icon": "bi-house-door",
+      "note": "Choose any city and we will open the hotel listing page with your city plus the current search dates preselected.",
       "regions": [
         {
           "label": "Asia",
@@ -72,7 +73,70 @@
       "key": "countries_and_territories",
       "label": "Countries & Territories",
       "icon": "bi-globe2",
-      "description": "Country directory will expand next. Top city links are live today."
+      "note": "Choose a country and we will open hotel listings for that destination with your current search dates preselected.",
+      "regions": [
+        {
+          "label": "Southeast Asia",
+          "items": [
+            { "label": "Thailand", "destination": "Thailand", "country": "Thailand", "country_code": "TH" },
+            { "label": "Indonesia", "destination": "Indonesia", "country": "Indonesia", "country_code": "ID" },
+            { "label": "Malaysia", "destination": "Malaysia", "country": "Malaysia", "country_code": "MY" },
+            { "label": "Philippines", "destination": "Philippines", "country": "Philippines", "country_code": "PH" },
+            { "label": "Vietnam", "destination": "Vietnam", "country": "Vietnam", "country_code": "VN" },
+            { "label": "Singapore", "destination": "Singapore", "country": "Singapore", "country_code": "SG" },
+            { "label": "Cambodia", "destination": "Cambodia", "country": "Cambodia", "country_code": "KH" },
+            { "label": "Myanmar", "destination": "Myanmar", "country": "Myanmar", "country_code": "MM" }
+          ]
+        },
+        {
+          "label": "South Asia",
+          "items": [
+            { "label": "India", "destination": "India", "country": "India", "country_code": "IN" },
+            { "label": "Sri Lanka", "destination": "Sri Lanka", "country": "Sri Lanka", "country_code": "LK" },
+            { "label": "Nepal", "destination": "Nepal", "country": "Nepal", "country_code": "NP" },
+            { "label": "Maldives", "destination": "Maldives", "country": "Maldives", "country_code": "MV" },
+            { "label": "Bhutan", "destination": "Bhutan", "country": "Bhutan", "country_code": "BT" },
+            { "label": "Bangladesh", "destination": "Bangladesh", "country": "Bangladesh", "country_code": "BD" }
+          ]
+        },
+        {
+          "label": "East Asia",
+          "items": [
+            { "label": "Japan", "destination": "Japan", "country": "Japan", "country_code": "JP" },
+            { "label": "South Korea", "destination": "South Korea", "country": "South Korea", "country_code": "KR" },
+            { "label": "China", "destination": "China", "country": "China", "country_code": "CN" },
+            { "label": "Hong Kong", "destination": "Hong Kong", "country": "Hong Kong", "country_code": "HK" },
+            { "label": "Taiwan", "destination": "Taiwan", "country": "Taiwan", "country_code": "TW" },
+            { "label": "Macau", "destination": "Macau", "country": "Macau", "country_code": "MO" }
+          ]
+        },
+        {
+          "label": "Middle East",
+          "items": [
+            { "label": "UAE", "destination": "UAE", "country": "UAE", "country_code": "AE" },
+            { "label": "Qatar", "destination": "Qatar", "country": "Qatar", "country_code": "QA" },
+            { "label": "Oman", "destination": "Oman", "country": "Oman", "country_code": "OM" },
+            { "label": "Saudi Arabia", "destination": "Saudi Arabia", "country": "Saudi Arabia", "country_code": "SA" },
+            { "label": "Jordan", "destination": "Jordan", "country": "Jordan", "country_code": "JO" },
+            { "label": "Bahrain", "destination": "Bahrain", "country": "Bahrain", "country_code": "BH" }
+          ]
+        },
+        {
+          "label": "Europe",
+          "items": [
+            { "label": "United Kingdom", "destination": "United Kingdom", "country": "United Kingdom", "country_code": "GB" },
+            { "label": "France", "destination": "France", "country": "France", "country_code": "FR" },
+            { "label": "Italy", "destination": "Italy", "country": "Italy", "country_code": "IT" },
+            { "label": "Spain", "destination": "Spain", "country": "Spain", "country_code": "ES" },
+            { "label": "Netherlands", "destination": "Netherlands", "country": "Netherlands", "country_code": "NL" },
+            { "label": "Turkey", "destination": "Turkey", "country": "Turkey", "country_code": "TR" },
+            { "label": "Germany", "destination": "Germany", "country": "Germany", "country_code": "DE" },
+            { "label": "Greece", "destination": "Greece", "country": "Greece", "country_code": "GR" },
+            { "label": "Switzerland", "destination": "Switzerland", "country": "Switzerland", "country_code": "CH" },
+            { "label": "Portugal", "destination": "Portugal", "country": "Portugal", "country_code": "PT" }
+          ]
+        }
+      ]
     },
     {
       "key": "destination_guides",

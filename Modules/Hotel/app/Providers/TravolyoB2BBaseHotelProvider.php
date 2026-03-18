@@ -14,6 +14,8 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
 {
     protected string $baseUrl;
     protected array  $headers;
+    protected int    $searchTimeout;
+    protected int    $connectTimeout;
 
     public function __construct()
     {
@@ -24,21 +26,25 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             'Content-Type'  => 'application/json',
             'Accept'        => 'application/json',
         ];
+        $this->searchTimeout = max(5, (int) config('travolyo_b2b.search_timeout', config('travolyo_b2b.timeout', 20)));
+        $this->connectTimeout = max(2, (int) config('travolyo_b2b.connect_timeout', 5));
     }
 
     // ── Search ──────────────────────────────────────────────────
 
     public function search(SearchHotelDto $dto): array
     {
-        if (empty(trim($dto->city)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
+        
+        if (empty(trim($dto->destination)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
             return [];
         }
 
         try {
-            $response = Http::timeout(45)
+            $response = Http::connectTimeout($this->connectTimeout)
+                ->timeout($this->searchTimeout)
                 ->withHeaders($this->headers)
                 ->post($this->baseUrl . '/api/v1/hotels/search', [
-                    'destination' => $dto->city,
+                    'destination' => $dto->destination,
                     'check_in'    => $dto->checkIn,
                     'check_out'   => $dto->checkOut,
                     'adults'      => $dto->adults,
@@ -65,7 +71,12 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
                 ->values()
                 ->all();
 
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            Log::warning('B2B hotel search failed', [
+                'provider' => $this->sourceTag(),
+                'destination' => $dto->destination,
+                'message' => $e->getMessage(),
+            ]);
             return [];
         }
     }
