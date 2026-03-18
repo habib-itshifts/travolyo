@@ -34,6 +34,7 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             return [];
         }
 
+        
         try {
             $response = Http::timeout(45)
                 ->withHeaders($this->headers)
