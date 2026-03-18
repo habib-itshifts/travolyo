@@ -1,12 +1,144 @@
 @extends('layouts.master')
 
-@section('title', 'Travolyo – Where Your Journey Takes Off')
+@php
+    $directoryTabs = collect(data_get($topCitiesConfig ?? [], 'tabs', []))->values();
+    $topCitiesTab = $directoryTabs->firstWhere('key', 'top_cities_to_book') ?? [];
+    $topCityRegions = collect(data_get($topCitiesTab, 'regions', []))->values();
+    $heroQuickCities = $topCityRegions
+        ->flatMap(fn (array $region) => data_get($region, 'items', []))
+        ->take(6)
+        ->values();
+@endphp
+
+@section('title', 'Travolyo - Where Your Journey Takes Off')
+
+@push('styles')
+<style>
+.top-cities-directory-wrap { margin-top: -48px; position: relative; z-index: 2; }
+.top-cities-directory {
+    background: #fff;
+    border: 1px solid #e9eef5;
+    border-radius: 28px;
+    box-shadow: 0 24px 60px rgba(18, 38, 63, .08);
+    padding: 28px 32px 34px;
+}
+.top-cities-directory__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    border-bottom: 1px solid #e9eef5;
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+}
+.top-cities-directory__tab {
+    appearance: none;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: #697586;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 500;
+    padding: 0 4px 14px;
+    transition: color .2s ease, border-color .2s ease;
+}
+.top-cities-directory__tab:hover,
+.top-cities-directory__tab.is-active {
+    color: #17c3ce;
+    border-color: #17c3ce;
+}
+.top-cities-directory__panel { display: none; }
+.top-cities-directory__panel.is-active { display: block; }
+.top-cities-directory__note {
+    color: #5f6c7b;
+    font-size: .95rem;
+    margin: -6px 0 20px;
+}
+.top-cities-region + .top-cities-region { margin-top: 34px; }
+.top-cities-region__title {
+    color: #12314d;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: .12em;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+}
+.top-cities-region__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.top-cities-chip {
+    background: #fff;
+    border: 1px solid #dbe4ef;
+    border-radius: 18px;
+    color: #465568;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    min-width: 104px;
+    padding: 10px 22px;
+    text-decoration: none;
+    transition: transform .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.top-cities-chip:hover {
+    border-color: #17c3ce;
+    box-shadow: 0 10px 24px rgba(23, 195, 206, .12);
+    color: #17c3ce;
+    transform: translateY(-1px);
+}
+.top-cities-placeholder {
+    background: linear-gradient(180deg, #f8fbfd 0%, #f3f7fb 100%);
+    border: 1px dashed #d8e3ee;
+    border-radius: 20px;
+    color: #5f6c7b;
+    padding: 22px 24px;
+}
+
+@media (max-width: 991.98px) {
+    .top-cities-directory-wrap { margin-top: 32px; }
+    .top-cities-directory { padding: 24px 20px 26px; }
+}
+
+@media (max-width: 767.98px) {
+    .top-cities-directory__tabs {
+        gap: 8px;
+        margin-bottom: 22px;
+        overflow-x: auto;
+        padding-bottom: 10px;
+        scrollbar-width: none;
+    }
+    .top-cities-directory__tabs::-webkit-scrollbar { display: none; }
+    .top-cities-directory__tab {
+        border: 1px solid #dbe4ef;
+        border-radius: 999px;
+        flex: 0 0 auto;
+        padding: 10px 14px;
+        white-space: nowrap;
+    }
+    .top-cities-directory__tab.is-active {
+        background: rgba(23, 195, 206, .08);
+    }
+    .top-cities-region__title {
+        font-size: 1rem;
+        letter-spacing: .1em;
+        margin-bottom: 14px;
+    }
+    .top-cities-region__grid { gap: 10px; }
+    .top-cities-chip {
+        min-height: 48px;
+        min-width: calc(50% - 5px);
+        padding: 10px 16px;
+    }
+}
+</style>
+@endpush
 
 @section('content')
 
-{{-- ═══════════════════════════════════════════
-     HERO SECTION
-════════════════════════════════════════════ --}}
 <section class="hero-section d-flex flex-column justify-content-center">
     <div class="container text-center text-white">
 
@@ -14,33 +146,40 @@
             Explore the World, <br class="d-none d-md-block"> Your Way
         </h1>
         <p class="hero-subtitle text-white mb-5">
-            Flights, hotels, activities &amp; more — all in one place.
+            Flights, hotels, activities &amp; more - all in one place.
         </p>
 
-        {{-- Search Widget --}}
-        @include('website.partials._search-widget')
+        @include('website.partials._search-widget', [
+            'defaultHotelCheckIn' => $defaultHotelCheckIn,
+            'defaultHotelCheckOut' => $defaultHotelCheckOut,
+        ])
 
-        {{-- Quick Links --}}
-        <div class="hero-quick-links mt-4">
-            <a href="#">Dubai</a>
-            <span class="dot"></span>
-            <a href="#">London</a>
-            <span class="dot"></span>
-            <a href="#">Paris</a>
-            <span class="dot"></span>
-            <a href="#">New York</a>
-            <span class="dot"></span>
-            <a href="#">Bangkok</a>
-            <span class="dot"></span>
-            <a href="#">Tokyo</a>
-        </div>
+        @if($heroQuickCities->isNotEmpty())
+            <div class="hero-quick-links mt-4">
+                @foreach($heroQuickCities as $quickCity)
+                    @php
+                        $quickCityUrl = route('hotels.index') . '?' . http_build_query([
+                            'country' => data_get($quickCity, 'country', ''),
+                            'country_code' => data_get($quickCity, 'country_code', ''),
+                            'city' => data_get($quickCity, 'city', data_get($quickCity, 'label', '')),
+                            'location' => data_get($quickCity, 'location', ''),
+                            'check_in' => $defaultHotelCheckIn,
+                            'check_out' => $defaultHotelCheckOut,
+                            'adults' => 1,
+                            'children' => 0,
+                        ]);
+                    @endphp
+                    <a href="{{ $quickCityUrl }}">{{ data_get($quickCity, 'label', data_get($quickCity, 'city', '')) }}</a>
+                    @if(! $loop->last)
+                        <span class="dot"></span>
+                    @endif
+                @endforeach
+            </div>
+        @endif
 
     </div>
 </section>
 
-{{-- ═══════════════════════════════════════════
-     FEATURED HOTELS
-════════════════════════════════════════════ --}}
 <section class="section-padding">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -51,7 +190,6 @@
         </div>
         <div class="row g-4">
 
-            {{-- Card 1 --}}
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="dest-card">
                     <div class="dest-card__img-wrap">
@@ -70,7 +208,6 @@
                 </div>
             </div>
 
-            {{-- Card 2 --}}
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="dest-card">
                     <div class="dest-card__img-wrap">
@@ -89,7 +226,6 @@
                 </div>
             </div>
 
-            {{-- Card 3 --}}
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="dest-card">
                     <div class="dest-card__img-wrap">
@@ -108,7 +244,6 @@
                 </div>
             </div>
 
-            {{-- Card 4 --}}
             <div class="col-6 col-md-4 col-lg-3">
                 <div class="dest-card">
                     <div class="dest-card__img-wrap">
@@ -130,9 +265,6 @@
     </div>
 </section>
 
-{{-- ═══════════════════════════════════════════
-     PROMO BANNER
-════════════════════════════════════════════ --}}
 <section class="promo-banner text-white text-center">
     <div class="container">
         <p class="text-uppercase fw-700 mb-2" style="letter-spacing:1.5px;opacity:.85;font-size:.85rem;">
@@ -148,9 +280,65 @@
     </div>
 </section>
 
-{{-- ═══════════════════════════════════════════
-     POPULAR DESTINATIONS
-════════════════════════════════════════════ --}}
+@if($directoryTabs->isNotEmpty())
+<section class="top-cities-directory-wrap">
+    <div class="container">
+        <div class="top-cities-directory">
+            <div class="top-cities-directory__tabs" role="tablist" aria-label="Travel directory">
+                @foreach($directoryTabs as $tab)
+                    <button
+                        type="button"
+                        class="top-cities-directory__tab {{ $loop->first ? 'is-active' : '' }}"
+                        data-directory-tab="{{ data_get($tab, 'key') }}"
+                        aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                        <i class="bi {{ data_get($tab, 'icon', 'bi-grid') }}"></i>
+                        <span>{{ data_get($tab, 'label') }}</span>
+                    </button>
+                @endforeach
+            </div>
+
+            @foreach($directoryTabs as $tab)
+                <div class="top-cities-directory__panel {{ $loop->first ? 'is-active' : '' }}" data-directory-panel="{{ data_get($tab, 'key') }}">
+                    @if(data_get($tab, 'key') === 'top_cities_to_book')
+                        <p class="top-cities-directory__note mb-0">
+                            Choose any city and we will open the hotel listing page with your city plus the current search dates preselected.
+                        </p>
+                        @foreach(data_get($tab, 'regions', []) as $region)
+                            <div class="top-cities-region">
+                                <div class="top-cities-region__title">{{ data_get($region, 'label') }}</div>
+                                <div class="top-cities-region__grid">
+                                    @foreach(data_get($region, 'items', []) as $city)
+                                        @php
+                                            $cityUrl = route('hotels.index') . '?' . http_build_query([
+                                                'country' => data_get($city, 'country', ''),
+                                                'country_code' => data_get($city, 'country_code', ''),
+                                                'city' => data_get($city, 'city', data_get($city, 'label', '')),
+                                                'location' => data_get($city, 'location', ''),
+                                                'check_in' => $defaultHotelCheckIn,
+                                                'check_out' => $defaultHotelCheckOut,
+                                                'adults' => 1,
+                                                'children' => 0,
+                                            ]);
+                                        @endphp
+                                        <a class="top-cities-chip" href="{{ $cityUrl }}">
+                                            {{ data_get($city, 'label', data_get($city, 'city', '')) }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="top-cities-placeholder">
+                            {{ data_get($tab, 'description', 'This section is ready for the next content set.') }}
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
 <section class="section-padding">
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -259,9 +447,6 @@
     </div>
 </section>
 
-{{-- ═══════════════════════════════════════════
-     WHY TRAVOLYO
-════════════════════════════════════════════ --}}
 <section class="section-padding why-section" style="background:#f8f9fa;">
     <div class="container">
         <h2 class="section-title text-center mb-5">Why Book with Travolyo?</h2>
@@ -312,3 +497,32 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const tabs = document.querySelectorAll('[data-directory-tab]');
+    const panels = document.querySelectorAll('[data-directory-panel]');
+
+    if (!tabs.length || !panels.length) {
+        return;
+    }
+
+    tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const key = tab.dataset.directoryTab || '';
+
+            tabs.forEach((btn) => {
+                const active = btn === tab;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            panels.forEach((panel) => {
+                panel.classList.toggle('is-active', panel.dataset.directoryPanel === key);
+            });
+        });
+    });
+})();
+</script>
+@endpush

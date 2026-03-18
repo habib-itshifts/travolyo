@@ -1,0 +1,90 @@
+{
+  "tabs": [
+    {
+      "key": "top_cities_to_book",
+      "label": "Top Cities to Book",
+      "icon": "bi-house-door",
+      "regions": [
+        {
+          "label": "Asia",
+          "items": [
+            { "label": "Dubai", "city": "Dubai", "country": "UAE", "country_code": "AE", "location": "DXB" },
+            { "label": "Bangkok", "city": "Bangkok", "country": "Thailand", "country_code": "TH", "location": "BKK" },
+            { "label": "Singapore", "city": "Singapore", "country": "Singapore", "country_code": "SG", "location": "SIN" },
+            { "label": "Bali", "city": "Bali", "country": "Indonesia", "country_code": "ID", "location": "DPS" },
+            { "label": "Kuala Lumpur", "city": "Kuala Lumpur", "country": "Malaysia", "country_code": "MY", "location": "KUL" },
+            { "label": "Tokyo", "city": "Tokyo", "country": "Japan", "country_code": "JP", "location": "TYO" },
+            { "label": "Seoul", "city": "Seoul", "country": "South Korea", "country_code": "KR", "location": "SEL" },
+            { "label": "Hong Kong", "city": "Hong Kong", "country": "Hong Kong", "country_code": "HK", "location": "HKG" },
+            { "label": "Phuket", "city": "Phuket", "country": "Thailand", "country_code": "TH", "location": "HKT" },
+            { "label": "Colombo", "city": "Colombo", "country": "Sri Lanka", "country_code": "LK", "location": "CMB" },
+            { "label": "Maldives", "city": "Male", "country": "Maldives", "country_code": "MV", "location": "MLE" },
+            { "label": "Kathmandu", "city": "Kathmandu", "country": "Nepal", "country_code": "NP", "location": "KTM" },
+            { "label": "Delhi", "city": "Delhi", "country": "India", "country_code": "IN", "location": "DEL" },
+            { "label": "Mumbai", "city": "Mumbai", "country": "India", "country_code": "IN", "location": "BOM" },
+            { "label": "Goa", "city": "Goa", "country": "India", "country_code": "IN", "location": "GOI" },
+            { "label": "Agra", "city": "Agra", "country": "India", "country_code": "IN", "location": "AGR" },
+            { "label": "Jaipur", "city": "Jaipur", "country": "India", "country_code": "IN", "location": "JAI" },
+            { "label": "Langkawi", "city": "Langkawi", "country": "Malaysia", "country_code": "MY", "location": "LGK" },
+            { "label": "Penang", "city": "Penang", "country": "Malaysia", "country_code": "MY", "location": "PEN" },
+            { "label": "Cebu", "city": "Cebu", "country": "Philippines", "country_code": "PH", "location": "CEB" },
+            { "label": "Manila", "city": "Manila", "country": "Philippines", "country_code": "PH", "location": "MNL" },
+            { "label": "Ho Chi Minh City", "city": "Ho Chi Minh City", "country": "Vietnam", "country_code": "VN", "location": "SGN" },
+            { "label": "Hanoi", "city": "Hanoi", "country": "Vietnam", "country_code": "VN", "location": "HAN" },
+            { "label": "Taipei", "city": "Taipei", "country": "Taiwan", "country_code": "TW", "location": "TPE" },
+            { "label": "Osaka", "city": "Osaka", "country": "Japan", "country_code": "JP", "location": "OSA" },
+            { "label": "Kyoto", "city": "Kyoto", "country": "Japan", "country_code": "JP", "location": "UKY" },
+            { "label": "Beijing", "city": "Beijing", "country": "China", "country_code": "CN", "location": "BJS" },
+            { "label": "Shanghai", "city": "Shanghai", "country": "China", "country_code": "CN", "location": "SHA" },
+            { "label": "Chiang Mai", "city": "Chiang Mai", "country": "Thailand", "country_code": "TH", "location": "CNX" },
+            { "label": "Krabi", "city": "Krabi", "country": "Thailand", "country_code": "TH", "location": "KBV" }
+          ]
+        },
+        {
+          "label": "Middle East",
+          "items": [
+            { "label": "Abu Dhabi", "city": "Abu Dhabi", "country": "UAE", "country_code": "AE", "location": "AUH" },
+            { "label": "Doha", "city": "Doha", "country": "Qatar", "country_code": "QA", "location": "DOH" },
+            { "label": "Muscat", "city": "Muscat", "country": "Oman", "country_code": "OM", "location": "MCT" },
+            { "label": "Riyadh", "city": "Riyadh", "country": "Saudi Arabia", "country_code": "SA", "location": "RUH" },
+            { "label": "Amman", "city": "Amman", "country": "Jordan", "country_code": "JO", "location": "AMM" },
+            { "label": "Beirut", "city": "Beirut", "country": "Lebanon", "country_code": "LB", "location": "BEY" }
+          ]
+        },
+        {
+          "label": "Europe",
+          "items": [
+            { "label": "London", "city": "London", "country": "United Kingdom", "country_code": "GB", "location": "LON" },
+            { "label": "Paris", "city": "Paris", "country": "France", "country_code": "FR", "location": "PAR" },
+            { "label": "Rome", "city": "Rome", "country": "Italy", "country_code": "IT", "location": "ROM" },
+            { "label": "Barcelona", "city": "Barcelona", "country": "Spain", "country_code": "ES", "location": "BCN" },
+            { "label": "Amsterdam", "city": "Amsterdam", "country": "Netherlands", "country_code": "NL", "location": "AMS" },
+            { "label": "Istanbul", "city": "Istanbul", "country": "Turkey", "country_code": "TR", "location": "IST" },
+            { "label": "Prague", "city": "Prague", "country": "Czech Republic", "country_code": "CZ", "location": "PRG" },
+            { "label": "Vienna", "city": "Vienna", "country": "Austria", "country_code": "AT", "location": "VIE" },
+            { "label": "Zurich", "city": "Zurich", "country": "Switzerland", "country_code": "CH", "location": "ZRH" },
+            { "label": "Athens", "city": "Athens", "country": "Greece", "country_code": "GR", "location": "ATH" }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "countries_and_territories",
+      "label": "Countries & Territories",
+      "icon": "bi-globe2",
+      "description": "Country directory will expand next. Top city links are live today."
+    },
+    {
+      "key": "destination_guides",
+      "label": "Destination Guides",
+      "icon": "bi-map",
+      "description": "Destination guides can plug into the same JSON structure when ready."
+    },
+    {
+      "key": "hotels_by_type",
+      "label": "Hotels by Type",
+      "icon": "bi-building",
+      "description": "Hotel-type collections can be added here without changing the layout."
+    }
+  ]
+}
