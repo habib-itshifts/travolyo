@@ -6,6 +6,11 @@
 <style>
 /* ── Hotel listing page ─────────────────────────────── */
 .hotel-page-bg { background: #f4f6fb; min-height: 60vh; }
+:root {
+    --hotel-theme: var(--primary, #17c3ce);
+    --hotel-theme-dark: var(--primary-dark, #13afba);
+    --hotel-theme-soft: rgba(23, 195, 206, .18);
+}
 
 /* Filter card */
 .filter-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
@@ -16,16 +21,21 @@
 .price-slider-wrap input[type=range] {
     -webkit-appearance: none; width: 100%; height: 4px;
     border-radius: 2px; outline: none; cursor: pointer;
-    background: linear-gradient(to right, var(--bs-primary) 100%, #e5e7eb 100%);
+    background: linear-gradient(to right, var(--hotel-theme) 100%, #e5e7eb 100%);
 }
 .price-slider-wrap input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; width: 16px; height: 16px;
-    border-radius: 50%; background: var(--bs-primary); cursor: pointer;
-    box-shadow: 0 0 0 3px rgba(13,110,253,.15);
+    border-radius: 50%; background: var(--hotel-theme); cursor: pointer;
+    box-shadow: 0 0 0 3px var(--hotel-theme-soft);
 }
-.filter-pill { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background .15s; font-size: .875rem; }
+.price-slider-wrap input[type=range]::-moz-range-thumb {
+    border: 0; border-radius: 50%; background: var(--hotel-theme); cursor: pointer;
+    box-shadow: 0 0 0 3px var(--hotel-theme-soft);
+    height: 16px; width: 16px;
+}
+.filter-pill { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background .15s, color .15s; font-size: .875rem; }
 .filter-pill:hover { background: #f0f4ff; }
-.filter-pill input { accent-color: var(--bs-primary); }
+.filter-pill input { accent-color: var(--hotel-theme); }
 
 /* Results header */
 .results-header { border-bottom: 1px solid #eef0f4; padding-bottom: 12px; margin-bottom: 16px; }
@@ -52,9 +62,56 @@
 .hotel-card__addr { font-size: .8rem; color: #6c757d; margin-bottom: 8px; }
 .hotel-card__stars { color: #f59e0b; font-size: .85rem; }
 .hotel-card__amenities { font-size: .75rem; color: #6c757d; }
-.hotel-card__price { font-size: 1.3rem; font-weight: 700; color: var(--bs-primary); }
+.hotel-card__price { font-size: 1.3rem; font-weight: 700; color: var(--hotel-theme); }
 .hotel-card__night { font-size: .75rem; color: #6c757d; }
 .hotel-card__badge { font-size: .65rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+
+/* Pagination */
+.hotel-pagination-wrap { display: flex; justify-content: center; margin-top: 24px; }
+.hotel-pagination {
+    align-items: center;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(18, 38, 63, .08);
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 10px 12px;
+}
+.hotel-pagination__btn {
+    background: #f8fafc;
+    border: 1px solid #dbe4ef;
+    border-radius: 12px;
+    color: #334155;
+    font-size: .9rem;
+    font-weight: 600;
+    min-width: 42px;
+    padding: 9px 12px;
+    transition: all .15s ease;
+}
+.hotel-pagination__btn:hover:not(:disabled) {
+    border-color: var(--hotel-theme);
+    color: var(--hotel-theme);
+    transform: translateY(-1px);
+}
+.hotel-pagination__btn.is-active {
+    background: var(--hotel-theme);
+    border-color: var(--hotel-theme);
+    box-shadow: 0 10px 20px var(--hotel-theme-soft);
+    color: #fff;
+}
+.hotel-pagination__btn:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+.hotel-pagination__ellipsis,
+.hotel-pagination__summary {
+    color: #64748b;
+    font-size: .85rem;
+    font-weight: 600;
+    padding: 0 6px;
+}
 
 /* Skeleton */
 .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
@@ -62,16 +119,16 @@
 
 /* Modal — Hotel detail */
 #hotelModal .modal-dialog { max-width: 860px; }
-#hotelModal .modal-header { background: linear-gradient(135deg, var(--bs-primary) 0%, #0e9aa7 100%); color: #fff; }
+#hotelModal .modal-header { background: linear-gradient(135deg, var(--hotel-theme) 0%, #0ea5b5 100%); color: #fff; }
 #hotelModal .modal-header .btn-close { filter: invert(1); }
 .hotel-gallery { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; border-radius: 8px; overflow: hidden; max-height: 240px; margin-bottom: 20px; }
 .hotel-gallery img { width: 100%; height: 120px; object-fit: cover; }
 .hotel-gallery img:first-child { grid-row: 1/3; height: 100%; }
 .room-card { border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px; transition: border-color .15s; }
-.room-card:hover { border-color: var(--bs-primary); }
+.room-card:hover { border-color: var(--hotel-theme); }
 .room-card__name { font-weight: 700; font-size: .95rem; color: #1a2942; }
 .room-card__meta { font-size: .8rem; color: #6c757d; margin: 6px 0; }
-.room-card__price { font-size: 1.15rem; font-weight: 700; color: var(--bs-primary); }
+.room-card__price { font-size: 1.15rem; font-weight: 700; color: var(--hotel-theme); }
 .btn-select-room { padding: 6px 20px; font-size: .85rem; border-radius: 8px; font-weight: 600; }
 
 @media (max-width: 576px) {
@@ -190,6 +247,7 @@
 
             {{-- Hotel cards rendered by JS --}}
             <div id="hotel-offers" class="d-none"></div>
+            <div id="hotel-pagination" class="hotel-pagination-wrap d-none"></div>
             <div id="hotel-error"  class="d-none alert alert-danger rounded-3"></div>
 
         @endif
@@ -229,8 +287,11 @@
     const errorEl   = document.getElementById('hotel-error');
     const header    = document.getElementById('results-header');
     const countEl   = document.getElementById('results-count');
+    const paginationEl = document.getElementById('hotel-pagination');
+    const pageSize = 10;
 
     let allHotels = [];
+    let currentPage = 1;
 
     // ── Stars html ──────────────────────────────────────
     function stars(n) {
@@ -250,6 +311,27 @@
         return `<span class="hotel-card__badge" style="background:${m.bg};color:${m.color}">${m.label}</span>`;
     }
 
+    function normalizePrice(value) {
+        if (typeof value === 'number') {
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        const normalized = String(value ?? '')
+            .replace(/,/g, '')
+            .replace(/[^\d.]/g, '');
+
+        const parsed = parseFloat(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function listingCurrency() {
+        return String(allHotels.find((hotel) => hotel?.currency)?.currency || 'USD').trim() || 'USD';
+    }
+
+    function formatMoney(value, currency = listingCurrency()) {
+        return `${currency} ${Math.round(normalizePrice(value)).toLocaleString('en-US')}`;
+    }
+
     // ── Render one hotel card ────────────────────────────
     function renderCard(h) {
         const img = h.images?.[0]
@@ -263,7 +345,7 @@
 
         return `
         <div class="hotel-card js-hotel-card"
-             data-price="${h.lowest_price}"
+             data-price="${normalizePrice(h.lowest_price)}"
              data-stars="${h.star_rating}"
              data-name="${(h.name ?? '').toLowerCase()}"
              data-provider="${h.provider}">
@@ -285,7 +367,7 @@
                 </div>
                 <div class="d-flex align-items-center justify-content-between mt-3">
                     <div>
-                        <div class="hotel-card__price">${h.currency} ${parseFloat(h.lowest_price).toLocaleString('en-US', {minimumFractionDigits:0})}</div>
+                        <div class="hotel-card__price">${formatMoney(h.lowest_price, h.currency)}</div>
                         <div class="hotel-card__night">per night</div>
                     </div>
                     <button class="btn btn-primary btn-select-room js-view-deal"
@@ -338,8 +420,8 @@
                             </div>` : ''}
                         </div>
                         <div class="text-end ms-3">
-                            <div class="room-card__price">${r.currency ?? h.currency} ${parseFloat(r.base_price ?? r.total_price ?? 0).toLocaleString()}</div>
-                            <div style="font-size:.75rem;color:#6c757d;">${r.nights ? r.nights + ' nights total: ' + parseFloat(r.total_price ?? 0).toLocaleString() : 'per night'}</div>
+                            <div class="room-card__price">${formatMoney(r.base_price ?? r.total_price ?? 0, r.currency ?? h.currency)}</div>
+                            <div style="font-size:.75rem;color:#6c757d;">${r.nights ? `${r.nights} nights total: ${formatMoney(r.total_price ?? 0, r.currency ?? h.currency)}` : 'per night'}</div>
                             <button class="btn btn-primary btn-select-room mt-2 js-select-room"
                                 data-offer-id="${h.id}"
                                 data-room-id="${r.id}"
@@ -390,6 +472,7 @@
                     check_out:  params.check_out,
                     adults:     parseInt(params.adults ?? 1, 10),
                     children:   parseInt(params.children ?? 0, 10),
+                    per_page:   100,
                 }),
             });
 
@@ -399,6 +482,7 @@
             if (!data.success || !data.data?.length) {
                 errorEl.textContent = data.message ?? 'No hotels found for your search.';
                 errorEl.classList.remove('d-none');
+                paginationEl?.classList.add('d-none');
                 return;
             }
 
@@ -408,22 +492,118 @@
 
             header.classList.remove('d-none');
             header.classList.add('d-flex');
-            updateCount();
 
             initPriceSlider();
-            filterCards();
+            filterCards(true);
 
         } catch (err) {
             loading.classList.add('d-none');
             errorEl.textContent = 'Failed to load hotels. Please try again.';
             errorEl.classList.remove('d-none');
+            paginationEl?.classList.add('d-none');
             console.error(err);
         }
     }
 
-    function updateCount() {
-        const visible = offersEl.querySelectorAll('.js-hotel-card:not([style*="none"])').length;
-        countEl.textContent = `Showing ${visible} hotel${visible !== 1 ? 's' : ''} in ${params.city ?? ''}`;
+    function filteredCards() {
+        return [...offersEl.querySelectorAll('.js-hotel-card')]
+            .filter((card) => card.dataset.filteredOut !== '1');
+    }
+
+    function updateCount(totalVisible = filteredCards().length) {
+        if (!countEl) return;
+
+        if (!totalVisible) {
+            countEl.textContent = `No hotels found in ${params.city ?? ''}`;
+            return;
+        }
+
+        const start = ((currentPage - 1) * pageSize) + 1;
+        const end = Math.min(totalVisible, currentPage * pageSize);
+        countEl.textContent = `Showing ${start}-${end} of ${totalVisible} hotel${totalVisible !== 1 ? 's' : ''} in ${params.city ?? ''}`;
+    }
+
+    function pageWindow(totalPages) {
+        if (totalPages <= 7) {
+            return Array.from({ length: totalPages }, (_, index) => index + 1);
+        }
+
+        const pages = [1];
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+
+        if (start > 2) pages.push('start-ellipsis');
+        for (let page = start; page <= end; page += 1) pages.push(page);
+        if (end < totalPages - 1) pages.push('end-ellipsis');
+        pages.push(totalPages);
+
+        return pages;
+    }
+
+    function renderPagination() {
+        if (!paginationEl) return;
+
+        const cards = filteredCards();
+        const totalVisible = cards.length;
+        const totalPages = Math.max(1, Math.ceil(totalVisible / pageSize));
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        [...offersEl.querySelectorAll('.js-hotel-card')].forEach((card) => {
+            card.style.display = 'none';
+        });
+
+        if (!totalVisible) {
+            paginationEl.innerHTML = '';
+            paginationEl.classList.add('d-none');
+            updateCount(0);
+            return;
+        }
+
+        cards
+            .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+            .forEach((card) => {
+                card.style.display = '';
+            });
+
+        updateCount(totalVisible);
+
+        if (totalPages <= 1) {
+            paginationEl.innerHTML = '';
+            paginationEl.classList.add('d-none');
+            return;
+        }
+
+        const pageButtons = pageWindow(totalPages).map((item) => {
+            if (typeof item !== 'number') {
+                return '<span class="hotel-pagination__ellipsis">...</span>';
+            }
+
+            return `
+                <button type="button"
+                        class="hotel-pagination__btn ${item === currentPage ? 'is-active' : ''}"
+                        data-page="${item}">
+                    ${item}
+                </button>
+            `;
+        }).join('');
+
+        paginationEl.innerHTML = `
+            <div class="hotel-pagination">
+                <button type="button" class="hotel-pagination__btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                ${pageButtons}
+                <button type="button" class="hotel-pagination__btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <span class="hotel-pagination__summary">Page ${currentPage} of ${totalPages}</span>
+            </div>
+        `;
+
+        paginationEl.classList.remove('d-none');
     }
 
     // ── Price slider ──────────────────────────────────────
@@ -432,9 +612,13 @@
         const priceRangeVal = document.getElementById('priceRangeVal');
         const priceRangeMin = document.getElementById('priceRangeMin');
         const cards         = [...document.querySelectorAll('.js-hotel-card')];
-        const prices        = cards.map(c => parseFloat(c.dataset.price)).filter(v => isFinite(v));
+        const prices        = cards.map(c => normalizePrice(c.dataset.price)).filter(v => isFinite(v) && v > 0);
 
-        if (!prices.length) return;
+        if (!prices.length) {
+            if (priceRangeMin) priceRangeMin.textContent = `${listingCurrency()} 0`;
+            if (priceRangeVal) priceRangeVal.textContent = `${listingCurrency()} 0`;
+            return;
+        }
 
         const minP = Math.floor(Math.min(...prices));
         const maxP = Math.ceil(Math.max(...prices));
@@ -443,33 +627,33 @@
         priceRange.max   = maxP;
         priceRange.value = maxP;
 
-        const fmt = v => `$${Math.round(v).toLocaleString()}`;
+        const fmt = v => formatMoney(v, listingCurrency());
         if (priceRangeMin) priceRangeMin.textContent = fmt(minP);
         if (priceRangeVal) priceRangeVal.textContent = fmt(maxP);
 
         function paintSlider() {
             const mn = +priceRange.min, mx = +priceRange.max, vl = +priceRange.value;
             const pct = mx > mn ? ((vl - mn) / (mx - mn)) * 100 : 100;
-            priceRange.style.background = `linear-gradient(to right,var(--bs-primary) 0%,var(--bs-primary) ${pct}%,#e5e7eb ${pct}%,#e5e7eb 100%)`;
+            priceRange.style.background = `linear-gradient(to right,var(--hotel-theme) 0%,var(--hotel-theme) ${pct}%,#e5e7eb ${pct}%,#e5e7eb 100%)`;
         }
         paintSlider();
 
         priceRange.addEventListener('input', function () {
             if (priceRangeVal) priceRangeVal.textContent = fmt(+this.value);
             paintSlider();
-            filterCards();
+            filterCards(true);
         });
     }
 
     // ── Filter cards ──────────────────────────────────────
-    function filterCards() {
+    function filterCards(resetPage = false) {
         const priceRange    = document.getElementById('priceRange');
         const maxPrice      = priceRange ? +priceRange.value : Infinity;
         const starFilter    = document.querySelector('.star-filter:checked')?.value ?? 'all';
         const provFilter    = document.querySelector('.provider-filter:checked')?.value ?? 'all';
 
         document.querySelectorAll('.js-hotel-card').forEach(card => {
-            const price    = parseFloat(card.dataset.price);
+            const price    = normalizePrice(card.dataset.price);
             const cardStar = parseInt(card.dataset.stars ?? 0, 10);
             const prov     = card.dataset.provider ?? '';
 
@@ -477,10 +661,14 @@
             if (starFilter !== 'all') show = show && cardStar >= parseInt(starFilter, 10);
             if (provFilter !== 'all') show = show && prov === provFilter;
 
-            card.style.display = show ? '' : 'none';
+            card.dataset.filteredOut = show ? '0' : '1';
         });
 
-        updateCount();
+        if (resetPage) {
+            currentPage = 1;
+        }
+
+        renderPagination();
     }
 
     // ── Sort ──────────────────────────────────────────────
@@ -490,17 +678,30 @@
         const cards  = [...parent.querySelectorAll('.js-hotel-card')];
 
         cards.sort((a, b) => {
-            if (key === 'price') return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+            if (key === 'price') return normalizePrice(a.dataset.price) - normalizePrice(b.dataset.price);
             if (key === 'stars') return parseInt(b.dataset.stars) - parseInt(a.dataset.stars);
             if (key === 'name')  return a.dataset.name.localeCompare(b.dataset.name);
             return 0;
         });
         cards.forEach(c => parent.appendChild(c));
+        currentPage = 1;
+        renderPagination();
     });
 
     // ── Filter listeners ──────────────────────────────────
     document.querySelectorAll('.star-filter, .provider-filter').forEach(el => {
-        el.addEventListener('change', filterCards);
+        el.addEventListener('change', () => filterCards(true));
+    });
+
+    paginationEl?.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-page]');
+        if (!btn || btn.disabled) return;
+
+        currentPage = Math.max(1, parseInt(btn.dataset.page ?? '1', 10) || 1);
+        renderPagination();
+
+        const top = header ? header.getBoundingClientRect().top + window.scrollY - 120 : 0;
+        window.scrollTo({ top, behavior: 'smooth' });
     });
 
     // ── View Deal → fetch rooms via API → open modal ─────
