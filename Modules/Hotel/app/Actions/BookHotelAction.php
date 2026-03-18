@@ -44,6 +44,8 @@ class BookHotelAction
             'email'           => $dto->email,
             'phone'           => $dto->phone,
             'customer_notes'  => $dto->specialRequests,
+            'source'          => $dto->source,
+            'platform'        => Booking::detectPlatform(),
         ]);
 
         BookingRoom::create([

@@ -18,6 +18,7 @@ class BookHotelDto
         public readonly array   $extraServices = [],
         public readonly string  $currency = 'USD',
         public readonly ?int    $customerId = null,
+        public readonly string  $source = 'local',
     ) {}
 
     public static function fromArray(array $data): self
@@ -36,6 +37,7 @@ class BookHotelDto
             extraServices:   $data['extra_services'] ?? [],
             currency:        $data['currency'] ?? 'USD',
             customerId:      $data['customer_id'] ?? null,
+            source:          $data['source'] ?? 'local',
         );
     }
 

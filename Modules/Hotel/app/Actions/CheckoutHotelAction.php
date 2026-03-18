@@ -100,6 +100,8 @@ class CheckoutHotelAction
             'email'           => $dto->email,
             'phone'           => $dto->phone,
             'customer_notes'  => $dto->specialRequests,
+            'source'          => $provider,
+            'platform'        => Booking::detectPlatform(),
         ]);
 
         // Calculate commission_amount and vendor_amount now that total is set

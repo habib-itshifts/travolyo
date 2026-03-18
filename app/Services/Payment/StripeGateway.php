@@ -23,10 +23,11 @@ class StripeGateway implements PaymentGatewayInterface
     public function initiate(Booking $booking): array
     {
         $session = \Stripe\Checkout\Session::create([
-            'mode'        => 'payment',
-            'success_url' => route('payments.stripe.return') . '?c=' . $booking->code . '&session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url'  => route('payments.stripe.cancel') . '?c=' . $booking->code,
-            'line_items'  => [[
+            'mode'           => 'payment',
+            'customer_email' => $booking->email ?: null,
+            'success_url'    => route('payments.stripe.return') . '?c=' . $booking->code . '&session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url'     => route('payments.stripe.cancel') . '?c=' . $booking->code,
+            'line_items'     => [[
                 'price_data' => [
                     'currency'     => strtolower($booking->currency ?: 'usd'),
                     'unit_amount'  => (int) round($booking->pay_now * 100),

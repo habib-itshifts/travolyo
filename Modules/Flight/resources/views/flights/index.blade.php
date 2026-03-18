@@ -200,6 +200,7 @@
 (function () {
 
     const params      = @json($params);
+    const isLoggedIn  = {{ auth()->check() ? 'true' : 'false' }};
     const apiUrl      = '{{ route('api.flights.search') }}';
     const loading     = document.getElementById('flight-loading');
     const offers      = document.getElementById('flight-offers');
@@ -469,6 +470,11 @@
     document.addEventListener('click', async function (e) {
         const btn = e.target.closest('.js-select-flight');
         if (!btn) return;
+
+        if (!isLoggedIn) {
+            window.openAuthModal('signin');
+            return;
+        }
 
         btn.disabled    = true;
         btn.textContent = 'Please wait…';
