@@ -16,7 +16,7 @@ class PrebookHotelRequest extends FormRequest
         return [
             'offer_id'   => ['required', 'string'],
             'room_id'    => ['required', 'string'],
-            'provider'   => ['required', 'string', 'in:local,travolyo_b2b_net_streaming,travolyo_b2b_local,hyperguest'],
+            'provider'   => ['required', 'string', 'in:local,travolyo_b2b,hyperguest'],
             'check_in'   => ['required', 'date', 'after_or_equal:today'],
             'check_out'  => ['required', 'date', 'after:check_in'],
             'adults'     => ['required', 'integer', 'min:1', 'max:20'],

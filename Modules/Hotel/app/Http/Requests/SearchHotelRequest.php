@@ -28,7 +28,7 @@ class SearchHotelRequest extends FormRequest
             'currency'    => ['nullable', 'string', 'size:3'],
             'sort_by'     => ['nullable', 'string', 'in:price_asc,price_desc,rating_desc,featured'],
             'per_page'    => ['nullable', 'integer', 'between:1,100'],
-            'provider'    => ['nullable', 'string', 'in:local,travolyo_b2b_net_streaming,travolyo_b2b_local,hyperguest'],
+            'provider'    => ['nullable', 'string', 'in:local,travolyo_b2b,hyperguest'],
         ];
     }
 }

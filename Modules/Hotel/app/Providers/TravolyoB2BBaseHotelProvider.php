@@ -10,7 +10,7 @@ use Modules\Hotel\DTOs\PrebookHotelDto;
 use Modules\Hotel\DTOs\SearchHotelDto;
 use Modules\Hotel\Enums\HotelProviderEnum;
 
-abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
+class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
 {
     protected string $baseUrl;
     protected array  $headers;
@@ -26,20 +26,16 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
         ];
     }
 
-    // ── Each subclass declares which source tag it handles ──────
-    abstract protected function sourceTag(): string; // 'local' | 'netstorming_api'
-
     // ── Search ──────────────────────────────────────────────────
 
     public function search(SearchHotelDto $dto): array
     {
-        
         if (empty(trim($dto->city)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
             return [];
         }
 
         try {
-            $response = Http::timeout(120)
+            $response = Http::timeout(45)
                 ->withHeaders($this->headers)
                 ->post($this->baseUrl . '/api/v1/hotels/search', [
                     'destination' => $dto->city,
@@ -57,15 +53,14 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             }
 
             $hotels = $response->json('hotels') ?? $response->json('data.hotels') ?? [];
-            if (! is_array($hotels)) {
+            if (! is_array($hotels) || empty($hotels)) {
                 return [];
             }
 
             $nights   = $dto->nights();
-            $provider = $this->providerEnum();
+            $provider = HotelProviderEnum::TravolyoB2B;
 
             return collect($hotels)
-                ->filter(fn (array $h) => ($h['source'] ?? '') === $this->sourceTag())
                 ->map(fn (array $h) => $this->mapHotelToDto($h, $nights, $provider, $dto->currency))
                 ->values()
                 ->all();
@@ -278,12 +273,7 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
 
     protected function providerEnum(): HotelProviderEnum
     {
-        return match ($this->sourceTag()) {
-            'local'           => HotelProviderEnum::TravolyoB2BLocal,
-            'netstorming_api' => HotelProviderEnum::TravolyoB2BNetStreaming,
-            'tasspro_api'     => HotelProviderEnum::TravolyoB2BTassPro,
-            default           => HotelProviderEnum::TravolyoB2BLocal,
-        };
+        return HotelProviderEnum::TravolyoB2B;
     }
 
     protected function mapHotelToDto(array $h, int $nights, HotelProviderEnum $provider, string $currency): HotelOfferDto
@@ -311,6 +301,7 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             currency:         (string) ($h['currency'] ?? $currency),
             rooms:            [], // rooms fetched separately via /api/v1/hotels/rooms
             badge:            $lowestPrice > 0 ? null : null,
+            apiSource:        (string) ($h['source'] ?? ''),
         );
     }
 
