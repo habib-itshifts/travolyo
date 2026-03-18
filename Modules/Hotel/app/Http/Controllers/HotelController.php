@@ -4,6 +4,7 @@ namespace Modules\Hotel\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use Illuminate\Support\Arr;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,11 +18,27 @@ class HotelController extends Controller
      */
     public function index(Request $request): View
     {
+        $destination = trim((string) $request->query('destination', ''));
+
+        if ($destination !== '' && $request->query('city', '') === '') {
+            $resolved = $this->resolveDestinationConfig($destination);
+
+            if ($resolved !== []) {
+                $request->merge($resolved);
+            }
+        }
+
         $params = [
+            'destination' => (string) $request->query('destination', ''),
             'country'    => (string) $request->query('country', ''),
             'country_code' => (string) $request->query('country_code', ''),
             'location'   => (string) $request->query('location', ''),
             'city'       => (string) $request->query('city', ''),
+            'search_mode' => (string) $request->query('search_mode', ''),
+            'search_cities' => array_values(array_filter(array_map(
+                'trim',
+                explode('|', (string) $request->query('search_cities', ''))
+            ))),
             'check_in'   => (string) $request->query('check_in', now()->addDays(4)->toDateString()),
             'check_out'  => (string) $request->query('check_out', now()->addDays(8)->toDateString()),
             'adults'     => max(1, (int) $request->query('adults', 1)),
@@ -31,6 +48,49 @@ class HotelController extends Controller
         ];
 
         return view('hotel::hotels.index', compact('params'));
+    }
+
+    private function resolveDestinationConfig(string $destination): array
+    {
+        $file = public_path('data/top-cities-to-book.json');
+
+        if (! is_file($file)) {
+            return [];
+        }
+
+        $payload = json_decode((string) file_get_contents($file), true);
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        $countryTab = collect(Arr::get($payload, 'tabs', []))
+            ->first(fn (array $tab) => ($tab['key'] ?? '') === 'countries_and_territories');
+
+        if (! is_array($countryTab)) {
+            return [];
+        }
+
+        $item = collect(Arr::get($countryTab, 'regions', []))
+            ->flatMap(fn (array $region) => Arr::get($region, 'items', []))
+            ->first(function (array $item) use ($destination) {
+                return strcasecmp((string) ($item['destination'] ?? $item['label'] ?? ''), $destination) === 0
+                    || strcasecmp((string) ($item['country'] ?? ''), $destination) === 0
+                    || strcasecmp((string) ($item['label'] ?? ''), $destination) === 0;
+            });
+
+        if (! is_array($item)) {
+            return [];
+        }
+
+        $resolved = [
+            'destination' => (string) ($item['destination'] ?? $item['country'] ?? $item['label'] ?? $destination),
+            'country' => (string) ($item['country'] ?? $item['label'] ?? ''),
+            'country_code' => (string) ($item['country_code'] ?? ''),
+            'location' => '',
+            'city' => '',
+        ];
+
+        return $resolved;
     }
 
     /**

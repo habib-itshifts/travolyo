@@ -34,7 +34,7 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
     public function search(SearchHotelDto $dto): array
     {
         
-        if (empty(trim($dto->city)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
+        if (empty(trim($dto->destination)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
             return [];
         }
 
@@ -42,7 +42,7 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             $response = Http::timeout(120)
                 ->withHeaders($this->headers)
                 ->post($this->baseUrl . '/api/v1/hotels/search', [
-                    'destination' => $dto->city,
+                    'destination' => $dto->destination,
                     'check_in'    => $dto->checkIn,
                     'check_out'   => $dto->checkOut,
                     'adults'      => $dto->adults,

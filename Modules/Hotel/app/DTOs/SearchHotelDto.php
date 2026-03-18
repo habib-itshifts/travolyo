@@ -8,7 +8,7 @@ use Modules\Hotel\Enums\HotelProviderEnum;
 class SearchHotelDto
 {
     public function __construct(
-        public readonly string             $city,
+        public readonly string             $destination,
         public readonly string             $checkIn,
         public readonly string             $checkOut,
         public readonly int                $adults,
@@ -27,7 +27,7 @@ class SearchHotelDto
     public static function fromArray(array $data): self
     {
         return new self(
-            city:       $data['city'],
+            destination:$data['destination'] ?? $data['city'],
             checkIn:    $data['check_in'],
             checkOut:   $data['check_out'],
             adults:     (int) $data['adults'],

@@ -203,7 +203,7 @@
     {{-- ── Results column ─────────────────────────────── --}}
     <div class="col-12 col-lg-9">
 
-        @if(empty($params['city']))
+        @if(empty($params['city']) && empty($params['destination']))
             <div class="filter-card text-center py-5">
                 <i class="bi bi-building text-muted" style="font-size:3rem"></i>
                 <p class="text-muted mt-3 mb-0">Enter a destination above and click <strong>Search Hotels</strong>.</p>
@@ -274,7 +274,7 @@
 
 @endsection
 
-@if(!empty($params['city']))
+@if(!empty($params['city']) || !empty($params['destination']))
 @push('scripts')
 <script>
 (function () {
@@ -330,6 +330,14 @@
 
     function formatMoney(value, currency = listingCurrency()) {
         return `${currency} ${Math.round(normalizePrice(value)).toLocaleString('en-US')}`;
+    }
+
+    function activeSearchLabel() {
+        if (params.destination) {
+            return params.destination;
+        }
+
+        return params.city ?? '';
     }
 
     // ── Render one hotel card ────────────────────────────
@@ -457,36 +465,48 @@
     }
 
     // ── Fetch hotels ─────────────────────────────────────
+    async function fetchHotels() {
+        const destination = String(params.destination || params.city || '').trim();
+        if (!destination) {
+            return [];
+        }
+
+        const res = await fetch(searchUrl, {
+            method:  'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept':       'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+            },
+            body: JSON.stringify({
+                destination:destination,
+                city:       params.city || destination,
+                check_in:   params.check_in,
+                check_out:  params.check_out,
+                adults:     parseInt(params.adults ?? 1, 10),
+                children:   parseInt(params.children ?? 0, 10),
+                per_page:   100,
+            }),
+        });
+
+        const data = await res.json();
+        return data.success && Array.isArray(data.data) ? data.data : [];
+    }
+
     async function loadHotels() {
         try {
-            const res  = await fetch(searchUrl, {
-                method:  'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept':       'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                },
-                body: JSON.stringify({
-                    city:       params.city,
-                    check_in:   params.check_in,
-                    check_out:  params.check_out,
-                    adults:     parseInt(params.adults ?? 1, 10),
-                    children:   parseInt(params.children ?? 0, 10),
-                    per_page:   100,
-                }),
-            });
+            const hotels = await fetchHotels();
 
-            const data = await res.json();
             loading.classList.add('d-none');
 
-            if (!data.success || !data.data?.length) {
-                errorEl.textContent = data.message ?? 'No hotels found for your search.';
+            if (!hotels.length) {
+                errorEl.textContent = 'No hotels found for your search.';
                 errorEl.classList.remove('d-none');
                 paginationEl?.classList.add('d-none');
                 return;
             }
 
-            allHotels = data.data;
+            allHotels = hotels;
             offersEl.innerHTML = allHotels.map(h => renderCard(h)).join('');
             offersEl.classList.remove('d-none');
 
@@ -514,13 +534,13 @@
         if (!countEl) return;
 
         if (!totalVisible) {
-            countEl.textContent = `No hotels found in ${params.city ?? ''}`;
+            countEl.textContent = `No hotels found in ${activeSearchLabel()}`;
             return;
         }
 
         const start = ((currentPage - 1) * pageSize) + 1;
         const end = Math.min(totalVisible, currentPage * pageSize);
-        countEl.textContent = `Showing ${start}-${end} of ${totalVisible} hotel${totalVisible !== 1 ? 's' : ''} in ${params.city ?? ''}`;
+        countEl.textContent = `Showing ${start}-${end} of ${totalVisible} hotel${totalVisible !== 1 ? 's' : ''} in ${activeSearchLabel()}`;
     }
 
     function pageWindow(totalPages) {
