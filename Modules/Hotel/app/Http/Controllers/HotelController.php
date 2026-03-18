@@ -47,19 +47,15 @@ class HotelController extends Controller
             'provider'   => (string) $request->query('provider', ''),
         ];
 
-        return view('hotel::hotels.index', compact('params'));
+        $destinationExplorer = $this->loadJsonFile('data/hotel-destination-explorer.json');
+
+        return view('hotel::hotels.index', compact('params', 'destinationExplorer'));
     }
 
     private function resolveDestinationConfig(string $destination): array
     {
-        $file = public_path('data/top-cities-to-book.json');
-
-        if (! is_file($file)) {
-            return [];
-        }
-
-        $payload = json_decode((string) file_get_contents($file), true);
-        if (! is_array($payload)) {
+        $payload = $this->loadJsonFile('data/top-cities-to-book.json');
+        if ($payload === []) {
             return [];
         }
 
@@ -91,6 +87,19 @@ class HotelController extends Controller
         ];
 
         return $resolved;
+    }
+
+    private function loadJsonFile(string $relativePath): array
+    {
+        $file = public_path($relativePath);
+
+        if (! is_file($file)) {
+            return [];
+        }
+
+        $payload = json_decode((string) file_get_contents($file), true);
+
+        return is_array($payload) ? $payload : [];
     }
 
     /**

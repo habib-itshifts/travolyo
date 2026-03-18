@@ -1,5 +1,21 @@
 @extends('layouts.master')
 
+@php
+    $destinationExplorerTabs = collect(data_get($destinationExplorer ?? [], 'tabs', []))->values();
+    $currentExplorerNeedle = strtolower(trim((string) (($params['destination'] ?? '') ?: ($params['city'] ?? '') ?: ($params['country'] ?? ''))));
+    $activeExplorerTab = $destinationExplorerTabs->first(function ($tab) use ($currentExplorerNeedle) {
+        return collect(data_get($tab, 'items', []))->contains(function ($item) use ($currentExplorerNeedle) {
+            return collect([
+                data_get($item, 'destination'),
+                data_get($item, 'city'),
+                data_get($item, 'country'),
+                data_get($item, 'label'),
+            ])->filter()->contains(fn ($value) => strtolower(trim((string) $value)) === $currentExplorerNeedle);
+        });
+    }) ?? $destinationExplorerTabs->first();
+    $activeExplorerTabKey = data_get($activeExplorerTab, 'key');
+@endphp
+
 @section('title', 'Hotel Search – Travolyo')
 
 @push('styles')
@@ -131,9 +147,139 @@
 .room-card__price { font-size: 1.15rem; font-weight: 700; color: var(--hotel-theme); }
 .btn-select-room { padding: 6px 20px; font-size: .85rem; border-radius: 8px; font-weight: 600; }
 
+/* Destination explorer */
+.destination-explorer { margin-top: 34px; }
+.destination-explorer__shell {
+    background: #fff;
+    border: 1px solid #e5edf6;
+    border-radius: 24px;
+    box-shadow: 0 18px 44px rgba(18, 38, 63, .08);
+    overflow: hidden;
+    padding: 28px;
+}
+.destination-explorer__eyebrow {
+    color: var(--hotel-theme);
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .14em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+.destination-explorer__title {
+    color: #12314d;
+    font-size: clamp(1.7rem, 2vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.08;
+    margin-bottom: 8px;
+}
+.destination-explorer__desc {
+    color: #5f6c7b;
+    font-size: .98rem;
+    margin-bottom: 22px;
+    max-width: 780px;
+}
+.destination-explorer__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+.destination-explorer__tab {
+    appearance: none;
+    background: #fff;
+    border: 1px solid #dbe4ef;
+    border-radius: 999px;
+    color: #334155;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 12px 22px;
+    transition: all .18s ease;
+}
+.destination-explorer__tab:hover,
+.destination-explorer__tab.is-active {
+    background: var(--hotel-theme);
+    border-color: var(--hotel-theme);
+    box-shadow: 0 12px 26px var(--hotel-theme-soft);
+    color: #fff;
+}
+.destination-explorer__panel { display: none; }
+.destination-explorer__panel.is-active { display: block; }
+.destination-explorer__grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.destination-explorer__card {
+    border-radius: 22px;
+    color: #fff;
+    display: block;
+    min-height: 230px;
+    overflow: hidden;
+    position: relative;
+    text-decoration: none;
+}
+.destination-explorer__image {
+    height: 100%;
+    left: 0;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    transition: transform .35s ease;
+    width: 100%;
+}
+.destination-explorer__card::after {
+    background: linear-gradient(180deg, rgba(7, 18, 34, .04) 12%, rgba(7, 18, 34, .72) 100%);
+    content: "";
+    inset: 0;
+    position: absolute;
+}
+.destination-explorer__card:hover .destination-explorer__image { transform: scale(1.05); }
+.destination-explorer__content {
+    bottom: 0;
+    left: 0;
+    padding: 18px 18px 20px;
+    position: absolute;
+    right: 0;
+    z-index: 1;
+}
+.destination-explorer__label {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 4px;
+}
+.destination-explorer__meta {
+    color: rgba(255,255,255,.84);
+    font-size: .92rem;
+    font-weight: 500;
+}
+
+@media (max-width: 1399.98px) {
+    .destination-explorer__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
 @media (max-width: 576px) {
     .hotel-card { flex-direction: column; }
     .hotel-card__img, .hotel-card__img-placeholder { width: 100%; min-width: unset; height: 160px; }
+    .destination-explorer__shell { padding: 22px 16px; }
+    .destination-explorer__tabs {
+        flex-wrap: nowrap;
+        margin-bottom: 18px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+        scrollbar-width: none;
+    }
+    .destination-explorer__tabs::-webkit-scrollbar { display: none; }
+    .destination-explorer__tab {
+        flex: 0 0 auto;
+        font-size: .95rem;
+        padding: 11px 18px;
+    }
+    .destination-explorer__grid {
+        gap: 14px;
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    .destination-explorer__card { min-height: 210px; }
 }
 </style>
 @endpush
@@ -258,6 +404,75 @@
 </div>
 
 {{-- ── Hotel Detail Modal ───────────────────────────── --}}
+@if($destinationExplorerTabs->isNotEmpty())
+<section class="destination-explorer d-none" id="destination-explorer">
+    <div class="container">
+        <div class="destination-explorer__shell">
+            <div class="destination-explorer__eyebrow">Keep Exploring</div>
+            <h2 class="destination-explorer__title">{{ data_get($destinationExplorer, 'title', 'Explore Hotels by Destination') }}</h2>
+            <p class="destination-explorer__desc">
+                {{ data_get($destinationExplorer, 'description', 'Open a fresh hotel listing with the same dates and travellers already carried forward.') }}
+            </p>
+
+            <div class="destination-explorer__tabs" role="tablist" aria-label="Explore destinations">
+                @foreach($destinationExplorerTabs as $tab)
+                    <button
+                        type="button"
+                        class="destination-explorer__tab {{ data_get($tab, 'key') === $activeExplorerTabKey ? 'is-active' : '' }}"
+                        data-destination-tab="{{ data_get($tab, 'key') }}"
+                        aria-selected="{{ data_get($tab, 'key') === $activeExplorerTabKey ? 'true' : 'false' }}">
+                        {{ data_get($tab, 'label') }}
+                    </button>
+                @endforeach
+            </div>
+
+            @foreach($destinationExplorerTabs as $tab)
+                <div class="destination-explorer__panel {{ data_get($tab, 'key') === $activeExplorerTabKey ? 'is-active' : '' }}" data-destination-panel="{{ data_get($tab, 'key') }}">
+                    <div class="destination-explorer__grid">
+                        @foreach(data_get($tab, 'items', []) as $item)
+                            @php
+                                $isCitySearch = filled(data_get($item, 'city'));
+                                $itemQuery = [
+                                    'check_in' => data_get($params, 'check_in'),
+                                    'check_out' => data_get($params, 'check_out'),
+                                    'adults' => data_get($params, 'adults', 1),
+                                    'children' => data_get($params, 'children', 0),
+                                    'rooms' => data_get($params, 'rooms', 1),
+                                ];
+
+                                if ($isCitySearch) {
+                                    $itemQuery = array_merge($itemQuery, [
+                                        'country' => data_get($item, 'country', ''),
+                                        'country_code' => data_get($item, 'country_code', ''),
+                                        'city' => data_get($item, 'city', data_get($item, 'label', '')),
+                                        'location' => data_get($item, 'location', ''),
+                                    ]);
+                                } else {
+                                    $itemQuery = array_merge($itemQuery, [
+                                        'destination' => data_get($item, 'destination', data_get($item, 'label', '')),
+                                        'country' => data_get($item, 'country', ''),
+                                        'country_code' => data_get($item, 'country_code', ''),
+                                    ]);
+                                }
+
+                                $itemUrl = route('hotels.index') . '?' . http_build_query(array_filter($itemQuery, fn ($value) => $value !== ''));
+                            @endphp
+                            <a class="destination-explorer__card" href="{{ $itemUrl }}">
+                                <img class="destination-explorer__image" src="{{ data_get($item, 'image') }}" alt="{{ data_get($item, 'label') }}" loading="lazy">
+                                <div class="destination-explorer__content">
+                                    <div class="destination-explorer__label">{{ data_get($item, 'label') }}</div>
+                                    <div class="destination-explorer__meta">{{ data_get($item, 'meta', data_get($item, 'country', 'Explore hotels')) }}</div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
 <div class="modal fade" id="hotelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
@@ -288,6 +503,7 @@
     const header    = document.getElementById('results-header');
     const countEl   = document.getElementById('results-count');
     const paginationEl = document.getElementById('hotel-pagination');
+    const explorerSection = document.getElementById('destination-explorer');
     const pageSize = 10;
 
     let allHotels = [];
@@ -503,12 +719,14 @@
                 errorEl.textContent = 'No hotels found for your search.';
                 errorEl.classList.remove('d-none');
                 paginationEl?.classList.add('d-none');
+                explorerSection?.classList.add('d-none');
                 return;
             }
 
             allHotels = hotels;
             offersEl.innerHTML = allHotels.map(h => renderCard(h)).join('');
             offersEl.classList.remove('d-none');
+            explorerSection?.classList.remove('d-none');
 
             header.classList.remove('d-none');
             header.classList.add('d-flex');
@@ -521,6 +739,7 @@
             errorEl.textContent = 'Failed to load hotels. Please try again.';
             errorEl.classList.remove('d-none');
             paginationEl?.classList.add('d-none');
+            explorerSection?.classList.add('d-none');
             console.error(err);
         }
     }
@@ -711,6 +930,22 @@
     // ── Filter listeners ──────────────────────────────────
     document.querySelectorAll('.star-filter, .provider-filter').forEach(el => {
         el.addEventListener('change', () => filterCards(true));
+    });
+
+    document.querySelectorAll('[data-destination-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            const key = tab.dataset.destinationTab || '';
+
+            document.querySelectorAll('[data-destination-tab]').forEach((button) => {
+                const active = button === tab;
+                button.classList.toggle('is-active', active);
+                button.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+
+            document.querySelectorAll('[data-destination-panel]').forEach((panel) => {
+                panel.classList.toggle('is-active', panel.dataset.destinationPanel === key);
+            });
+        });
     });
 
     paginationEl?.addEventListener('click', function (e) {
