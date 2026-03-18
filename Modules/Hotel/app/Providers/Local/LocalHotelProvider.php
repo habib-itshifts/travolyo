@@ -29,7 +29,11 @@ class LocalHotelProvider implements HotelProviderInterface
         $query = Hotel::query()
             ->active()
             ->with(['amenities', 'services', 'rooms' => fn ($q) => $q->active()->with('amenities')])
-            ->where('city', 'like', '%' . $dto->city . '%');
+            ->where(function ($query) use ($dto) {
+                $query
+                    ->where('city', 'like', '%' . $dto->destination . '%')
+                    ->orWhere('country', 'like', '%' . $dto->destination . '%');
+            });
 
         if ($dto->starRating) {
             $query->where('star_rating', $dto->starRating);

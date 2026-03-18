@@ -14,6 +14,8 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
 {
     protected string $baseUrl;
     protected array  $headers;
+    protected int    $searchTimeout;
+    protected int    $connectTimeout;
 
     public function __construct()
     {
@@ -24,13 +26,17 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             'Content-Type'  => 'application/json',
             'Accept'        => 'application/json',
         ];
+        $this->searchTimeout = max(5, (int) config('travolyo_b2b.search_timeout', config('travolyo_b2b.timeout', 20)));
+        $this->connectTimeout = max(2, (int) config('travolyo_b2b.connect_timeout', 5));
     }
+
+    
 
     // ── Search ──────────────────────────────────────────────────
 
     public function search(SearchHotelDto $dto): array
     {
-        if (empty(trim($dto->city)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
+        if (empty(trim($dto->destination)) || empty(trim($dto->checkIn)) || empty(trim($dto->checkOut))) {
             return [];
         }
 
@@ -39,7 +45,7 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             $response = Http::timeout(45)
                 ->withHeaders($this->headers)
                 ->post($this->baseUrl . '/api/v1/hotels/search', [
-                    'destination' => $dto->city,
+                    'destination' => $dto->destination,
                     'check_in'    => $dto->checkIn,
                     'check_out'   => $dto->checkOut,
                     'adults'      => $dto->adults,

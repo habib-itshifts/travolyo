@@ -299,29 +299,45 @@
 
             @foreach($directoryTabs as $tab)
                 <div class="top-cities-directory__panel {{ $loop->first ? 'is-active' : '' }}" data-directory-panel="{{ data_get($tab, 'key') }}">
-                    @if(data_get($tab, 'key') === 'top_cities_to_book')
-                        <p class="top-cities-directory__note mb-0">
-                            Choose any city and we will open the hotel listing page with your city plus the current search dates preselected.
-                        </p>
+                    @if(collect(data_get($tab, 'regions', []))->isNotEmpty())
+                        @if(data_get($tab, 'note'))
+                            <p class="top-cities-directory__note mb-0">
+                                {{ data_get($tab, 'note') }}
+                            </p>
+                        @endif
                         @foreach(data_get($tab, 'regions', []) as $region)
                             <div class="top-cities-region">
                                 <div class="top-cities-region__title">{{ data_get($region, 'label') }}</div>
                                 <div class="top-cities-region__grid">
-                                    @foreach(data_get($region, 'items', []) as $city)
+                                    @foreach(data_get($region, 'items', []) as $entry)
                                         @php
-                                            $cityUrl = route('hotels.index') . '?' . http_build_query([
-                                                'country' => data_get($city, 'country', ''),
-                                                'country_code' => data_get($city, 'country_code', ''),
-                                                'city' => data_get($city, 'city', data_get($city, 'label', '')),
-                                                'location' => data_get($city, 'location', ''),
-                                                'check_in' => $defaultHotelCheckIn,
-                                                'check_out' => $defaultHotelCheckOut,
-                                                'adults' => 1,
-                                                'children' => 0,
-                                            ]);
+                                            $isCountryTab = data_get($tab, 'key') === 'countries_and_territories';
+
+                                            $query = $isCountryTab
+                                                ? [
+                                                    'destination' => data_get($entry, 'destination', data_get($entry, 'country', data_get($entry, 'label', ''))),
+                                                    'country' => data_get($entry, 'country', data_get($entry, 'label', '')),
+                                                    'country_code' => data_get($entry, 'country_code', ''),
+                                                    'check_in' => $defaultHotelCheckIn,
+                                                    'check_out' => $defaultHotelCheckOut,
+                                                    'adults' => 1,
+                                                    'children' => 0,
+                                                ]
+                                                : [
+                                                    'country' => data_get($entry, 'country', ''),
+                                                    'country_code' => data_get($entry, 'country_code', ''),
+                                                    'city' => data_get($entry, 'city', data_get($entry, 'label', '')),
+                                                    'location' => data_get($entry, 'location', ''),
+                                                    'check_in' => $defaultHotelCheckIn,
+                                                    'check_out' => $defaultHotelCheckOut,
+                                                    'adults' => 1,
+                                                    'children' => 0,
+                                                ];
+
+                                            $entryUrl = route('hotels.index') . '?' . http_build_query($query);
                                         @endphp
-                                        <a class="top-cities-chip" href="{{ $cityUrl }}">
-                                            {{ data_get($city, 'label', data_get($city, 'city', '')) }}
+                                        <a class="top-cities-chip" href="{{ $entryUrl }}">
+                                            {{ data_get($entry, 'label', data_get($entry, 'city', '')) }}
                                         </a>
                                     @endforeach
                                 </div>

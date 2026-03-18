@@ -11,6 +11,7 @@ use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 
 class SearchHotelAction
 {
+    private const OVERALL_TIME_BUDGET_SECONDS = 40;
     /** @return \Modules\Hotel\DTOs\HotelOfferDto[] */
     public function handle(SearchHotelDto $dto): array
     {
@@ -19,11 +20,12 @@ class SearchHotelAction
             : HotelProviderEnum::cases();
 
         $results = [];
+         $startedAt = microtime(true);
 
         foreach ($providers as $providerEnum) {
             try {
                 $providerDto = new SearchHotelDto(
-                    city:       $dto->city,
+                    destination:       $dto->destination,
                     checkIn:    $dto->checkIn,
                     checkOut:   $dto->checkOut,
                     adults:     $dto->adults,
