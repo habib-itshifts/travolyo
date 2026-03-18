@@ -2,6 +2,8 @@
     $activeTab           = $activeTab ?? 'hotels';
     $selectedCountryCode = request('country_code', '');
     $selectedCountryName = request('country', '');
+    $defaultHotelCheckIn = $defaultHotelCheckIn ?? now()->addDays(4)->format('Y-m-d');
+    $defaultHotelCheckOut = $defaultHotelCheckOut ?? now()->addDays(8)->format('Y-m-d');
 @endphp
 
 <div class="search-widget bg-white rounded-4 shadow-lg p-4 text-start">
@@ -95,7 +97,7 @@
                     <div class="input-icon-wrap">
                         <i class="bi bi-calendar3 input-icon"></i>
                         <input type="date" name="check_in" class="form-control search-input"
-                               value="{{ request('check_in', now()->addDays(4)->format('Y-m-d')) }}" />
+                               value="{{ request('check_in', $defaultHotelCheckIn) }}" />
                     </div>
                 </div>
 
@@ -105,7 +107,7 @@
                     <div class="input-icon-wrap">
                         <i class="bi bi-calendar3 input-icon"></i>
                         <input type="date" name="check_out" class="form-control search-input"
-                               value="{{ request('check_out', now()->addDays(8)->format('Y-m-d')) }}" />
+                               value="{{ request('check_out', $defaultHotelCheckOut) }}" />
                     </div>
                 </div>
 

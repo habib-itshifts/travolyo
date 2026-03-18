@@ -17,9 +17,18 @@ class HotelController extends Controller
      */
     public function index(Request $request): View
     {
-        $params = $request->only([
-            'city', 'check_in', 'check_out', 'adults', 'children', 'rooms', 'provider',
-        ]);
+        $params = [
+            'country'    => (string) $request->query('country', ''),
+            'country_code' => (string) $request->query('country_code', ''),
+            'location'   => (string) $request->query('location', ''),
+            'city'       => (string) $request->query('city', ''),
+            'check_in'   => (string) $request->query('check_in', now()->addDays(4)->toDateString()),
+            'check_out'  => (string) $request->query('check_out', now()->addDays(8)->toDateString()),
+            'adults'     => max(1, (int) $request->query('adults', 1)),
+            'children'   => max(0, (int) $request->query('children', 0)),
+            'rooms'      => max(1, (int) $request->query('rooms', 1)),
+            'provider'   => (string) $request->query('provider', ''),
+        ];
 
         return view('hotel::hotels.index', compact('params'));
     }

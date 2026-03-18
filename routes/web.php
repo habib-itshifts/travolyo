@@ -13,7 +13,19 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('website.index');
+    $topCitiesFile = public_path('data/top-cities-to-book.json');
+    $topCitiesConfig = [];
+
+    if (is_file($topCitiesFile)) {
+        $decoded = json_decode((string) file_get_contents($topCitiesFile), true);
+        $topCitiesConfig = is_array($decoded) ? $decoded : [];
+    }
+
+    return view('website.index', [
+        'topCitiesConfig'      => $topCitiesConfig,
+        'defaultHotelCheckIn'  => now()->addDays(4)->toDateString(),
+        'defaultHotelCheckOut' => now()->addDays(8)->toDateString(),
+    ]);
 })->name('website');
 
 Route::view('/about-us', 'website.about-us')->name('about');
