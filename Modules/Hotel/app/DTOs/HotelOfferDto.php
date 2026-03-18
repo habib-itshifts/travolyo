@@ -48,5 +48,8 @@ class HotelOfferDto
 
         // Badge
         public readonly ?string           $badge     = null, // 'best_value'|'popular'|null
+
+        // B2B API source tag (e.g. 'local', 'netstorming_api', 'tasspro_api')
+        public readonly ?string           $apiSource = null,
     ) {}
 }

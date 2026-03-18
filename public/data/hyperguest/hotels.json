@@ -1,0 +1,333 @@
+{
+  "status": "success",
+  "hotels": [
+    {
+      "hotel_id": "HG001",
+      "property_id": 10001,
+      "name": "Grand Hyperguest Dubai",
+      "star_rating": 5,
+      "city": "Dubai",
+      "country": "UAE",
+      "address": "Sheikh Zayed Road, Dubai Marina, Dubai",
+      "latitude": 25.2048,
+      "longitude": 55.2708,
+      "description": "A luxury 5-star hotel perched in the heart of Dubai Marina, offering breathtaking views of the skyline and the Arabian Gulf. Featuring world-class dining, a rooftop infinity pool, a full-service spa, and state-of-the-art facilities designed for both business and leisure travellers.",
+      "short_description": "Luxury 5-star hotel with stunning marina views and world-class amenities.",
+      "check_in_time": "14:00",
+      "check_out_time": "12:00",
+      "images": [
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+        "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800",
+        "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800"
+      ],
+      "amenities": ["Free WiFi", "Outdoor Pool", "Fitness Center", "Spa", "Restaurant", "Bar", "Concierge", "Valet Parking", "Airport Shuttle", "Business Center"],
+      "rooms": [
+        {
+          "room_id": "HG001-R001",
+          "room_code": "DBL",
+          "rate_code": "RO",
+          "name": "Deluxe King Room",
+          "room_type": "standard",
+          "bed_configuration": {"king": 1},
+          "max_adults": 2,
+          "max_children": 1,
+          "size_sqm": 35,
+          "view_type": "City View",
+          "description": "Spacious deluxe room with a plush king bed, modern en-suite bathroom with rain shower, and panoramic city views.",
+          "amenities": ["AC", "Flat-screen TV", "In-room Safe", "Mini Bar", "Free WiFi", "Coffee Maker"],
+          "images": [
+            "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 250.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 48 hours before check-in",
+            "meal_plan": "Room Only"
+          }
+        },
+        {
+          "room_id": "HG001-R002",
+          "room_code": "TWN",
+          "rate_code": "BB",
+          "name": "Superior Twin Room",
+          "room_type": "standard",
+          "bed_configuration": {"twin": 2},
+          "max_adults": 2,
+          "max_children": 2,
+          "size_sqm": 32,
+          "view_type": "Garden View",
+          "description": "Bright and comfortable twin room with two single beds, ideal for friends or colleagues travelling together.",
+          "amenities": ["AC", "Flat-screen TV", "In-room Safe", "Free WiFi", "Coffee Maker"],
+          "images": [
+            "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 220.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 48 hours before check-in",
+            "meal_plan": "Bed & Breakfast"
+          }
+        },
+        {
+          "room_id": "HG001-R003",
+          "room_code": "STE",
+          "rate_code": "BB",
+          "name": "Executive Suite",
+          "room_type": "suite",
+          "bed_configuration": {"king": 1},
+          "max_adults": 2,
+          "max_children": 2,
+          "size_sqm": 75,
+          "view_type": "Sea View",
+          "description": "Luxurious suite with a separate living area, private balcony overlooking the Arabian Gulf, and exclusive executive lounge access.",
+          "amenities": ["AC", "65\" TV", "In-room Safe", "Mini Bar", "Free WiFi", "Coffee Maker", "Jacuzzi", "Executive Lounge Access", "Bathrobe & Slippers"],
+          "images": [
+            "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 550.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 72 hours before check-in",
+            "meal_plan": "Bed & Breakfast"
+          }
+        }
+      ]
+    },
+    {
+      "hotel_id": "HG002",
+      "property_id": 10002,
+      "name": "Cityscape Boutique Hotel Dubai",
+      "star_rating": 4,
+      "city": "Dubai",
+      "country": "UAE",
+      "address": "Downtown Dubai, Near Burj Khalifa, Dubai",
+      "latitude": 25.1972,
+      "longitude": 55.2744,
+      "description": "A contemporary 4-star boutique hotel in the vibrant Downtown Dubai district, just minutes from the Burj Khalifa and Dubai Mall. Featuring stylish rooms with modern interiors, a rooftop terrace, and personalised service.",
+      "short_description": "Contemporary 4-star boutique hotel steps from the Burj Khalifa.",
+      "check_in_time": "15:00",
+      "check_out_time": "11:00",
+      "images": [
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800"
+      ],
+      "amenities": ["Free WiFi", "Rooftop Pool", "Fitness Center", "Restaurant", "Bar", "24h Front Desk", "Laundry Service"],
+      "rooms": [
+        {
+          "room_id": "HG002-R001",
+          "room_code": "DBL",
+          "rate_code": "RO",
+          "name": "Classic Double Room",
+          "room_type": "standard",
+          "bed_configuration": {"double": 1},
+          "max_adults": 2,
+          "max_children": 1,
+          "size_sqm": 28,
+          "view_type": "City View",
+          "description": "A well-appointed classic room with a queen-size bed, contemporary decor, and modern bathroom with walk-in shower.",
+          "amenities": ["AC", "Flat-screen TV", "In-room Safe", "Free WiFi", "Minibar"],
+          "images": [
+            "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 150.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 24 hours before check-in",
+            "meal_plan": "Room Only"
+          }
+        },
+        {
+          "room_id": "HG002-R002",
+          "room_code": "DBL",
+          "rate_code": "BB",
+          "name": "Deluxe Room with Burj View",
+          "room_type": "deluxe",
+          "bed_configuration": {"king": 1},
+          "max_adults": 2,
+          "max_children": 1,
+          "size_sqm": 34,
+          "view_type": "Burj Khalifa View",
+          "description": "Stylish deluxe room with a floor-to-ceiling window framing an iconic view of the Burj Khalifa, premium bedding, and a marble bathroom.",
+          "amenities": ["AC", "55\" Smart TV", "In-room Safe", "Mini Bar", "Free WiFi", "Nespresso Machine"],
+          "images": [
+            "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 190.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 24 hours before check-in",
+            "meal_plan": "Bed & Breakfast"
+          }
+        },
+        {
+          "room_id": "HG002-R003",
+          "room_code": "STE",
+          "rate_code": "BB",
+          "name": "Junior Suite",
+          "room_type": "suite",
+          "bed_configuration": {"king": 1},
+          "max_adults": 2,
+          "max_children": 2,
+          "size_sqm": 55,
+          "view_type": "Burj Khalifa View",
+          "description": "Generously sized junior suite with a separate lounge area, panoramic Burj Khalifa views, and a luxurious soaking tub.",
+          "amenities": ["AC", "55\" Smart TV", "In-room Safe", "Full Bar", "Free WiFi", "Nespresso Machine", "Soaking Tub", "Dining Area"],
+          "images": [
+            "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 320.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 48 hours before check-in",
+            "meal_plan": "Bed & Breakfast"
+          }
+        }
+      ]
+    },
+    {
+      "hotel_id": "HG003",
+      "property_id": 10003,
+      "name": "Desert Oasis Resort & Spa",
+      "star_rating": 5,
+      "city": "Dubai",
+      "country": "UAE",
+      "address": "Al Barsha, Dubai",
+      "latitude": 25.1122,
+      "longitude": 55.1802,
+      "description": "An exclusive desert-inspired resort blending traditional Arabian architecture with modern luxury. Set on private grounds with a lagoon pool, three signature restaurants, and a holistic wellness spa.",
+      "short_description": "Exclusive desert resort with Arabian architecture and a world-class spa.",
+      "check_in_time": "14:00",
+      "check_out_time": "12:00",
+      "images": [
+        "https://images.unsplash.com/photo-1615460549969-36fa19521a4f?w=800",
+        "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800"
+      ],
+      "amenities": ["Free WiFi", "Lagoon Pool", "Private Beach", "Fitness Center", "Spa", "3 Restaurants", "Kids Club", "Tennis Court", "Butler Service"],
+      "rooms": [
+        {
+          "room_id": "HG003-R001",
+          "room_code": "VIL",
+          "rate_code": "HB",
+          "name": "Garden Villa",
+          "room_type": "villa",
+          "bed_configuration": {"king": 1},
+          "max_adults": 2,
+          "max_children": 2,
+          "size_sqm": 90,
+          "view_type": "Garden View",
+          "description": "Standalone garden villa with a private terrace, outdoor plunge pool, and curated Arabian interior design.",
+          "amenities": ["AC", "65\" Smart TV", "In-room Safe", "Full Bar", "Free WiFi", "Nespresso Machine", "Private Plunge Pool", "Outdoor Terrace", "Butler Service"],
+          "images": [
+            "https://images.unsplash.com/photo-1570213489059-0aac6626cade?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 750.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 72 hours before check-in",
+            "meal_plan": "Half Board"
+          }
+        },
+        {
+          "room_id": "HG003-R002",
+          "room_code": "DBL",
+          "rate_code": "BB",
+          "name": "Deluxe Resort Room",
+          "room_type": "standard",
+          "bed_configuration": {"king": 1},
+          "max_adults": 2,
+          "max_children": 1,
+          "size_sqm": 48,
+          "view_type": "Pool View",
+          "description": "Elegant resort room with rich textures, hand-crafted furnishings, and a private balcony overlooking the lagoon pool.",
+          "amenities": ["AC", "55\" Smart TV", "In-room Safe", "Mini Bar", "Free WiFi", "Nespresso Machine", "Private Balcony"],
+          "images": [
+            "https://images.unsplash.com/photo-1630660664869-c9d3cc676880?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 420.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 48 hours before check-in",
+            "meal_plan": "Bed & Breakfast"
+          }
+        }
+      ]
+    },
+    {
+      "hotel_id": "HG004",
+      "property_id": 10004,
+      "name": "Harbour View Hotel",
+      "star_rating": 3,
+      "city": "Dubai",
+      "country": "UAE",
+      "address": "Deira, Port Saeed, Dubai",
+      "latitude": 25.2654,
+      "longitude": 55.3209,
+      "description": "A comfortable 3-star hotel in Deira, the historic heart of Dubai. Conveniently located near the Gold Souk, spice markets, and public transport links. Ideal for budget-conscious travellers who want easy access to the city.",
+      "short_description": "Well-located 3-star hotel in Deira near the Gold Souk and metro.",
+      "check_in_time": "14:00",
+      "check_out_time": "12:00",
+      "images": [
+        "https://images.unsplash.com/photo-1563911302283-d2bc129e7570?w=800"
+      ],
+      "amenities": ["Free WiFi", "Restaurant", "24h Front Desk", "Airport Shuttle", "Currency Exchange"],
+      "rooms": [
+        {
+          "room_id": "HG004-R001",
+          "room_code": "SGL",
+          "rate_code": "RO",
+          "name": "Standard Single Room",
+          "room_type": "standard",
+          "bed_configuration": {"single": 1},
+          "max_adults": 1,
+          "max_children": 0,
+          "size_sqm": 18,
+          "view_type": "Street View",
+          "description": "Compact and clean single room with all essential amenities for a comfortable stay.",
+          "amenities": ["AC", "Flat-screen TV", "Free WiFi", "Work Desk"],
+          "images": [
+            "https://images.unsplash.com/photo-1586105251261-72a756497a11?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 60.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 24 hours before check-in",
+            "meal_plan": "Room Only"
+          }
+        },
+        {
+          "room_id": "HG004-R002",
+          "room_code": "DBL",
+          "rate_code": "RO",
+          "name": "Standard Double Room",
+          "room_type": "standard",
+          "bed_configuration": {"double": 1},
+          "max_adults": 2,
+          "max_children": 1,
+          "size_sqm": 24,
+          "view_type": "Street View",
+          "description": "Comfortable double room with a queen-size bed, clean en-suite bathroom, and free WiFi.",
+          "amenities": ["AC", "Flat-screen TV", "Free WiFi", "Work Desk", "In-room Safe"],
+          "images": [
+            "https://images.unsplash.com/photo-1504652517000-ae1068478c59?w=800"
+          ],
+          "rates": {
+            "base_price_per_night": 85.00,
+            "currency": "USD",
+            "is_available": true,
+            "cancellation_policy": "Free cancellation up to 24 hours before check-in",
+            "meal_plan": "Room Only"
+          }
+        }
+      ]
+    }
+  ]
+}

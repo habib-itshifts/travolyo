@@ -337,10 +337,7 @@
                 <input type="radio" name="providerFilter" class="provider-filter" value="local"> Local
             </label>
             <label class="filter-pill">
-                <input type="radio" name="providerFilter" class="provider-filter" value="travolyo_b2b_local"> B2B Local
-            </label>
-            <label class="filter-pill">
-                <input type="radio" name="providerFilter" class="provider-filter" value="travolyo_b2b_net_streaming"> B2B Streaming
+                <input type="radio" name="providerFilter" class="provider-filter" value="travolyo_b2b"> B2B
             </label>
 
         </div>
@@ -494,9 +491,10 @@
 <script>
 (function () {
 
-    const params    = @json($params);
-    const searchUrl = '{{ route('api.hotels.search') }}';
-    const prebookUrl= '{{ route('api.hotels.prebook') }}';
+    const params      = @json($params);
+    const isLoggedIn  = {{ auth()->check() ? 'true' : 'false' }};
+    const searchUrl   = '{{ route('api.hotels.search') }}';
+    const prebookUrl  = '{{ route('api.hotels.prebook') }}';
     const loading   = document.getElementById('hotel-loading');
     const offersEl  = document.getElementById('hotel-offers');
     const errorEl   = document.getElementById('hotel-error');
@@ -520,8 +518,7 @@
     function providerBadge(p) {
         const map = {
             'local':                        { label: 'Local',     bg: '#e0f2fe', color: '#0369a1' },
-            'travolyo_b2b_local':           { label: 'B2B Local', bg: '#ecfdf5', color: '#059669' },
-            'travolyo_b2b_net_streaming':   { label: 'B2B',       bg: '#f3e8ff', color: '#7c3aed' },
+            'travolyo_b2b':                 { label: 'B2B',       bg: '#f3e8ff', color: '#7c3aed' },
         };
         const m = map[p] ?? { label: p, bg: '#f3f4f6', color: '#6b7280' };
         return `<span class="hotel-card__badge" style="background:${m.bg};color:${m.color}">${m.label}</span>`;
@@ -581,6 +578,7 @@
                         <div class="text-end flex-shrink-0">
                             ${badgeHtml}
                             ${providerBadge(h.provider)}
+                            ${h.api_source ? `<span style="font-size:.65rem;padding:2px 6px;border-radius:4px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;white-space:nowrap">${h.api_source}</span>` : ''}
                         </div>
                     </div>
                     <div class="hotel-card__addr">
@@ -1013,6 +1011,12 @@
     document.addEventListener('click', async function (e) {
         const btn = e.target.closest('.js-select-room');
         if (!btn) return;
+
+        if (!isLoggedIn) {
+            bootstrap.Modal.getInstance(document.getElementById('hotelModal'))?.hide();
+            window.openAuthModal('signin');
+            return;
+        }
 
         btn.disabled    = true;
         btn.textContent = 'Please wait…';

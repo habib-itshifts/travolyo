@@ -66,6 +66,7 @@ class HotelOfferResource extends JsonResource
             ])->values(),
 
             'badge'             => $this->badge,
+            'api_source'        => $this->apiSource,
         ];
     }
 }

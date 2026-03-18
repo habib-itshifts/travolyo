@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Modules\Hotel\DTOs\CheckoutHotelDto;
 use Modules\Hotel\Enums\BookingRoomStatusEnum;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Models\BookingRoom;
 use Modules\Hotel\Models\Hotel;
@@ -51,6 +52,33 @@ class CheckoutHotelAction
             }
         }
 
+        // ── Hyperguest: call their booking API before creating the local record ──
+        $hyperguestBooking = null;
+        if ($provider === 'hyperguest') {
+            $hyperguestBooking = (new HyperguestHotelProvider())->book(
+                checkoutData: array_merge($hotel, ['special_requests' => $dto->specialRequests]),
+                guest: [
+                    'first_name' => $dto->firstName,
+                    'last_name'  => $dto->lastName,
+                    'email'      => $dto->email,
+                    'phone'      => $dto->phone,
+                    'title'      => 'MR',
+                    'birth_date' => '1990-01-01',
+                    'address'    => 'N/A',
+                    'city'       => 'N/A',
+                    'country'    => 'N/A',
+                    'state'      => 'N/A',
+                    'zip'        => 'N/A',
+                ],
+            );
+
+            // Use the confirmed sell price from Hyperguest if available
+            $confirmedPrice = $hyperguestBooking['content']['prices']['sell']['price'] ?? null;
+            if ($confirmedPrice) {
+                $hotel['total_price'] = (float) $confirmedPrice;
+            }
+        }
+
         $booking = Booking::create([
             'object_model'    => 'hotel',
             'object_id'       => $provider === 'local' ? (int) ($hotel['offer_id'] ?? null) : null,
@@ -72,6 +100,8 @@ class CheckoutHotelAction
             'email'           => $dto->email,
             'phone'           => $dto->phone,
             'customer_notes'  => $dto->specialRequests,
+            'source'          => $provider,
+            'platform'        => Booking::detectPlatform(),
         ]);
 
         // Calculate commission_amount and vendor_amount now that total is set
@@ -82,6 +112,19 @@ class CheckoutHotelAction
 
         // Store hotel details in booking meta for confirmation page
         $booking->addMeta('hotel_details', $hotel);
+
+        // Hyperguest: persist the full API response + booking ID for reference
+        if ($hyperguestBooking !== null) {
+            $booking->addMeta('hyperguest_booking', $hyperguestBooking);
+            $booking->addMeta('hyperguest_booking_id', $hyperguestBooking['bookingId'] ?? null);
+            $booking->addMeta('hyperguest_status', $hyperguestBooking['content']['status'] ?? 'unknown');
+            $booking->addMeta('hyperguest_cancellation_policy',
+                $hyperguestBooking['rooms'][0]['cancellationPolicy'] ?? []
+            );
+            $booking->addMeta('hyperguest_remarks',
+                $hyperguestBooking['rooms'][0]['remarks'] ?? []
+            );
+        }
         $booking->addMeta('payment_gateway', $dto->paymentGateway);
 
         if ($dto->specialRequests) {

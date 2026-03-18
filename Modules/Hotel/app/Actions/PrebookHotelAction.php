@@ -7,8 +7,8 @@ use Modules\Hotel\DTOs\PrebookHotelDto;
 use Modules\Hotel\Enums\HotelProviderEnum;
 use Modules\Hotel\Providers\HotelProviderInterface;
 use Modules\Hotel\Providers\Local\LocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2BLocal\TravolyoB2BLocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2BNetStreaming\TravolyoB2BNetStreamingHotelProvider;
+use Modules\Hotel\Providers\TravolyoB2BBaseHotelProvider;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 
 class PrebookHotelAction
 {
@@ -20,9 +20,9 @@ class PrebookHotelAction
     private function resolveProvider(HotelProviderEnum $provider): HotelProviderInterface
     {
         return match ($provider) {
-            HotelProviderEnum::Local                  => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2BNetStreaming => new TravolyoB2BNetStreamingHotelProvider(),
-            HotelProviderEnum::TravolyoB2BLocal       => new TravolyoB2BLocalHotelProvider(),
+            HotelProviderEnum::Local       => new LocalHotelProvider(),
+            HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
+            HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }
 }
