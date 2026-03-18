@@ -5,10 +5,22 @@
 @push('styles')
 <style>
 /* ── Flight page ─────────────────────────────────── */
-.flight-page-bg { background: #f4f6fb; min-height: 60vh; }
+.flight-page-bg {
+    background:
+        /* radial-gradient(circle at top left, rgba(23, 195, 206, .08), transparent 28%),
+        linear-gradient(180deg, #f8fbfd 0%, #f1f5fb 100%); */
+    min-height: 60vh;
+}
+:root {
+    --flight-theme: var(--primary, #17c3ce);
+    --flight-theme-dark: #1099a6;
+    --flight-ink: #12314d;
+    --flight-muted: #6b7a90;
+    --flight-line: #d9e4ef;
+}
 
 /* Filters card */
-.filter-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.07); }
+.filter-card { background: #fff; border-radius: 18px; padding: 20px; box-shadow: 0 10px 32px rgba(18,38,63,.08); }
 .filter-card .filter-title { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6c757d; margin-bottom: 12px; }
 .filter-divider { border-top: 1px solid #eef0f4; margin: 16px 0; }
 
@@ -16,59 +28,215 @@
 .price-slider-wrap input[type=range] {
     -webkit-appearance: none; width: 100%; height: 4px;
     border-radius: 2px; outline: none; cursor: pointer;
-    background: linear-gradient(to right, var(--bs-primary) 100%, #e5e7eb 100%);
+    background: linear-gradient(to right, var(--flight-theme) 100%, #e5e7eb 100%);
 }
 .price-slider-wrap input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none; width: 16px; height: 16px;
-    border-radius: 50%; background: var(--bs-primary); cursor: pointer;
-    box-shadow: 0 0 0 3px rgba(13,110,253,.15);
+    border-radius: 50%; background: var(--flight-theme); cursor: pointer;
+    box-shadow: 0 0 0 3px rgba(23, 195, 206, .15);
 }
 .price-slider-wrap input[type=range]::-moz-range-thumb {
     width: 16px; height: 16px; border-radius: 50%;
-    background: var(--bs-primary); cursor: pointer; border: none;
+    background: var(--flight-theme); cursor: pointer; border: none;
 }
 
 /* Stop / time filter pills */
 .filter-pill { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; transition: background .15s; font-size: .875rem; }
 .filter-pill:hover { background: #f0f4ff; }
-.filter-pill input[type=radio] { accent-color: var(--bs-primary); }
+.filter-pill input[type=radio] { accent-color: var(--flight-theme); }
 
 /* Results header */
 .results-header { border-bottom: 1px solid #eef0f4; padding-bottom: 12px; margin-bottom: 16px; }
-.sort-select { border: 1px solid #dee2e6; border-radius: 6px; padding: 4px 10px; font-size: .85rem; color: #495057; background: #fff; cursor: pointer; }
+.sort-select { border: 1px solid #dee2e6; border-radius: 10px; padding: 6px 12px; font-size: .85rem; color: #495057; background: #fff; cursor: pointer; }
 
 /* Flight card */
 .flight-card {
-    background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.07);
-    margin-bottom: 12px; overflow: hidden; transition: box-shadow .2s, transform .2s;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+    border: 1px solid #dde7f2;
+    border-radius: 22px;
+    box-shadow: 0 16px 38px rgba(18,38,63,.08);
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: box-shadow .2s, transform .2s, border-color .2s;
 }
-.flight-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.12); transform: translateY(-1px); }
-.flight-card__body { padding: 18px 20px; }
-.flight-card__badge { font-size: .7rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+.flight-card:hover {
+    border-color: rgba(23, 195, 206, .28);
+    box-shadow: 0 22px 48px rgba(18,38,63,.12);
+    transform: translateY(-2px);
+}
+.flight-card__body { padding: 22px; }
+.flight-card__layout {
+    align-items: center;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 146px minmax(0, 1fr) 132px;
+}
+.flight-card__badge {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 4px 9px;
+    border-radius: 999px;
+}
 
 /* Airline logo col */
-.airline-col { min-width: 90px; max-width: 110px; }
-.airline-logo { height: 32px; max-width: 80px; object-fit: contain; }
+.airline-col { display: flex; flex-direction: column; gap: 12px; }
+.airline-meta { display: flex; flex-direction: column; gap: 10px; }
+.airline-logo-wrap {
+    width: 54px; height: 54px; border-radius: 16px; background: #f4f7fb;
+    display: flex; align-items: center; justify-content: center;
+}
+.airline-logo { height: 30px; max-width: 30px; object-fit: contain; }
+.airline-brand { color: var(--flight-ink); font-size: .94rem; font-weight: 800; line-height: 1.15; }
+.airline-flight-no { color: var(--flight-muted); font-size: .8rem; }
+.airline-provider-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* Leg */
-.leg-time { font-size: 1.2rem; font-weight: 700; line-height: 1.1; }
-.leg-iata { font-size: .8rem; color: #6c757d; }
-.leg-date { font-size: .75rem; color: #9ca3af; margin-top: 2px; }
+.flight-itinerary { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.flight-itinerary__segment {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(78px, 94px) minmax(0, 1fr) minmax(78px, 94px);
+    align-items: center;
+}
+.flight-itinerary__chip {
+    background: rgba(23, 195, 206, .12);
+    color: var(--flight-theme-dark);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: .58rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    margin-bottom: 6px;
+    padding: 3px 8px;
+    text-transform: uppercase;
+}
+.leg-point { min-width: 0; }
+.leg-point--arrival { text-align: right; }
+.leg-time { color: var(--flight-ink); font-size: 1.45rem; font-weight: 800; line-height: 1; }
+.leg-iata { font-size: .9rem; color: var(--flight-ink); font-weight: 700; margin-top: 6px; }
+.leg-date { font-size: .78rem; color: #8ea0b4; margin-top: 4px; }
+.flight-path { text-align: center; min-width: 0; }
+.flight-path__line { display: flex; align-items: center; gap: 10px; justify-content: center; margin-bottom: 8px; }
+.flight-path__dot { width: 8px; height: 8px; border-radius: 50%; background: #91a5bd; flex: 0 0 8px; }
+.flight-path__dash { flex: 1 1 auto; min-width: 24px; border-top: 2px dashed var(--flight-line); }
+.flight-path__plane { color: #879bb1; font-size: .82rem; display: inline-flex; align-items: center; justify-content: center; }
+.flight-path__meta { display: flex; flex-direction: column; gap: 3px; color: var(--flight-muted); }
+.flight-path__duration { color: var(--flight-ink); font-size: .92rem; font-weight: 700; }
+.flight-path__stops { font-size: .82rem; font-weight: 600; }
 .stops-direct { color: #16a34a; }
 .stops-multi  { color: #d97706; }
 
-/* Return leg separator */
-.return-sep { border-left: 2px dashed #dee2e6; margin: 0 8px; flex-shrink: 0; }
-
 /* Price col */
-.price-col { min-width: 160px; max-width: 180px; }
-.price-amount { font-size: 1.4rem; font-weight: 700; color: var(--bs-primary); line-height: 1.1; }
-.price-cabin  { font-size: .75rem; color: #6c757d; margin-top: 2px; }
-.btn-select { padding: 8px 0; font-size: .85rem; border-radius: 8px; font-weight: 600; width: 140px; }
+.price-col {
+    align-items: flex-end;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-self: end;
+    text-align: right;
+    width: 118px;
+}
+.price-from {
+    color: var(--flight-muted);
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+}
+.price-amount {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--flight-theme);
+    line-height: 1;
+    letter-spacing: -.03em;
+}
+.price-cabin  {
+    font-size: .66rem;
+    color: #6c757d;
+    margin-top: 0;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.btn-select {
+    background: var(--flight-theme);
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 10px 20px rgba(23, 195, 206, .16);
+    font-size: .82rem;
+    font-weight: 700;
+    padding: 9px 0;
+    width: 106px;
+}
+.btn-select:hover,
+.btn-select:focus { background: var(--flight-theme-dark); }
+
+/* Pagination */
+.flight-pagination-wrap { display: flex; justify-content: center; margin-top: 24px; }
+.flight-pagination {
+    align-items: center;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(18, 38, 63, .08);
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 10px 12px;
+}
+.flight-pagination__btn {
+    background: #f8fafc;
+    border: 1px solid #dbe4ef;
+    border-radius: 12px;
+    color: #334155;
+    font-size: .86rem;
+    font-weight: 600;
+    min-width: 40px;
+    padding: 8px 10px;
+    transition: all .15s ease;
+}
+.flight-pagination__btn:hover:not(:disabled) {
+    border-color: var(--flight-theme);
+    color: var(--flight-theme);
+    transform: translateY(-1px);
+}
+.flight-pagination__btn.is-active {
+    background: var(--flight-theme);
+    border-color: var(--flight-theme);
+    box-shadow: 0 10px 20px rgba(23, 195, 206, .18);
+    color: #fff;
+}
+.flight-pagination__btn:disabled { cursor: not-allowed; opacity: .45; }
+.flight-pagination__ellipsis,
+.flight-pagination__summary {
+    color: #64748b;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: 0 6px;
+}
 
 /* Skeleton */
 .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+@media (max-width: 1199.98px) {
+    .flight-card__layout { grid-template-columns: 138px minmax(0, 1fr) 122px; }
+    .leg-time { font-size: 1.32rem; }
+}
+
+@media (max-width: 991.98px) {
+    .flight-card__layout { grid-template-columns: 1fr; }
+    .price-col { align-items: flex-start; justify-self: stretch; text-align: left; width: 100%; }
+    .btn-select { width: 100%; }
+}
+
+@media (max-width: 575.98px) {
+    .flight-card__body { padding: 18px; }
+    .flight-itinerary__segment { grid-template-columns: 1fr; gap: 10px; }
+    .leg-point, .leg-point--arrival, .flight-path { text-align: left; }
+    .flight-path__line { justify-content: flex-start; }
+    .leg-time { font-size: 1.2rem; }
+    .price-amount { font-size: 1.08rem; }
+}
 </style>
 @endpush
 
@@ -166,15 +334,24 @@
             <div id="flight-loading">
                 @for($i = 0; $i < 4; $i++)
                 <div class="flight-card mb-3">
-                    <div class="flight-card__body d-flex align-items-center gap-3">
-                        <div class="skeleton" style="width:70px;height:32px;flex-shrink:0"></div>
-                        <div class="flex-fill">
-                            <div class="skeleton mb-2" style="height:18px;width:60%"></div>
-                            <div class="skeleton" style="height:14px;width:40%"></div>
-                        </div>
-                        <div>
-                            <div class="skeleton mb-2" style="height:24px;width:80px"></div>
-                            <div class="skeleton" style="height:32px;width:80px;border-radius:8px"></div>
+                    <div class="flight-card__body">
+                        <div class="flight-card__layout">
+                            <div>
+                                <div class="skeleton mb-3" style="height:26px;width:84px;border-radius:999px"></div>
+                                <div class="skeleton mb-3" style="width:54px;height:54px;border-radius:16px"></div>
+                                <div class="skeleton mb-2" style="height:16px;width:102px"></div>
+                                <div class="skeleton" style="height:13px;width:76px"></div>
+                            </div>
+                            <div>
+                                <div class="skeleton mb-3" style="height:14px;width:72px;border-radius:999px"></div>
+                                <div class="skeleton mb-3" style="height:72px;width:100%;border-radius:18px"></div>
+                            </div>
+                            <div>
+                                <div class="skeleton mb-2 ms-auto" style="height:14px;width:40px"></div>
+                                <div class="skeleton mb-3 ms-auto" style="height:38px;width:106px"></div>
+                                <div class="skeleton mb-3 ms-auto" style="height:13px;width:66px"></div>
+                                <div class="skeleton ms-auto" style="height:44px;width:126px;border-radius:16px"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,6 +360,7 @@
 
             {{-- Flight cards rendered by JS --}}
             <div id="flight-offers" class="d-none"></div>
+            <div id="flight-pagination" class="flight-pagination-wrap d-none"></div>
             <div id="flight-error"  class="d-none alert alert-danger rounded-3"></div>
 
         @endif
@@ -206,6 +384,9 @@
     const error       = document.getElementById('flight-error');
     const header      = document.getElementById('results-header');
     const countEl     = document.getElementById('results-count');
+    const paginationEl= document.getElementById('flight-pagination');
+    const pageSize    = 10;
+    let currentPage   = 1;
 
     // ── Helpers ──────────────────────────────────────────────────
     function fmt(dt) {
@@ -230,28 +411,131 @@
         const m = str.match(/(\d+)h\s*(\d+)m/);
         return m ? parseInt(m[1]) * 60 + parseInt(m[2]) : 9999;
     }
+    function moneyLabel(currency, value) {
+        const amount = Math.round(parseFloat(value) || 0).toLocaleString('en-US');
+        return String(currency || 'USD').toUpperCase() === 'USD' ? `$${amount}` : `${currency} ${amount}`;
+    }
+    function filteredCards() {
+        return [...offers.querySelectorAll('.js-flight-card')]
+            .filter((card) => card.dataset.filteredOut !== '1');
+    }
+    function updateCount(totalVisible = filteredCards().length) {
+        if (!countEl) return;
+
+        if (!totalVisible) {
+            countEl.textContent = `No flights available · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
+            return;
+        }
+
+        const start = ((currentPage - 1) * pageSize) + 1;
+        const end = Math.min(totalVisible, currentPage * pageSize);
+        countEl.textContent = `Showing ${start}-${end} of ${totalVisible} flights · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
+    }
+    function pageWindow(totalPages) {
+        if (totalPages <= 7) {
+            return Array.from({ length: totalPages }, (_, index) => index + 1);
+        }
+
+        const pages = [1];
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+
+        if (start > 2) pages.push('start-ellipsis');
+        for (let page = start; page <= end; page += 1) pages.push(page);
+        if (end < totalPages - 1) pages.push('end-ellipsis');
+        pages.push(totalPages);
+
+        return pages;
+    }
+    function renderPagination() {
+        if (!paginationEl) return;
+
+        const cards = filteredCards();
+        const totalVisible = cards.length;
+        const totalPages = Math.max(1, Math.ceil(totalVisible / pageSize));
+
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        [...offers.querySelectorAll('.js-flight-card')].forEach((card) => {
+            card.style.display = 'none';
+        });
+
+        if (!totalVisible) {
+            paginationEl.innerHTML = '';
+            paginationEl.classList.add('d-none');
+            updateCount(0);
+            return;
+        }
+
+        cards.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach((card) => {
+            card.style.display = '';
+        });
+
+        updateCount(totalVisible);
+
+        if (totalPages <= 1) {
+            paginationEl.innerHTML = '';
+            paginationEl.classList.add('d-none');
+            return;
+        }
+
+        const pageButtons = pageWindow(totalPages).map((item) => {
+            if (typeof item !== 'number') {
+                return '<span class="flight-pagination__ellipsis">...</span>';
+            }
+
+            return `
+                <button type="button"
+                        class="flight-pagination__btn ${item === currentPage ? 'is-active' : ''}"
+                        data-page="${item}">
+                    ${item}
+                </button>
+            `;
+        }).join('');
+
+        paginationEl.innerHTML = `
+            <div class="flight-pagination">
+                <button type="button" class="flight-pagination__btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                ${pageButtons}
+                <button type="button" class="flight-pagination__btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+                <span class="flight-pagination__summary">Page ${currentPage} of ${totalPages}</span>
+            </div>
+        `;
+
+        paginationEl.classList.remove('d-none');
+    }
 
     // ── Render a single leg ───────────────────────────────────────
     function renderLeg(origin, destination, depAt, arrAt, duration, stops, stopsLabel, isNextDay) {
         const stopsClass = stops === 0 ? 'stops-direct' : 'stops-multi';
         const stopsText  = stopsLabel ?? (stops === 0 ? 'Direct' : stops + ' stop' + (stops > 1 ? 's' : ''));
         return `
-        <div class="d-flex align-items-center gap-2 flex-fill">
-            <div class="text-start" style="min-width:56px">
+        <div class="flight-itinerary__segment">
+            <div class="leg-point">
                 <div class="leg-time">${fmt(depAt)}</div>
                 <div class="leg-iata">${origin}</div>
                 <div class="leg-date">${fmtDate(depAt)}</div>
             </div>
-            <div class="flex-fill text-center px-2">
-                <div style="font-size:.75rem;color:#6c757d;margin-bottom:4px">${duration ?? ''}</div>
-                <div class="position-relative" style="height:2px;background:#dee2e6;border-radius:2px">
-                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-1 text-primary lh-1" style="font-size:.8rem">
-                        <i class="bi bi-airplane-fill"></i>
-                    </span>
+            <div class="flight-path">
+                <div class="flight-path__line">
+                    <span class="flight-path__dot"></span>
+                    <span class="flight-path__dash"></span>
+                    <span class="flight-path__plane"><i class="bi bi-airplane-fill"></i></span>
+                    <span class="flight-path__dash"></span>
+                    <span class="flight-path__dot"></span>
                 </div>
-                <div class="fw-semibold mt-1 ${stopsClass}" style="font-size:.75rem">${stopsText}</div>
+                <div class="flight-path__meta">
+                    <div class="flight-path__duration">${duration ?? '—'}</div>
+                    <div class="flight-path__stops ${stopsClass}">${stopsText}</div>
+                </div>
             </div>
-            <div class="text-start" style="min-width:56px">
+            <div class="leg-point leg-point--arrival">
                 <div class="leg-time">${fmt(arrAt)}${isNextDay ? '<sup class="text-danger" style="font-size:.6rem">+1</sup>' : ''}</div>
                 <div class="leg-iata">${destination}</div>
                 <div class="leg-date">${fmtDate(arrAt)}</div>
@@ -266,7 +550,7 @@
             'travolyo_b2b_xml_agency':   { label: 'B2B',       bg: '#ecfdf5', color: '#059669' },
         };
         const p = map[provider] ?? { label: provider ?? 'Unknown', bg: '#f3f4f6', color: '#6b7280' };
-        return `<span style="font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:20px;background:${p.bg};color:${p.color};letter-spacing:.04em">${p.label}</span>`;
+        return `<span class="flight-card__badge" style="background:${p.bg};color:${p.color}">${p.label}</span>`;
     }
 
     // ── Render one card ───────────────────────────────────────────
@@ -282,11 +566,10 @@
             : `<span class="fw-bold text-primary fs-5">${f.airline_code ?? ''}</span>`;
 
         const returnLegHtml = hasReturn ? `
-            <div class="return-sep align-self-stretch d-none d-md-block"></div>
-            <div class="d-flex flex-column justify-content-center" style="min-width:38px;text-align:center">
-                <span class="text-muted" style="font-size:.65rem;letter-spacing:.06em;text-transform:uppercase;writing-mode:vertical-lr;transform:rotate(180deg)">Return</span>
+            <div>
+                <span class="flight-itinerary__chip">Return</span>
+                ${renderLeg(f.destination, f.origin, f.return_departure_at, f.return_arrival_at, f.return_duration, f.return_stops ?? 0, null, false)}
             </div>
-            ${renderLeg(f.destination, f.origin, f.return_departure_at, f.return_arrival_at, f.return_duration, f.return_stops ?? 0, null, false)}
         ` : '';
 
         return `
@@ -295,29 +578,39 @@
              data-stops="${f.stops}"
              data-duration="${f.duration ?? ''}"
              data-dep-time="${depTimeStr(f.departure_at)}"
-             data-arr-time="${depTimeStr(f.arrival_at)}">
+             data-arr-time="${depTimeStr(f.arrival_at)}"
+             data-currency="${f.currency}">
             <div class="flight-card__body">
-                <div class="d-flex align-items-center gap-3 w-100">
+                <div class="flight-card__layout">
 
-                    {{-- Airline --}}
-                    <div class="airline-col d-flex flex-column align-items-center text-center flex-shrink-0">
-                        ${logoHtml}
-                        <div class="small text-muted mt-2 lh-sm">${f.airline_name ?? ''}</div>
-                        <div class="text-muted" style="font-size:.72rem">Flt ${f.flight_number ?? ''}</div>
-                        <div class="mt-1">${badgeHtml}</div>
-                        <div class="mt-1">${providerBadge(f.provider)}</div>
+                    <div class="airline-col">
+                        <div class="airline-provider-row">
+                            ${providerBadge(f.provider)}
+                            ${badgeHtml}
+                        </div>
+                        <div class="airline-meta">
+                            <div class="airline-logo-wrap">
+                                ${logoHtml}
+                            </div>
+                            <div>
+                                <div class="airline-brand">${f.airline_name ?? 'Unknown Airline'}</div>
+                                <div class="airline-flight-no">Flight: ${f.flight_number ?? 'N/A'}</div>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Legs --}}
-                    <div class="d-flex align-items-center flex-fill min-w-0 gap-1">
-                        ${renderLeg(f.origin, f.destination, f.departure_at, f.arrival_at, f.duration, f.stops, f.stops_label, f.is_next_day)}
+                    <div class="flight-itinerary">
+                        <div>
+                            <span class="flight-itinerary__chip">Outbound</span>
+                            ${renderLeg(f.origin, f.destination, f.departure_at, f.arrival_at, f.duration, f.stops, f.stops_label, f.is_next_day)}
+                        </div>
                         ${returnLegHtml}
                     </div>
 
-                    {{-- Price --}}
-                    <div class="price-col d-flex flex-column align-items-center align-items-end flex-shrink-0 ms-auto text-end">
-                        <div class="price-amount">${f.currency} ${parseFloat(f.total_amount).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2})}</div>
-                        <div class="price-cabin">${f.cabin_class}</div>
+                    <div class="price-col">
+                        <div class="price-from">From</div>
+                        <div class="price-amount">${moneyLabel(f.currency, f.total_amount)}</div>
+                        <div class="price-cabin">${f.cabin_class ?? 'Economy'}</div>
                         <button class="btn btn-primary btn-select mt-3 js-select-flight w-100"
                             data-offer-id="${f.id}"
                             data-provider="${f.provider}"
@@ -337,7 +630,6 @@
                             Select
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>`;
@@ -374,7 +666,7 @@
             countEl.textContent = `Showing ${cnt} flight${cnt !== 1 ? 's' : ''} · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
 
             initPriceSlider();
-            filterCards();
+            filterCards(true);
 
         } catch (err) {
             loading.classList.add('d-none');
@@ -401,26 +693,26 @@
         priceRange.max   = maxP;
         priceRange.value = maxP;
 
-        const fmt = v => `${cards[0]?.querySelector('.price-amount')?.textContent.charAt(0) ?? '$'}${Math.round(v).toLocaleString()}`;
+        const fmt = v => moneyLabel(cards[0]?.dataset.currency ?? 'USD', v);
         if (priceRangeMin) priceRangeMin.textContent = fmt(minP);
         if (priceRangeVal) priceRangeVal.textContent = fmt(maxP);
 
         function paintSlider() {
             const mn = +priceRange.min, mx = +priceRange.max, vl = +priceRange.value;
             const pct = mx > mn ? ((vl - mn) / (mx - mn)) * 100 : 100;
-            priceRange.style.background = `linear-gradient(to right,var(--bs-primary) 0%,var(--bs-primary) ${pct}%,#e5e7eb ${pct}%,#e5e7eb 100%)`;
+            priceRange.style.background = `linear-gradient(to right,var(--flight-theme) 0%,var(--flight-theme) ${pct}%,#e5e7eb ${pct}%,#e5e7eb 100%)`;
         }
         paintSlider();
 
         priceRange.addEventListener('input', function () {
             if (priceRangeVal) priceRangeVal.textContent = fmt(+this.value);
             paintSlider();
-            filterCards();
+            filterCards(true);
         });
     }
 
     // ── Filter cards ──────────────────────────────────────────────
-    function filterCards() {
+    function filterCards(resetPage = false) {
         const priceRange = document.getElementById('priceRange');
         const maxPrice   = priceRange ? +priceRange.value : Infinity;
         const stopFilter = document.querySelector('.stop-filter:checked')?.value ?? 'all';
@@ -440,8 +732,14 @@
             else if (timeFilter === 'afternoon') show = show && hour >= 12 && hour < 18;
             else if (timeFilter === 'evening')   show = show && hour >= 18;
 
-            card.style.display = show ? '' : 'none';
+            card.dataset.filteredOut = show ? '0' : '1';
         });
+
+        if (resetPage) {
+            currentPage = 1;
+        }
+
+        renderPagination();
     }
 
     // ── Sort ──────────────────────────────────────────────────────
@@ -458,11 +756,24 @@
             return 0;
         });
         cards.forEach(c => parent.appendChild(c));
+        currentPage = 1;
+        renderPagination();
     });
 
     // ── Filter listeners ──────────────────────────────────────────
     document.querySelectorAll('.stop-filter, .dep-time-filter').forEach(el => {
-        el.addEventListener('change', filterCards);
+        el.addEventListener('change', () => filterCards(true));
+    });
+
+    paginationEl?.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-page]');
+        if (!btn || btn.disabled) return;
+
+        currentPage = Math.max(1, parseInt(btn.dataset.page ?? '1', 10) || 1);
+        renderPagination();
+
+        const top = header ? header.getBoundingClientRect().top + window.scrollY - 120 : 0;
+        window.scrollTo({ top, behavior: 'smooth' });
     });
 
     // ── Select button → prebook API → checkout page ──────────────
