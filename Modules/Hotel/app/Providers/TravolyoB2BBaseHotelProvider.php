@@ -42,6 +42,7 @@ abstract class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
             return [];
         }
 
+        
         try {
             $response = Http::connectTimeout($this->connectTimeout)
                 ->timeout($this->searchTimeout)
