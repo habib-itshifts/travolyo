@@ -8,93 +8,101 @@ use Illuminate\Routing\Controller;
 use Illuminate\View\View;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelDeal;
-use Modules\Hotel\Models\PromoCode;
+use Modules\Hotel\Models\RoomType;
 use Modules\Hotel\Services\HotelDealService;
+use Modules\Hotel\Services\PromoCodeService;
 
 class HotelDealController extends Controller
 {
-    public function __construct(private readonly HotelDealService $service) {}
+    public function __construct(
+        private readonly HotelDealService $dealService,
+        private readonly PromoCodeService $promoService,
+    ) {}
 
-    public function index(Request $request, int $hotel): View
+    private function authorizeHotel(Hotel $hotel): void
     {
-        $hotel = Hotel::where('author_id', auth()->id())->findOrFail($hotel);
-        $deals = $this->service->list($hotel, $request);
+        abort_unless($hotel->author_id === auth()->id(), 403);
+    }
 
+    public function index(Request $request, Hotel $hotel): View
+    {
+        $this->authorizeHotel($hotel);
+        $deals = $this->dealService->list($hotel, $request->only(['status', 'room_type_id']));
         return view('vendor::hotel-deals.index', compact('hotel', 'deals'));
     }
 
-    public function create(int $hotel): View
+    public function create(Hotel $hotel): View
     {
-        $hotel      = Hotel::with('rooms')->where('author_id', auth()->id())->findOrFail($hotel);
-        $promoCodes = PromoCode::where('user_id', auth()->id())->active()->orderBy('code')->get();
-
-        return view('vendor::hotel-deals.create', compact('hotel', 'promoCodes'));
+        $this->authorizeHotel($hotel);
+        $roomTypes  = RoomType::where('user_id', auth()->id())->orWhereNull('user_id')->active()->orderBy('name')->get();
+        $promoCodes = $this->promoService->getActiveForUser(auth()->id());
+        return view('vendor::hotel-deals.create', compact('hotel', 'roomTypes', 'promoCodes'));
     }
 
-    public function store(Request $request, int $hotel): RedirectResponse
+    public function store(Request $request, Hotel $hotel): RedirectResponse
     {
-        $hotel = Hotel::where('author_id', auth()->id())->findOrFail($hotel);
-
+        $this->authorizeHotel($hotel);
         $data = $this->validateDeal($request);
-        $this->service->store($hotel, $data, isVendor: true);
+        $data['hotel_id'] = $hotel->id;
+        $data['status'] = 'draft';
 
-        return redirect()->route('vendor.hotels.deals.index', $hotel->id)
-            ->with('success', 'Deal submitted for admin review.');
+        $deal = $this->dealService->store($data, $data['rates'] ?? []);
+        if (!empty($data['promo_codes'])) {
+            $deal->promoCodes()->sync($data['promo_codes']);
+        }
+
+        return redirect()->route('vendor.hotels.deals.index', $hotel)->with('success', 'Deal created (pending admin approval).');
     }
 
-    public function edit(int $hotel, int $deal): View
+    public function edit(Hotel $hotel, HotelDeal $deal): View
     {
-        $hotel      = Hotel::with('rooms')->where('author_id', auth()->id())->findOrFail($hotel);
-        $deal       = HotelDeal::with(['rates', 'promoCodes'])->where('hotel_id', $hotel->id)->findOrFail($deal);
-        $promoCodes = PromoCode::where('user_id', auth()->id())->active()->orderBy('code')->get();
-
-        return view('vendor::hotel-deals.edit', compact('hotel', 'deal', 'promoCodes'));
+        $this->authorizeHotel($hotel);
+        $deal->load(['rates', 'promoCodes']);
+        $roomTypes  = RoomType::where('user_id', auth()->id())->orWhereNull('user_id')->active()->orderBy('name')->get();
+        $promoCodes = $this->promoService->getActiveForUser(auth()->id());
+        return view('vendor::hotel-deals.edit', compact('hotel', 'deal', 'roomTypes', 'promoCodes'));
     }
 
-    public function update(Request $request, int $hotel, int $deal): RedirectResponse
+    public function update(Request $request, Hotel $hotel, HotelDeal $deal): RedirectResponse
     {
-        $hotel = Hotel::where('author_id', auth()->id())->findOrFail($hotel);
-        $deal  = HotelDeal::where('hotel_id', $hotel->id)->findOrFail($deal);
-
+        $this->authorizeHotel($hotel);
         $data = $this->validateDeal($request);
-        $this->service->update($deal, $data, isVendor: true);
+        $data['status'] = 'draft';
 
-        return redirect()->route('vendor.hotels.deals.index', $hotel->id)
-            ->with('success', 'Deal updated successfully.');
+        $this->dealService->update($deal, $data, $data['rates'] ?? []);
+        $deal->promoCodes()->sync($data['promo_codes'] ?? []);
+
+        return redirect()->route('vendor.hotels.deals.index', $hotel)->with('success', 'Deal updated.');
     }
 
-    public function destroy(int $hotel, int $deal): RedirectResponse
+    public function destroy(Hotel $hotel, HotelDeal $deal): RedirectResponse
     {
-        $hotel = Hotel::where('author_id', auth()->id())->findOrFail($hotel);
-        $deal  = HotelDeal::where('hotel_id', $hotel->id)->findOrFail($deal);
-        $this->service->delete($deal);
-
+        $this->authorizeHotel($hotel);
+        $this->dealService->delete($deal);
         return back()->with('success', 'Deal deleted.');
     }
 
     private function validateDeal(Request $request): array
     {
         return $request->validate([
-            'hotel_room_id'       => 'nullable|exists:hotel_rooms,id',
-            'room_type'           => 'required|string|max:100',
-            'release_period'      => 'nullable|string|max:100',
-            'booking_window'      => 'nullable|string|max:100',
-            'cancellation_policy' => 'nullable|string|max:100',
-            'max_occupancy_label' => 'nullable|string|max:150',
-            'allocation'          => 'nullable|string|max:100',
-            'blackout_dates'      => 'nullable|array',
-            'blackout_dates.*'    => 'date',
-            'special_remarks'     => 'nullable|string',
-            'promo_codes'         => 'nullable|array',
-            'promo_codes.*'       => 'exists:promo_codes,id',
-            'rates'               => 'nullable|array',
-            'rates.*.travel_date_start' => 'required|date',
-            'rates.*.travel_date_end'   => 'required|date|after_or_equal:rates.*.travel_date_start',
+            'room_type_id'              => 'required|exists:room_types,id',
+            'release_period'            => 'nullable|string|max:100',
+            'booking_window'            => 'nullable|string|max:100',
+            'cancellation_policy'       => 'nullable|string|max:100',
+            'max_occupancy_label'       => 'nullable|string|max:150',
+            'allocation'                => 'nullable|string|max:100',
+            'blackout_dates'            => 'nullable|string',
+            'special_remarks'           => 'nullable|string',
+            'rates'                     => 'nullable|array',
+            'rates.*.travel_date_start' => 'required_with:rates|date',
+            'rates.*.travel_date_end'   => 'required_with:rates|date',
             'rates.*.price_sgl_bb'      => 'nullable|numeric|min:0',
             'rates.*.price_dbl_bb'      => 'nullable|numeric|min:0',
             'rates.*.extra_bed_price'   => 'nullable|numeric|min:0',
             'rates.*.child_price'       => 'nullable|numeric|min:0',
             'rates.*.child_breakfast'   => 'nullable|numeric|min:0',
+            'promo_codes'               => 'nullable|array',
+            'promo_codes.*'             => 'exists:promo_codes,id',
         ]);
     }
 }

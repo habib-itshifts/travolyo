@@ -12,42 +12,23 @@ class HotelRoom extends Model
 {
     protected $fillable = [
         'hotel_id',
-        'name',
-        'slug',
-        'room_type',
-        'currency',
+        'room_type_id',
         'image_id',
         'gallery',
-        'bed_configuration',
-        'max_adults',
-        'max_children',
-        'max_occupancy',
-        'size_sqm',
         'floor',
-        'view_type',
-        'description',
-        'base_price',
-        'extra_adult_price',
-        'extra_child_price',
         'quantity',
+        'base_price',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'currency'         => 'string',
-        'image_id'         => 'integer',
-        'bed_configuration' => 'array',
-        'max_adults'        => 'integer',
-        'max_children'      => 'integer',
-        'max_occupancy'     => 'integer',
-        'size_sqm'          => 'decimal:2',
-        'base_price'        => 'decimal:2',
-        'extra_adult_price' => 'decimal:2',
-        'extra_child_price' => 'decimal:2',
-        'quantity'          => 'integer',
-        'is_active'         => 'boolean',
-        'sort_order'        => 'integer',
+        'room_type_id'  => 'integer',
+        'image_id'      => 'integer',
+        'base_price'    => 'decimal:2',
+        'quantity'      => 'integer',
+        'is_active'     => 'boolean',
+        'sort_order'    => 'integer',
     ];
 
     protected function mediaPathFromId(?int $id): ?string
@@ -95,6 +76,11 @@ class HotelRoom extends Model
         return $this->belongsTo(Hotel::class);
     }
 
+    public function roomType(): BelongsTo
+    {
+        return $this->belongsTo(RoomType::class);
+    }
+
     public function featuredMedia(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class, 'image_id');
@@ -114,12 +100,13 @@ class HotelRoom extends Model
 
     /**
      * Calculate the total price for a stay.
+     * Extra pricing comes from the room type.
      */
     public function calculatePrice(int $nights, int $adults, int $children): float
     {
         $base = $this->base_price * $nights;
-        $extraAdults = max(0, $adults - 2) * $this->extra_adult_price * $nights;
-        $extraChildren = $children * $this->extra_child_price * $nights;
+        $extraAdults = max(0, $adults - 2) * ($this->roomType->extra_adult_price ?? 0) * $nights;
+        $extraChildren = $children * ($this->roomType->extra_child_price ?? 0) * $nights;
 
         return round($base + $extraAdults + $extraChildren, 2);
     }

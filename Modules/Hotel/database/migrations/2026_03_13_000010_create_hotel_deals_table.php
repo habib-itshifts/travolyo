@@ -14,11 +14,8 @@ return new class extends Migration
             // Hotel reference (required)
             $table->foreignId('hotel_id')->constrained('hotels')->cascadeOnDelete();
 
-            // Room reference — string from B2B sheet (e.g. "Superior Deluxe Room")
-            $table->string('room_type', 100);
-
-            // Optional link to our DB room once matched
-            $table->foreignId('hotel_room_id')->nullable()->constrained('hotel_rooms')->nullOnDelete();
+            // Room type reference
+            $table->foreignId('room_type_id')->constrained('room_types')->cascadeOnDelete();
 
             // Booking restrictions
             $table->string('release_period', 100)->nullable();        // "04 Days Prior" | "High: 06 Days Prior"

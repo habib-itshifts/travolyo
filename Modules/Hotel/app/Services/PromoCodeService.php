@@ -2,21 +2,18 @@
 
 namespace Modules\Hotel\Services;
 
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Hotel\Models\PromoCode;
 
 class PromoCodeService
 {
-    public function list(Request $request, ?int $userId = null): LengthAwarePaginator
+    public function list(array $filters = [], ?int $userId = null): LengthAwarePaginator
     {
         return PromoCode::query()
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
-            ->when($request->search, fn ($q) => $q->where(function ($q) use ($request) {
-                $q->where('code', 'like', "%{$request->search}%")
-                  ->orWhere('label', 'like', "%{$request->search}%");
-            }))
-            ->when($request->type, fn ($q) => $q->where('type', $request->type))
+            ->when($filters['search'] ?? null, fn ($q, $s) => $q->where('code', 'like', "%{$s}%")->orWhere('label', 'like', "%{$s}%"))
+            ->when($filters['type'] ?? null, fn ($q, $t) => $q->where('type', $t))
+            ->when(isset($filters['is_active']), fn ($q) => $q->where('is_active', $filters['is_active']))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -36,5 +33,14 @@ class PromoCodeService
     public function delete(PromoCode $promoCode): void
     {
         $promoCode->delete();
+    }
+
+    public function getActiveForUser(?int $userId = null): \Illuminate\Database\Eloquent\Collection
+    {
+        return PromoCode::query()
+            ->when($userId, fn ($q) => $q->where('user_id', $userId))
+            ->active()
+            ->orderBy('code')
+            ->get();
     }
 }

@@ -14,24 +14,24 @@ class HotelDealSupplementController extends Controller
 {
     public function __construct(private readonly HotelDealSupplementService $service) {}
 
+    private function vendorDeals()
+    {
+        return HotelDeal::whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
+            ->with('hotel:id,name', 'roomType:id,name')
+            ->orderByDesc('id')
+            ->get();
+    }
+
     public function index(Request $request): View
     {
-        $supplements = $this->service->list($request, auth()->id());
-        $deals       = HotelDeal::with('hotel:id,name')
-            ->whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->orderBy('id', 'desc')
-            ->get();
-
+        $supplements = $this->service->list($request->only(['search', 'deal_id']), auth()->id());
+        $deals = $this->vendorDeals();
         return view('vendor::hotel-deal-supplements.index', compact('supplements', 'deals'));
     }
 
     public function create(): View
     {
-        $deals = HotelDeal::with('hotel:id,name')
-            ->whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->orderBy('id', 'desc')
-            ->get();
-
+        $deals = $this->vendorDeals();
         return view('vendor::hotel-deal-supplements.create', compact('deals'));
     }
 
@@ -44,35 +44,23 @@ class HotelDealSupplementController extends Controller
             'date_end'      => 'required|date|after_or_equal:date_start',
             'amount'        => 'required|numeric|min:0',
         ]);
-
-        // Verify ownership
-        HotelDeal::whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->findOrFail($data['hotel_deal_id']);
+        $deal = HotelDeal::findOrFail($data['hotel_deal_id']);
+        abort_unless($deal->hotel->author_id === auth()->id(), 403);
 
         $this->service->store($data);
-
-        return redirect()->route('vendor.hotel-deal-supplements.index')
-            ->with('success', 'Supplement created successfully.');
+        return redirect()->route('vendor.hotel-deal-supplements.index')->with('success', 'Supplement created.');
     }
 
-    public function edit(int $id): View
+    public function edit(HotelDealSupplement $hotelDealSupplement): View
     {
-        $supplement = HotelDealSupplement::whereHas('deal.hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->findOrFail($id);
-
-        $deals = HotelDeal::with('hotel:id,name')
-            ->whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->orderBy('id', 'desc')
-            ->get();
-
-        return view('vendor::hotel-deal-supplements.edit', compact('supplement', 'deals'));
+        abort_unless($hotelDealSupplement->deal->hotel->author_id === auth()->id(), 403);
+        $deals = $this->vendorDeals();
+        return view('vendor::hotel-deal-supplements.edit', compact('hotelDealSupplement', 'deals'));
     }
 
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(Request $request, HotelDealSupplement $hotelDealSupplement): RedirectResponse
     {
-        $supplement = HotelDealSupplement::whereHas('deal.hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->findOrFail($id);
-
+        abort_unless($hotelDealSupplement->deal->hotel->author_id === auth()->id(), 403);
         $data = $request->validate([
             'hotel_deal_id' => 'required|exists:hotel_deals,id',
             'event_name'    => 'required|string|max:100',
@@ -80,23 +68,14 @@ class HotelDealSupplementController extends Controller
             'date_end'      => 'required|date|after_or_equal:date_start',
             'amount'        => 'required|numeric|min:0',
         ]);
-
-        // Verify ownership of target deal
-        HotelDeal::whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->findOrFail($data['hotel_deal_id']);
-
-        $this->service->update($supplement, $data);
-
-        return redirect()->route('vendor.hotel-deal-supplements.index')
-            ->with('success', 'Supplement updated successfully.');
+        $this->service->update($hotelDealSupplement, $data);
+        return redirect()->route('vendor.hotel-deal-supplements.index')->with('success', 'Supplement updated.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(HotelDealSupplement $hotelDealSupplement): RedirectResponse
     {
-        $supplement = HotelDealSupplement::whereHas('deal.hotel', fn ($q) => $q->where('author_id', auth()->id()))
-            ->findOrFail($id);
-
-        $this->service->delete($supplement);
+        abort_unless($hotelDealSupplement->deal->hotel->author_id === auth()->id(), 403);
+        $this->service->delete($hotelDealSupplement);
         return back()->with('success', 'Supplement deleted.');
     }
 }

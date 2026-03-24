@@ -1,28 +1,9 @@
 <x-vendor::layouts.master title="Create Supplement">
-
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            <nav aria-label="breadcrumb" style="font-size:12px;">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="{{ route('vendor.hotel-deal-supplements.index') }}" class="text-decoration-none">Supplements</a></li>
-                    <li class="breadcrumb-item active">Create</li>
-                </ol>
-            </nav>
-            <h5 class="fw-bold mb-0 text-dark">Create Supplement</h5>
-        </div>
-        <a href="{{ route('vendor.hotel-deal-supplements.index') }}" class="btn btn-sm btn-outline-secondary">Back</a>
+        <div><h5 class="fw-bold mb-0 text-dark">Create Supplement</h5><p class="text-muted mb-0" style="font-size:13px;">Add event-based price supplement</p></div>
+        <a href="{{ route('vendor.hotel-deal-supplements.index') }}" class="btn btn-sm btn-outline-secondary">Back to List</a>
     </div>
-
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body p-4">
-            <form method="POST" action="{{ route('vendor.hotel-deal-supplements.store') }}">
-                @csrf
-                @include('vendor::hotel-deal-supplements._form')
-                <div class="mt-4">
-                    <button type="submit" class="btn text-white" style="background:var(--clr-primary);">Create Supplement</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <form method="POST" action="{{ route('vendor.hotel-deal-supplements.store') }}">@csrf @include('vendor::hotel-deal-supplements._form')
+        <div class="mt-4"><button type="submit" class="btn text-white px-4" style="background:var(--clr-primary);border-radius:var(--radius-btn);">Create Supplement</button></div>
+    </form>
 </x-vendor::layouts.master>

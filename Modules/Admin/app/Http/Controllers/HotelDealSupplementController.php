@@ -16,15 +16,14 @@ class HotelDealSupplementController extends Controller
 
     public function index(Request $request): View
     {
-        $supplements = $this->service->list($request);
-        $deals       = HotelDeal::with('hotel:id,name')->orderBy('id', 'desc')->get();
-
+        $supplements = $this->service->list($request->only(['search', 'deal_id']));
+        $deals = HotelDeal::with('hotel:id,name', 'roomType:id,name')->orderByDesc('id')->get();
         return view('admin::hotel-deal-supplements.index', compact('supplements', 'deals'));
     }
 
     public function create(): View
     {
-        $deals = HotelDeal::with('hotel:id,name')->orderBy('id', 'desc')->get();
+        $deals = HotelDeal::with('hotel:id,name', 'roomType:id,name')->orderByDesc('id')->get();
         return view('admin::hotel-deal-supplements.create', compact('deals'));
     }
 
@@ -37,25 +36,18 @@ class HotelDealSupplementController extends Controller
             'date_end'      => 'required|date|after_or_equal:date_start',
             'amount'        => 'required|numeric|min:0',
         ]);
-
         $this->service->store($data);
-
-        return redirect()->route('admin.hotel-deal-supplements.index')
-            ->with('success', 'Supplement created successfully.');
+        return redirect()->route('admin.hotel-deal-supplements.index')->with('success', 'Supplement created.');
     }
 
-    public function edit(int $id): View
+    public function edit(HotelDealSupplement $hotelDealSupplement): View
     {
-        $supplement = HotelDealSupplement::findOrFail($id);
-        $deals      = HotelDeal::with('hotel:id,name')->orderBy('id', 'desc')->get();
-
-        return view('admin::hotel-deal-supplements.edit', compact('supplement', 'deals'));
+        $deals = HotelDeal::with('hotel:id,name', 'roomType:id,name')->orderByDesc('id')->get();
+        return view('admin::hotel-deal-supplements.edit', compact('hotelDealSupplement', 'deals'));
     }
 
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(Request $request, HotelDealSupplement $hotelDealSupplement): RedirectResponse
     {
-        $supplement = HotelDealSupplement::findOrFail($id);
-
         $data = $request->validate([
             'hotel_deal_id' => 'required|exists:hotel_deals,id',
             'event_name'    => 'required|string|max:100',
@@ -63,16 +55,13 @@ class HotelDealSupplementController extends Controller
             'date_end'      => 'required|date|after_or_equal:date_start',
             'amount'        => 'required|numeric|min:0',
         ]);
-
-        $this->service->update($supplement, $data);
-
-        return redirect()->route('admin.hotel-deal-supplements.index')
-            ->with('success', 'Supplement updated successfully.');
+        $this->service->update($hotelDealSupplement, $data);
+        return redirect()->route('admin.hotel-deal-supplements.index')->with('success', 'Supplement updated.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(HotelDealSupplement $hotelDealSupplement): RedirectResponse
     {
-        $this->service->delete(HotelDealSupplement::findOrFail($id));
+        $this->service->delete($hotelDealSupplement);
         return back()->with('success', 'Supplement deleted.');
     }
 }

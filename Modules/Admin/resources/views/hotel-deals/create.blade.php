@@ -1,29 +1,9 @@
-<x-admin::layouts.master title="Create Deal">
-
+<x-admin::layouts.master title="Create Deal - {{ $hotel->name }}">
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            <nav aria-label="breadcrumb" style="font-size:12px;">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.hotels.index') }}" class="text-decoration-none">Hotels</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.hotels.deals.index', $hotel->id) }}" class="text-decoration-none">Deals</a></li>
-                    <li class="breadcrumb-item active">Create</li>
-                </ol>
-            </nav>
-            <h5 class="fw-bold mb-0 text-dark">Create Deal — {{ $hotel->name }}</h5>
-        </div>
-        <a href="{{ route('admin.hotels.deals.index', $hotel->id) }}" class="btn btn-sm btn-outline-secondary">Back</a>
+        <div><h5 class="fw-bold mb-0 text-dark">Create Deal</h5><p class="text-muted mb-0" style="font-size:13px;">{{ $hotel->name }}</p></div>
+        <a href="{{ route('admin.hotels.deals.index', $hotel) }}" class="btn btn-sm btn-outline-secondary">Back to Deals</a>
     </div>
-
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body p-4">
-            <form method="POST" action="{{ route('admin.hotels.deals.store', $hotel->id) }}">
-                @csrf
-                @include('admin::hotel-deals._form')
-                <div class="mt-3">
-                    <button type="submit" class="btn text-white" style="background:var(--clr-primary);">Create Deal</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <form method="POST" action="{{ route('admin.hotels.deals.store', $hotel) }}">@csrf @include('admin::hotel-deals._form', ['isVendor' => false])
+        <div class="mt-4"><button type="submit" class="btn text-white px-4" style="background:var(--clr-primary);border-radius:var(--radius-btn);">Create Deal</button></div>
+    </form>
 </x-admin::layouts.master>

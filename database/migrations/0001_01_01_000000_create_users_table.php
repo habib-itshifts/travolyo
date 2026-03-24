@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id(); // Primary key — auto-incrementing unsigned big integer
 
             // ─── Identity ────────────────────────────────────────────────────
-            $table->string('first_name');                          // User's legal first name
+            $table->string('first_name')->nullable();                          // User's legal first name
             $table->string('last_name')->nullable();                           // User's legal last name
             $table->string('name');                           // concatenated full name for display purposes (e.g. "John Doe")
             $table->string('username')->unique()->nullable();      // Optional unique public handle (e.g. @john_doe)

@@ -15,7 +15,7 @@ class PromoCodeController extends Controller
 
     public function index(Request $request): View
     {
-        $promoCodes = $this->service->list($request, auth()->id());
+        $promoCodes = $this->service->list($request->only(['search', 'type', 'is_active']), auth()->id());
         return view('vendor::promo-codes.index', compact('promoCodes'));
     }
 
@@ -35,28 +35,24 @@ class PromoCodeController extends Controller
             'discount_value' => 'nullable|numeric|min:0',
             'valid_from'     => 'nullable|date',
             'valid_until'    => 'nullable|date|after_or_equal:valid_from',
-            'is_active'      => 'sometimes|boolean',
+            'is_active'      => 'boolean',
         ]);
-
-        $data['user_id']   = auth()->id();
         $data['is_active'] = $request->boolean('is_active');
+        $data['user_id'] = auth()->id();
 
         $this->service->store($data);
-
-        return redirect()->route('vendor.promo-codes.index')
-            ->with('success', 'Promo code created successfully.');
+        return redirect()->route('vendor.promo-codes.index')->with('success', 'Promo code created.');
     }
 
-    public function edit(int $id): View
+    public function edit(PromoCode $promoCode): View
     {
-        $promoCode = PromoCode::where('user_id', auth()->id())->findOrFail($id);
+        abort_unless($promoCode->user_id === auth()->id(), 403);
         return view('vendor::promo-codes.edit', compact('promoCode'));
     }
 
-    public function update(Request $request, int $id): RedirectResponse
+    public function update(Request $request, PromoCode $promoCode): RedirectResponse
     {
-        $promoCode = PromoCode::where('user_id', auth()->id())->findOrFail($id);
-
+        abort_unless($promoCode->user_id === auth()->id(), 403);
         $data = $request->validate([
             'code'           => 'required|string|max:100|unique:promo_codes,code,' . $promoCode->id,
             'label'          => 'nullable|string|max:150',
@@ -66,22 +62,18 @@ class PromoCodeController extends Controller
             'discount_value' => 'nullable|numeric|min:0',
             'valid_from'     => 'nullable|date',
             'valid_until'    => 'nullable|date|after_or_equal:valid_from',
-            'is_active'      => 'sometimes|boolean',
+            'is_active'      => 'boolean',
         ]);
-
         $data['is_active'] = $request->boolean('is_active');
 
         $this->service->update($promoCode, $data);
-
-        return redirect()->route('vendor.promo-codes.index')
-            ->with('success', 'Promo code updated successfully.');
+        return redirect()->route('vendor.promo-codes.index')->with('success', 'Promo code updated.');
     }
 
-    public function destroy(int $id): RedirectResponse
+    public function destroy(PromoCode $promoCode): RedirectResponse
     {
-        $promoCode = PromoCode::where('user_id', auth()->id())->findOrFail($id);
+        abort_unless($promoCode->user_id === auth()->id(), 403);
         $this->service->delete($promoCode);
-
         return back()->with('success', 'Promo code deleted.');
     }
 }

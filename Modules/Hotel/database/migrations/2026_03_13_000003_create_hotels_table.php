@@ -63,6 +63,9 @@ return new class extends Migration
             $table->json('extra_prices')->nullable();
             $table->string('related_hotel_ids', 255)->nullable();
 
+            // Currency
+            $table->string('currency', 3)->default('USD');
+
             // JSON display-only fields (not filterable)
             $table->json('payment_methods')->nullable();              // ["cash","card","bank_transfer"]
             $table->json('languages_spoken')->nullable();             // ["en","ar","fr"]

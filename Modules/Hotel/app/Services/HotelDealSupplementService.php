@@ -2,19 +2,18 @@
 
 namespace Modules\Hotel\Services;
 
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Hotel\Models\HotelDealSupplement;
 
 class HotelDealSupplementService
 {
-    public function list(Request $request, ?int $userId = null): LengthAwarePaginator
+    public function list(array $filters = [], ?int $userId = null): LengthAwarePaginator
     {
         return HotelDealSupplement::query()
-            ->with(['deal.hotel'])
-            ->when($userId, fn ($q) => $q->whereHas('deal.hotel', fn ($q) => $q->where('author_id', $userId)))
-            ->when($request->search, fn ($q) => $q->where('event_name', 'like', "%{$request->search}%"))
-            ->when($request->deal_id, fn ($q) => $q->where('hotel_deal_id', $request->deal_id))
+            ->with(['deal.hotel', 'deal.roomType'])
+            ->when($userId, fn ($q) => $q->whereHas('deal.hotel', fn ($hq) => $hq->where('author_id', $userId)))
+            ->when($filters['search'] ?? null, fn ($q, $s) => $q->where('event_name', 'like', "%{$s}%"))
+            ->when($filters['deal_id'] ?? null, fn ($q, $d) => $q->where('hotel_deal_id', $d))
             ->latest()
             ->paginate(20)
             ->withQueryString();

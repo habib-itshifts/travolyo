@@ -11,6 +11,7 @@ use Modules\Vendor\Http\Controllers\BookingController;
 use Modules\Vendor\Http\Controllers\HotelDealController;
 use Modules\Vendor\Http\Controllers\HotelDealSupplementController;
 use Modules\Vendor\Http\Controllers\PromoCodeController;
+use Modules\Vendor\Http\Controllers\RoomTypeController;
 use Modules\Vendor\Http\Controllers\ProfileController;
 use Modules\Vendor\Http\Controllers\VendorDocumentController;
 
@@ -41,6 +42,9 @@ Route::prefix('vendor')
 
         // Hotel Rooms — scoped to rooms of the vendor's own hotels.
         Route::resource('hotel-rooms', HotelRoomController::class)->except(['show']);
+
+        // Room Types (scoped to vendor's own)
+        Route::resource('room-types', RoomTypeController::class)->except(['show']);
 
         // Hotel Deals (nested under hotels, scoped to vendor's own)
         Route::resource('hotels.deals', HotelDealController::class)->except(['show']);

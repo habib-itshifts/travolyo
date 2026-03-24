@@ -20,6 +20,7 @@ use Modules\Admin\Http\Controllers\BookingController;
 use Modules\Admin\Http\Controllers\HotelDealController;
 use Modules\Admin\Http\Controllers\HotelDealSupplementController;
 use Modules\Admin\Http\Controllers\PromoCodeController;
+use Modules\Admin\Http\Controllers\RoomTypeController;
 use Modules\Admin\Http\Controllers\VendorRequestController;
 
 Route::prefix('admin')
@@ -55,6 +56,9 @@ Route::prefix('admin')
         Route::resource('hotels', HotelController::class);
         Route::post('hotels/{id}/restore', [HotelController::class, 'restore'])->name('hotels.restore');
         Route::resource('hotel-rooms', HotelRoomController::class)->except(['show']);
+
+        // Room Types
+        Route::resource('room-types', RoomTypeController::class)->except(['show']);
 
         // Hotel Deals (nested under hotels)
         Route::resource('hotels.deals', HotelDealController::class)->except(['show']);

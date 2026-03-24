@@ -11,8 +11,7 @@ class HotelDeal extends Model
 {
     protected $fillable = [
         'hotel_id',
-        'hotel_room_id',
-        'room_type',
+        'room_type_id',
         'release_period',
         'booking_window',
         'cancellation_policy',
@@ -47,9 +46,9 @@ class HotelDeal extends Model
         return $this->belongsTo(Hotel::class);
     }
 
-    public function room(): BelongsTo
+    public function roomType(): BelongsTo
     {
-        return $this->belongsTo(HotelRoom::class, 'hotel_room_id');
+        return $this->belongsTo(RoomType::class);
     }
 
     public function rates(): HasMany
