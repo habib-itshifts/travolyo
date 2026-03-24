@@ -19,6 +19,7 @@
                 </svg>
                 Manage Rooms
             </a>
+            <a href="{{ route('vendor.hotels.deals.index', $hotel->id) }}" class="btn btn-sm text-white" style="background:var(--clr-primary);">Manage Deals</a>
             <a href="{{ route('vendor.hotels.edit', $hotel->id) }}" class="btn btn-sm btn-primary">Edit Hotel</a>
             <a href="{{ route('vendor.hotels.index') }}" class="btn btn-sm btn-outline-secondary">Back</a>
         </div>

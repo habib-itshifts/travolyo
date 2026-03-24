@@ -12,6 +12,7 @@
             <p class="text-muted mb-0" style="font-size:13px;">Hotel details overview</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('admin.hotels.deals.index', $hotel->id) }}" class="btn btn-sm text-white" style="background:var(--clr-primary);">Manage Deals</a>
             <a href="{{ route('admin.hotels.edit', $hotel->id) }}" class="btn btn-sm btn-primary">Edit Hotel</a>
             <a href="{{ route('admin.hotels.index') }}" class="btn btn-sm btn-outline-secondary">Back</a>
         </div>

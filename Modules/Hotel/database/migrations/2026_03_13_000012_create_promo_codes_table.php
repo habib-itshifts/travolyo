@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('promo_codes', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->string('code', 100)->unique();                    // "TAEXCLUO226", "SVHPROMO-1902"
             $table->string('label', 150)->nullable();                 // "Flash Sale", "Offline Deal", "Contracted Rates"

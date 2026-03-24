@@ -2,12 +2,15 @@
 
 namespace Modules\Hotel\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PromoCode extends Model
 {
     protected $fillable = [
+        'user_id',
         'code',
         'label',
         'type',
@@ -36,6 +39,11 @@ class PromoCode extends Model
         return $query->active()
             ->where(fn ($q) => $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()))
             ->where(fn ($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>=', now()));
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function deals(): BelongsToMany

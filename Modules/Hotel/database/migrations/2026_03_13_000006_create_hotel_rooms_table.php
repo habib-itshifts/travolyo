@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('slug', 191);
             $table->string('room_type', 50);                          // single|double|twin|suite|family|studio|penthouse
 
+            // Media
+            $table->unsignedBigInteger('image_id')->nullable();
+            $table->text('gallery')->nullable();
+
             // Bed & capacity
             $table->json('bed_configuration');                        // {"king":1} or {"twin":2,"sofa_bed":1}
             $table->unsignedTinyInteger('max_adults')->default(2);
@@ -30,6 +34,7 @@ return new class extends Migration
 
             // Content
             $table->text('description')->nullable();
+            $table->string('currency', 3)->default('USD');
 
             // Pricing
             $table->decimal('base_price', 10, 2);                    // per night

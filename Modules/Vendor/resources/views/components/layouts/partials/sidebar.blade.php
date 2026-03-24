@@ -28,6 +28,18 @@
             'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5-6h3m-9 9h10a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z"/>',
         ],
         [
+            'route'   => 'vendor.promo-codes.index',
+            'label'   => 'Promo Codes',
+            'has_sub' => false,
+            'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M3 11l8.586 8.586a2 2 0 002.828 0l6.172-6.172a2 2 0 000-2.828L12 2H5a2 2 0 00-2 2v7z"/>',
+        ],
+        [
+            'route'   => 'vendor.hotel-deal-supplements.index',
+            'label'   => 'Deal Supplements',
+            'has_sub' => false,
+            'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+        ],
+        [
             'route'   => 'vendor.activities.index',
             'label'   => 'Activities',
             'has_sub' => true,

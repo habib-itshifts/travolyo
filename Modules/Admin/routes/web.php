@@ -17,6 +17,9 @@ use Modules\Admin\Http\Controllers\ServiceController;
 use Modules\Admin\Http\Controllers\CustomerController;
 use Modules\Admin\Http\Controllers\VendorController;
 use Modules\Admin\Http\Controllers\BookingController;
+use Modules\Admin\Http\Controllers\HotelDealController;
+use Modules\Admin\Http\Controllers\HotelDealSupplementController;
+use Modules\Admin\Http\Controllers\PromoCodeController;
 use Modules\Admin\Http\Controllers\VendorRequestController;
 
 Route::prefix('admin')
@@ -52,6 +55,15 @@ Route::prefix('admin')
         Route::resource('hotels', HotelController::class);
         Route::post('hotels/{id}/restore', [HotelController::class, 'restore'])->name('hotels.restore');
         Route::resource('hotel-rooms', HotelRoomController::class)->except(['show']);
+
+        // Hotel Deals (nested under hotels)
+        Route::resource('hotels.deals', HotelDealController::class)->except(['show']);
+
+        // Promo Codes
+        Route::resource('promo-codes', PromoCodeController::class)->except(['show']);
+
+        // Hotel Deal Supplements
+        Route::resource('hotel-deal-supplements', HotelDealSupplementController::class)->except(['show']);
         Route::get('amenities', [AmenityController::class, 'index'])->name('amenities.index');
         Route::post('amenities', [AmenityController::class, 'store'])->name('amenities.store');
         Route::put('amenities/{amenity}', [AmenityController::class, 'update'])->name('amenities.update');
