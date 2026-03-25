@@ -49,6 +49,26 @@ class LocationController extends Controller
     }
 
     /**
+     * GET /api/locations/find/{code}
+     */
+    public function locationByCode(string $code): JsonResponse
+    {
+        $location = $this->locationSearchService->findByCode($code);
+
+        if (! $location) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Location not found.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $location,
+        ]);
+    }
+
+    /**
      * GET /api/locations/airports/search?keyword=dub
      */
     public function searchAirports(Request $request): JsonResponse

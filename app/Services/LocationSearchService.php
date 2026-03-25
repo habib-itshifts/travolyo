@@ -34,4 +34,35 @@ class LocationSearchService
             ->values()
             ->all();
     }
+
+    /**
+     * Find a location by IATA code or city name (exact, case-insensitive).
+     * e.g. "DXB" or "Dubai" both return the matching airport(s).
+     */
+    public function findByCode(string $code): ?array
+    {
+        $code = mb_strtolower(trim($code));
+
+        if ($code === '') {
+            return null;
+        }
+
+        $airport = collect($this->locationService->getAirports())
+            ->first(fn($a) =>
+                mb_strtolower((string) ($a['IATA_CODE'] ?? '')) === $code
+                || mb_strtolower((string) ($a['CITY'] ?? '')) === $code
+            );
+
+        if (! $airport) {
+            return null;
+        }
+
+        return [
+            'code'    => (string) ($airport['IATA_CODE'] ?? ''),
+            'name'    => (string) ($airport['AIRPORT'] ?? ''),
+            'city'    => (string) ($airport['CITY'] ?? ''),
+            'country' => (string) ($airport['COUNTRY'] ?? ''),
+            'label'   => trim(($airport['IATA_CODE'] ?? '') . ' - ' . ($airport['CITY'] ?? '') . ', ' . ($airport['COUNTRY'] ?? '')),
+        ];
+    }
 }
