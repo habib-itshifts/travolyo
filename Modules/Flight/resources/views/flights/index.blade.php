@@ -170,50 +170,6 @@
 .btn-select:hover,
 .btn-select:focus { background: var(--flight-theme-dark); }
 
-/* Pagination */
-.flight-pagination-wrap { display: flex; justify-content: center; margin-top: 24px; }
-.flight-pagination {
-    align-items: center;
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 8px 24px rgba(18, 38, 63, .08);
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    padding: 10px 12px;
-}
-.flight-pagination__btn {
-    background: #f8fafc;
-    border: 1px solid #dbe4ef;
-    border-radius: 12px;
-    color: #334155;
-    font-size: .86rem;
-    font-weight: 600;
-    min-width: 40px;
-    padding: 8px 10px;
-    transition: all .15s ease;
-}
-.flight-pagination__btn:hover:not(:disabled) {
-    border-color: var(--flight-theme);
-    color: var(--flight-theme);
-    transform: translateY(-1px);
-}
-.flight-pagination__btn.is-active {
-    background: var(--flight-theme);
-    border-color: var(--flight-theme);
-    box-shadow: 0 10px 20px rgba(23, 195, 206, .18);
-    color: #fff;
-}
-.flight-pagination__btn:disabled { cursor: not-allowed; opacity: .45; }
-.flight-pagination__ellipsis,
-.flight-pagination__summary {
-    color: #64748b;
-    font-size: .82rem;
-    font-weight: 600;
-    padding: 0 6px;
-}
-
 /* Skeleton */
 .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
@@ -360,7 +316,16 @@
 
             {{-- Flight cards rendered by JS --}}
             <div id="flight-offers" class="d-none"></div>
-            <div id="flight-pagination" class="flight-pagination-wrap d-none"></div>
+
+            {{-- Load More button --}}
+            <div id="load-more-wrap" class="d-none text-center mt-3 mb-4">
+                <button class="btn btn-outline-primary px-4 py-2 fw-semibold" id="load-more-btn">
+                    <span id="load-more-text">Load More Flights</span>
+                    <span id="load-more-spinner" class="d-none spinner-border spinner-border-sm ms-2" role="status"></span>
+                </button>
+                <p class="text-muted small mt-2" id="pagination-info"></p>
+            </div>
+
             <div id="flight-error"  class="d-none alert alert-danger rounded-3"></div>
 
         @endif
@@ -385,9 +350,16 @@
     const error       = document.getElementById('flight-error');
     const header      = document.getElementById('results-header');
     const countEl     = document.getElementById('results-count');
-    const paginationEl= document.getElementById('flight-pagination');
-    const pageSize    = 10;
-    let currentPage   = 1;
+    const loadMoreWrap    = document.getElementById('load-more-wrap');
+    const loadMoreBtn     = document.getElementById('load-more-btn');
+    const loadMoreText    = document.getElementById('load-more-text');
+    const loadMoreSpinner = document.getElementById('load-more-spinner');
+    const paginationInfo  = document.getElementById('pagination-info');
+    let serverPage    = 1;
+    let lastPage      = 1;
+    let totalFlights  = 0;
+    let allFlights    = [];
+    let isLoading     = false;
 
     // ── Helpers ──────────────────────────────────────────────────
     function fmt(dt) {
@@ -416,100 +388,23 @@
         const amount = Math.round(parseFloat(value) || 0).toLocaleString('en-US');
         return String(currency || 'USD').toUpperCase() === 'USD' ? `$${amount}` : `${currency} ${amount}`;
     }
-    function filteredCards() {
-        return [...offers.querySelectorAll('.js-flight-card')]
-            .filter((card) => card.dataset.filteredOut !== '1');
-    }
-    function updateCount(totalVisible = filteredCards().length) {
+    function updateCount() {
         if (!countEl) return;
+        const visible = offers.querySelectorAll('.js-flight-card:not([style*="none"])').length;
 
-        if (!totalVisible) {
+        if (!visible) {
             countEl.textContent = `No flights available · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
             return;
         }
 
-        const start = ((currentPage - 1) * pageSize) + 1;
-        const end = Math.min(totalVisible, currentPage * pageSize);
-        countEl.textContent = `Showing ${start}-${end} of ${totalVisible} flights · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
+        const totalStr = totalFlights ? ` of ${totalFlights}` : '';
+        countEl.textContent = `Showing ${visible}${totalStr} flights · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
     }
-    function pageWindow(totalPages) {
-        if (totalPages <= 7) {
-            return Array.from({ length: totalPages }, (_, index) => index + 1);
-        }
-
-        const pages = [1];
-        const start = Math.max(2, currentPage - 1);
-        const end = Math.min(totalPages - 1, currentPage + 1);
-
-        if (start > 2) pages.push('start-ellipsis');
-        for (let page = start; page <= end; page += 1) pages.push(page);
-        if (end < totalPages - 1) pages.push('end-ellipsis');
-        pages.push(totalPages);
-
-        return pages;
-    }
-    function renderPagination() {
-        if (!paginationEl) return;
-
-        const cards = filteredCards();
-        const totalVisible = cards.length;
-        const totalPages = Math.max(1, Math.ceil(totalVisible / pageSize));
-
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
-
-        [...offers.querySelectorAll('.js-flight-card')].forEach((card) => {
-            card.style.display = 'none';
+    function applyVisibility() {
+        document.querySelectorAll('.js-flight-card').forEach(card => {
+            card.style.display = card.dataset.filteredOut === '1' ? 'none' : '';
         });
-
-        if (!totalVisible) {
-            paginationEl.innerHTML = '';
-            paginationEl.classList.add('d-none');
-            updateCount(0);
-            return;
-        }
-
-        cards.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach((card) => {
-            card.style.display = '';
-        });
-
-        updateCount(totalVisible);
-
-        if (totalPages <= 1) {
-            paginationEl.innerHTML = '';
-            paginationEl.classList.add('d-none');
-            return;
-        }
-
-        const pageButtons = pageWindow(totalPages).map((item) => {
-            if (typeof item !== 'number') {
-                return '<span class="flight-pagination__ellipsis">...</span>';
-            }
-
-            return `
-                <button type="button"
-                        class="flight-pagination__btn ${item === currentPage ? 'is-active' : ''}"
-                        data-page="${item}">
-                    ${item}
-                </button>
-            `;
-        }).join('');
-
-        paginationEl.innerHTML = `
-            <div class="flight-pagination">
-                <button type="button" class="flight-pagination__btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-                ${pageButtons}
-                <button type="button" class="flight-pagination__btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
-                    <i class="bi bi-chevron-right"></i>
-                </button>
-                <span class="flight-pagination__summary">Page ${currentPage} of ${totalPages}</span>
-            </div>
-        `;
-
-        paginationEl.classList.remove('d-none');
+        updateCount();
     }
 
     // ── Render a single leg ───────────────────────────────────────
@@ -636,8 +531,26 @@
         </div>`;
     }
 
+    function updateLoadMoreUI() {
+        if (serverPage < lastPage) {
+            loadMoreWrap.classList.remove('d-none');
+            paginationInfo.textContent = `Showing ${allFlights.length} of ${totalFlights} flights`;
+        } else {
+            loadMoreWrap.classList.add('d-none');
+        }
+    }
+
     // ── Fetch flights ─────────────────────────────────────────────
-    async function loadFlights() {
+    async function loadFlights(page = 1) {
+        if (isLoading) return;
+        isLoading = true;
+
+        if (page > 1) {
+            loadMoreText.textContent = 'Loading…';
+            loadMoreSpinner.classList.remove('d-none');
+            loadMoreBtn.disabled = true;
+        }
+
         try {
             const res  = await fetch(apiUrl, {
                 method:  'POST',
@@ -646,36 +559,66 @@
                     'Accept':       'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                 },
-                body: JSON.stringify(params),
+                body: JSON.stringify({
+                    ...params,
+                    page: page,
+                }),
             });
 
             const data = await res.json();
             loading.classList.add('d-none');
 
             if (!data.success || !data.data?.length) {
-                error.textContent = data.message ?? 'No flights found for your search.';
-                error.classList.remove('d-none');
+                if (page === 1) {
+                    error.textContent = data.message ?? 'No flights found for your search.';
+                    error.classList.remove('d-none');
+                }
+                isLoading = false;
                 return;
             }
 
-            offers.innerHTML = data.data.map(f => renderCard(f)).join('');
+            serverPage   = data.current_page;
+            lastPage     = data.last_page;
+            totalFlights = data.total;
+
+            allFlights = allFlights.concat(data.data);
+
+            const newHtml = data.data.map(f => renderCard(f)).join('');
+            if (page === 1) {
+                offers.innerHTML = newHtml;
+            } else {
+                offers.insertAdjacentHTML('beforeend', newHtml);
+            }
             offers.classList.remove('d-none');
 
             header.classList.remove('d-none');
             header.classList.add('d-flex');
-            const cnt = data.count;
-            countEl.textContent = `Showing ${cnt} flight${cnt !== 1 ? 's' : ''} · ${(params.origin ?? '').toUpperCase()} → ${(params.destination ?? '').toUpperCase()}`;
 
             initPriceSlider();
-            filterCards(true);
+            filterCards();
+            updateLoadMoreUI();
 
         } catch (err) {
             loading.classList.add('d-none');
-            error.textContent = 'Failed to load flights. Please try again.';
-            error.classList.remove('d-none');
+            if (page === 1) {
+                error.textContent = 'Failed to load flights. Please try again.';
+                error.classList.remove('d-none');
+            }
             console.error(err);
+        } finally {
+            isLoading = false;
+            loadMoreText.textContent = 'Load More Flights';
+            loadMoreSpinner.classList.add('d-none');
+            loadMoreBtn.disabled = false;
         }
     }
+
+    // ── Load More click ──────────────────────────────────────────
+    loadMoreBtn?.addEventListener('click', () => {
+        if (serverPage < lastPage) {
+            loadFlights(serverPage + 1);
+        }
+    });
 
     // ── Price slider ──────────────────────────────────────────────
     function initPriceSlider() {
@@ -690,9 +633,12 @@
         const minP = Math.floor(Math.min(...prices));
         const maxP = Math.ceil(Math.max(...prices));
 
+        const oldMax   = +priceRange.max || 0;
+        const wasAtMax = +priceRange.value >= oldMax || oldMax === 0;
+
         priceRange.min   = minP;
         priceRange.max   = maxP;
-        priceRange.value = maxP;
+        priceRange.value = wasAtMax ? maxP : priceRange.value;
 
         const fmt = v => moneyLabel(cards[0]?.dataset.currency ?? 'USD', v);
         if (priceRangeMin) priceRangeMin.textContent = fmt(minP);
@@ -708,12 +654,12 @@
         priceRange.addEventListener('input', function () {
             if (priceRangeVal) priceRangeVal.textContent = fmt(+this.value);
             paintSlider();
-            filterCards(true);
+            filterCards();
         });
     }
 
     // ── Filter cards ──────────────────────────────────────────────
-    function filterCards(resetPage = false) {
+    function filterCards() {
         const priceRange = document.getElementById('priceRange');
         const maxPrice   = priceRange ? +priceRange.value : Infinity;
         const stopFilter = document.querySelector('.stop-filter:checked')?.value ?? 'all';
@@ -736,11 +682,7 @@
             card.dataset.filteredOut = show ? '0' : '1';
         });
 
-        if (resetPage) {
-            currentPage = 1;
-        }
-
-        renderPagination();
+        applyVisibility();
     }
 
     // ── Sort ──────────────────────────────────────────────────────
@@ -757,24 +699,12 @@
             return 0;
         });
         cards.forEach(c => parent.appendChild(c));
-        currentPage = 1;
-        renderPagination();
+        applyVisibility();
     });
 
     // ── Filter listeners ──────────────────────────────────────────
     document.querySelectorAll('.stop-filter, .dep-time-filter').forEach(el => {
-        el.addEventListener('change', () => filterCards(true));
-    });
-
-    paginationEl?.addEventListener('click', function (e) {
-        const btn = e.target.closest('[data-page]');
-        if (!btn || btn.disabled) return;
-
-        currentPage = Math.max(1, parseInt(btn.dataset.page ?? '1', 10) || 1);
-        renderPagination();
-
-        const top = header ? header.getBoundingClientRect().top + window.scrollY - 120 : 0;
-        window.scrollTo({ top, behavior: 'smooth' });
+        el.addEventListener('change', () => filterCards());
     });
 
     // ── Select button → prebook API → checkout page ──────────────

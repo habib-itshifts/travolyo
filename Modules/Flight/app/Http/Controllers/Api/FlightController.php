@@ -35,14 +35,44 @@ class FlightController extends Controller
                 returnDate:    $request->input('return_date'),
                 children:      (int) $request->input('children', 0),
                 infants:       (int) $request->input('infants', 0),
+                perPage:       (int) $request->input('per_page', 10),
+                page:          (int) $request->input('page', 1),
             );
 
-            $offers = (new SearchFlightAction)->handle($dto);
+            $perPage = $dto->perPage;
+            $page    = $dto->page;
+
+            // Cache key from search params (excluding page/perPage)
+            $cacheKey = 'flight_search_' . md5(json_encode([
+                $dto->origin, $dto->destination, $dto->departureDate,
+                $dto->adults, $dto->cabinClass, $dto->returnDate,
+                $dto->children, $dto->infants, $dto->currency,
+            ]));
+
+            // On page 1 always do a fresh search; cache results for subsequent pages
+            if ($page === 1) {
+                $offers = (new SearchFlightAction)->handle($dto);
+                Cache::put($cacheKey, $offers, now()->addMinutes(15));
+            } else {
+                $offers = Cache::get($cacheKey, []);
+
+                if (empty($offers)) {
+                    $offers = (new SearchFlightAction)->handle($dto);
+                    Cache::put($cacheKey, $offers, now()->addMinutes(15));
+                }
+            }
+
+            $total  = count($offers);
+            $sliced = array_slice($offers, ($page - 1) * $perPage, $perPage);
 
             return response()->json([
-                'success' => true,
-                'count'   => count($offers),
-                'data'    => FlightOfferResource::collection(collect($offers)),
+                'success'      => true,
+                'count'        => count($sliced),
+                'total'        => $total,
+                'per_page'     => $perPage,
+                'current_page' => $page,
+                'last_page'    => (int) ceil($total / $perPage),
+                'data'         => FlightOfferResource::collection(collect($sliced)),
             ]);
 
         } catch (FlightException $e) {

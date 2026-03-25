@@ -25,6 +25,8 @@ class SearchFlightRequest extends FormRequest
             'children'       => ['nullable', 'integer', 'min:0', 'max:9'],
             'infants'        => ['nullable', 'integer', 'min:0', 'max:9'],
             'cabin_class'    => ['required', 'in:ECONOMY,PREMIUM_ECONOMY,BUSINESS,FIRST'],
+            'per_page'       => ['nullable', 'integer', 'between:1,100'],
+            'page'           => ['nullable', 'integer', 'min:1'],
         ];
     }
 

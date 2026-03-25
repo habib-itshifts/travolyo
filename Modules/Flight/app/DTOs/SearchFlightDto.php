@@ -17,5 +17,7 @@ class SearchFlightDto
         public readonly int            $children    = 0,
         public readonly int            $infants     = 0,
         public readonly ?string        $currency    = 'USD',
+        public readonly int            $perPage     = 60,
+        public readonly int            $page        = 1,
     ) {}
 }
