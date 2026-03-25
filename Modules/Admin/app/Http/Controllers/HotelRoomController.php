@@ -2,7 +2,6 @@
 
 namespace Modules\Admin\Http\Controllers;
 
-use App\Models\Currency;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -13,6 +12,7 @@ use Modules\Hotel\Http\Requests\Admin\UpdateHotelRoomRequest;
 use Modules\Hotel\Models\Amenity;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
+use Modules\Hotel\Models\RoomType;
 
 /**
  * Admin HotelRoomController
@@ -44,13 +44,9 @@ class HotelRoomController extends Controller
         $hotels = Hotel::query()->orderBy('name')->get(['id', 'name']);
 
         $rooms = HotelRoom::query()
-            ->with(['hotel'])
+            ->with(['hotel', 'roomType'])
             ->when($request->filled('hotel_id'), fn ($q) => $q->where('hotel_id', (int) $request->hotel_id))
-            ->when($request->filled('search'), fn ($q) => $q->where(function ($inner) use ($request) {
-                $inner->where('name',      'like', '%' . $request->search . '%')
-                      ->orWhere('room_type', 'like', '%' . $request->search . '%')
-                      ->orWhere('slug',      'like', '%' . $request->search . '%');
-            }))
+            ->when($request->filled('search'), fn ($q) => $q->whereHas('roomType', fn ($rt) => $rt->where('name', 'like', '%' . $request->search . '%')))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -71,12 +67,12 @@ class HotelRoomController extends Controller
     {
         $hotels          = Hotel::query()->orderBy('name')->get(['id', 'name']);
         $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
-        $currencies      = Currency::supported();
+        $roomTypes       = RoomType::active()->orderBy('sort_order')->get(['id', 'name']);
         $selectedHotelId = $request->integer('hotel_id') ?: null;
         // A non-null $lockedHotelId renders the hotel select as disabled with a hidden input.
         $lockedHotelId   = $selectedHotelId;
 
-        return view('admin::hotel-rooms.create', compact('hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
+        return view('admin::hotel-rooms.create', compact('hotels', 'amenities', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
     }
 
     /**
@@ -108,11 +104,11 @@ class HotelRoomController extends Controller
 
         $hotels          = Hotel::query()->orderBy('name')->get(['id', 'name']);
         $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
-        $currencies      = Currency::supported();
+        $roomTypes       = RoomType::active()->orderBy('sort_order')->get(['id', 'name']);
         $selectedHotelId = $hotelRoom->hotel_id;
         $lockedHotelId   = null;  // on edit the admin may reassign the room to a different hotel
 
-        return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
+        return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'amenities', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
     }
 
     /**

@@ -28,16 +28,20 @@ class StoreHotelRoomRequest extends FormRequest
     protected function baseRules(): array
     {
         return [
-            'hotel_id'   => ['required', 'integer', 'exists:hotels,id'],
-            'image_id'   => ['nullable', 'integer', 'exists:media_files,id'],
-            'gallery'    => ['nullable', 'string'],
-            'floor'      => ['nullable', 'string', 'max:20'],
-            'quantity'   => ['required', 'integer', 'min:1'],
-            'base_price' => ['required', 'numeric', 'min:0'],
-            'is_active'  => ['nullable', 'boolean'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
-            'amenity_ids'   => ['nullable', 'array'],
-            'amenity_ids.*' => ['integer', 'exists:amenities,id'],
+            'hotel_id'        => ['required', 'integer', 'exists:hotels,id'],
+            'image_id'        => ['nullable', 'integer', 'exists:media_files,id'],
+            'gallery'         => ['nullable', 'string'],
+            'floor'           => ['nullable', 'string', 'max:20'],
+            'quantity'        => ['required', 'integer', 'min:1'],
+            'price_sgl_bb'    => ['nullable', 'numeric', 'min:0'],
+            'price_dbl_bb'    => ['nullable', 'numeric', 'min:0'],
+            'extra_bed_price' => ['nullable', 'numeric', 'min:0'],
+            'child_price'     => ['nullable', 'numeric', 'min:0'],
+            'child_breakfast' => ['nullable', 'numeric', 'min:0'],
+            'is_active'       => ['nullable', 'boolean'],
+            'sort_order'      => ['nullable', 'integer', 'min:0'],
+            'amenity_ids'     => ['nullable', 'array'],
+            'amenity_ids.*'   => ['integer', 'exists:amenities,id'],
         ];
     }
 }

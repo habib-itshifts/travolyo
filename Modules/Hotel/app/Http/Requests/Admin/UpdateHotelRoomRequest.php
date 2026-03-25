@@ -8,7 +8,8 @@ class UpdateHotelRoomRequest extends StoreHotelRoomRequest
 {
     public function rules(): array
     {
-        $roomId = (int) $this->route('hotel_room');
+        $room = $this->route('hotel_room');
+        $roomId = $room instanceof \Modules\Hotel\Models\HotelRoom ? $room->id : (int) $room;
 
         return array_merge($this->baseRules(), [
             'room_type_id' => [

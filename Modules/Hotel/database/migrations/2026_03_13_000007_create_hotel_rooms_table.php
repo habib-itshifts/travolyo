@@ -21,8 +21,12 @@ return new class extends Migration
             $table->string('floor', 20)->nullable();
             $table->unsignedSmallInteger('quantity')->default(1);     // how many of this room type exist
 
-            // Pricing (hotel-specific)
-            $table->decimal('base_price', 10, 2);                    // per night
+            // Pricing (fallback when no deal exists)
+            $table->decimal('price_sgl_bb', 10, 2)->nullable();       // Single occupancy + breakfast
+            $table->decimal('price_dbl_bb', 10, 2)->nullable();       // Double occupancy + breakfast
+            $table->decimal('extra_bed_price', 10, 2)->nullable();    // Extra bed per night
+            $table->decimal('child_price', 10, 2)->nullable();        // Child per night
+            $table->decimal('child_breakfast', 10, 2)->nullable();    // Breakfast for child
 
             // Availability
             $table->boolean('is_active')->default(true);

@@ -50,11 +50,13 @@ class StoreHotelRequest extends FormRequest
     {
         return [
             // Identity
+            'currency'          => ['required', 'string', 'max:191'],
             'name'              => ['required', 'string', 'max:191'],
             'slug'              => ['nullable', 'string', 'max:191', 'unique:hotels,slug'],
             'star_rating'       => ['nullable', 'integer', 'between:1,5'],
             'short_description' => ['nullable', 'string', 'max:500'],
             'description'       => ['nullable', 'string'],
+
 
             // Media (IDs reference the media_files table)
             'image_id'        => ['nullable', 'integer', 'exists:media_files,id'],

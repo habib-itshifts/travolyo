@@ -37,7 +37,7 @@ class HotelDealController extends Controller
         $data = $this->validateDeal($request);
         $data['hotel_id'] = $hotel->id;
 
-        $deal = $this->dealService->store($data, $data['rates'] ?? []);
+        $deal = $this->dealService->store($data);
         if (!empty($data['promo_codes'])) {
             $deal->promoCodes()->sync($data['promo_codes']);
         }
@@ -47,7 +47,7 @@ class HotelDealController extends Controller
 
     public function edit(Hotel $hotel, HotelDeal $deal): View
     {
-        $deal->load(['rates', 'promoCodes']);
+        $deal->load(['promoCodes']);
         $roomTypes  = RoomType::active()->orderBy('name')->get();
         $promoCodes = $this->promoService->getActiveForUser();
         return view('admin::hotel-deals.edit', compact('hotel', 'deal', 'roomTypes', 'promoCodes'));
@@ -56,7 +56,7 @@ class HotelDealController extends Controller
     public function update(Request $request, Hotel $hotel, HotelDeal $deal): RedirectResponse
     {
         $data = $this->validateDeal($request);
-        $this->dealService->update($deal, $data, $data['rates'] ?? []);
+        $this->dealService->update($deal, $data);
         $deal->promoCodes()->sync($data['promo_codes'] ?? []);
 
         return redirect()->route('admin.hotels.deals.index', $hotel)->with('success', 'Deal updated.');
@@ -71,25 +71,23 @@ class HotelDealController extends Controller
     private function validateDeal(Request $request): array
     {
         return $request->validate([
-            'room_type_id'              => 'required|exists:room_types,id',
-            'release_period'            => 'nullable|string|max:100',
-            'booking_window'            => 'nullable|string|max:100',
-            'cancellation_policy'       => 'nullable|string|max:100',
-            'max_occupancy_label'       => 'nullable|string|max:150',
-            'allocation'                => 'nullable|string|max:100',
-            'blackout_dates'            => 'nullable|string',
-            'special_remarks'           => 'nullable|string',
-            'status'                    => 'required|in:draft,published',
-            'rates'                     => 'nullable|array',
-            'rates.*.travel_date_start' => 'required_with:rates|date',
-            'rates.*.travel_date_end'   => 'required_with:rates|date',
-            'rates.*.price_sgl_bb'      => 'nullable|numeric|min:0',
-            'rates.*.price_dbl_bb'      => 'nullable|numeric|min:0',
-            'rates.*.extra_bed_price'   => 'nullable|numeric|min:0',
-            'rates.*.child_price'       => 'nullable|numeric|min:0',
-            'rates.*.child_breakfast'   => 'nullable|numeric|min:0',
-            'promo_codes'               => 'nullable|array',
-            'promo_codes.*'             => 'exists:promo_codes,id',
+            'room_type_id'        => 'required|exists:room_types,id',
+            'release_period'      => 'nullable|integer|min:0',
+            'release_type'        => 'nullable|string|max:100',
+            'booking_window'      => 'nullable|date',
+            'cancellation_policy' => 'nullable|string|max:100',
+            'blackout_dates'      => 'nullable|string',
+            'special_remarks'     => 'nullable|string',
+            'travel_date_start'   => 'nullable|date',
+            'travel_date_end'     => 'nullable|date|after_or_equal:travel_date_start',
+            'price_sgl_bb'        => 'nullable|numeric|min:0',
+            'price_dbl_bb'        => 'nullable|numeric|min:0',
+            'extra_bed_price'     => 'nullable|numeric|min:0',
+            'child_price'         => 'nullable|numeric|min:0',
+            'child_breakfast'     => 'nullable|numeric|min:0',
+            'status'              => 'required|in:draft,published',
+            'promo_codes'         => 'nullable|array',
+            'promo_codes.*'       => 'exists:promo_codes,id',
         ]);
     }
 }

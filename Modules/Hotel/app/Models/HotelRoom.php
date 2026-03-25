@@ -17,18 +17,26 @@ class HotelRoom extends Model
         'gallery',
         'floor',
         'quantity',
-        'base_price',
+        'price_sgl_bb',
+        'price_dbl_bb',
+        'extra_bed_price',
+        'child_price',
+        'child_breakfast',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'room_type_id'  => 'integer',
-        'image_id'      => 'integer',
-        'base_price'    => 'decimal:2',
-        'quantity'      => 'integer',
-        'is_active'     => 'boolean',
-        'sort_order'    => 'integer',
+        'room_type_id'    => 'integer',
+        'image_id'        => 'integer',
+        'price_sgl_bb'    => 'decimal:2',
+        'price_dbl_bb'    => 'decimal:2',
+        'extra_bed_price' => 'decimal:2',
+        'child_price'     => 'decimal:2',
+        'child_breakfast' => 'decimal:2',
+        'quantity'        => 'integer',
+        'is_active'       => 'boolean',
+        'sort_order'      => 'integer',
     ];
 
     protected function mediaPathFromId(?int $id): ?string
@@ -96,18 +104,5 @@ class HotelRoom extends Model
     public function bookingRooms(): HasMany
     {
         return $this->hasMany(BookingRoom::class);
-    }
-
-    /**
-     * Calculate the total price for a stay.
-     * Extra pricing comes from the room type.
-     */
-    public function calculatePrice(int $nights, int $adults, int $children): float
-    {
-        $base = $this->base_price * $nights;
-        $extraAdults = max(0, $adults - 2) * ($this->roomType->extra_adult_price ?? 0) * $nights;
-        $extraChildren = $children * ($this->roomType->extra_child_price ?? 0) * $nights;
-
-        return round($base + $extraAdults + $extraChildren, 2);
     }
 }

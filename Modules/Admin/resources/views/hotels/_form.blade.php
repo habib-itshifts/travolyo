@@ -527,6 +527,16 @@
             <div class="card border-0 shadow-sm rounded-3 mb-3">
                 <div class="card-header bg-white border-bottom fw-semibold py-3" style="font-size:13px;">Publish Settings</div>
                 <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:13px;">Currency</label>
+                        <select name="currency" class="form-select form-select-sm @error('currency') is-invalid @enderror">
+                            @foreach (config('currency.supported') as $code => $cur)
+                                <option value="{{ $code }}" {{ old('currency', $hotel->currency ?? config('currency.default')) === $code ? 'selected' : '' }}>{{ $code }} - {{ $cur['name'] }}</option>
+                            @endforeach
+                        </select>
+                        @error('currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+                    <hr class="my-3">
                     <label class="form-label fw-semibold" style="font-size:13px;">Status <span class="text-danger">*</span></label>
                     <div class="d-flex flex-column gap-2 mb-3">
                         @foreach (['active' => 'Active', 'draft' => 'Draft', 'inactive' => 'Inactive', 'suspended' => 'Suspended'] as $value => $label)

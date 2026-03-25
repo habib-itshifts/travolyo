@@ -18,26 +18,30 @@ return new class extends Migration
             $table->foreignId('room_type_id')->constrained('room_types')->cascadeOnDelete();
 
             // Booking restrictions
-            $table->string('release_period', 100)->nullable();        // "04 Days Prior" | "High: 06 Days Prior"
-            $table->string('booking_window', 100)->nullable();        // "Open Window" | "2026-02-28"
+            $table->unsignedSmallInteger('release_period')->nullable();  // days
+            $table->string('release_type', 100)->nullable();             // free-text label
+            $table->date('booking_window')->nullable();                  // date
 
             // Cancellation
-            $table->string('cancellation_policy', 100)->nullable();   // "NRF" | "48 Hours Prior"
-
-            // Occupancy label as received from B2B sheet
-            $table->string('max_occupancy_label', 150)->nullable();   // "02 Adults +01 child"
-
-            // Allocation
-            $table->string('allocation', 100)->nullable();            // "09 Rooms" | "Subject to stop sale"
+            $table->string('cancellation_policy', 100)->nullable();      // kept as-is (string)
 
             // Blackout dates stored as simple JSON array
-            $table->json('blackout_dates')->nullable();               // ["2026-12-24", "2026-12-25"]
+            $table->json('blackout_dates')->nullable();                  // ["2026-12-24","2026-12-25"]
 
             // Notes
             $table->text('special_remarks')->nullable();
 
+            // Rates (single row — no separate table)
+            $table->date('travel_date_start')->nullable();
+            $table->date('travel_date_end')->nullable();
+            $table->decimal('price_sgl_bb', 10, 2)->nullable();          // Single occupancy + breakfast
+            $table->decimal('price_dbl_bb', 10, 2)->nullable();          // Double occupancy + breakfast
+            $table->decimal('extra_bed_price', 10, 2)->nullable();       // Extra bed per night
+            $table->decimal('child_price', 10, 2)->nullable();           // Child 0–11.99 yrs per night
+            $table->decimal('child_breakfast', 10, 2)->nullable();       // Breakfast for child separately
+
             // Status
-            $table->string('status', 20)->default('draft');           // draft | published
+            $table->string('status', 20)->default('draft');              // draft | published
 
             $table->timestamps();
 

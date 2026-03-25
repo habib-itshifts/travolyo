@@ -12,14 +12,15 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle" style="font-size:13px;">
-                    <thead class="table-light border-bottom"><tr><th class="ps-4 py-3" style="width:40px;">#</th><th class="py-3">Room Type</th><th class="py-3">Policy</th><th class="py-3">Rates</th><th class="py-3">Status</th><th class="py-3 text-end pe-4">Actions</th></tr></thead>
+                    <thead class="table-light border-bottom"><tr><th class="ps-4 py-3" style="width:40px;">#</th><th class="py-3">Room Type</th><th class="py-3">Policy</th><th class="py-3">Travel Dates</th><th class="py-3">SGL / DBL</th><th class="py-3">Status</th><th class="py-3 text-end pe-4">Actions</th></tr></thead>
                     <tbody>
                         @forelse ($deals as $deal)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $deal->id }}</td>
-                                <td><p class="mb-0 fw-semibold">{{ $deal->roomType?->name ?? '-' }}</p><p class="mb-0 text-muted" style="font-size:11px;">{{ $deal->allocation ?? '-' }}</p></td>
-                                <td><p class="mb-0" style="font-size:12px;">{{ $deal->cancellation_policy ?? '-' }}</p><p class="mb-0 text-muted" style="font-size:11px;">Release: {{ $deal->release_period ?? '-' }}</p></td>
-                                <td><span class="badge bg-light text-dark border">{{ $deal->rates->count() }} rates</span></td>
+                                <td><p class="mb-0 fw-semibold">{{ $deal->roomType?->name ?? '-' }}</p></td>
+                                <td><p class="mb-0" style="font-size:12px;">{{ $deal->cancellation_policy ?? '-' }}</p><p class="mb-0 text-muted" style="font-size:11px;">Release: {{ $deal->release_period ? $deal->release_period . 'd' : '-' }} {{ $deal->release_type }}</p></td>
+                                <td style="font-size:12px;">{{ $deal->travel_date_start?->format('d M Y') ?? '-' }} — {{ $deal->travel_date_end?->format('d M Y') ?? '-' }}</td>
+                                <td style="font-size:12px;">{{ $deal->price_sgl_bb ?? '-' }} / {{ $deal->price_dbl_bb ?? '-' }}</td>
                                 <td><span class="badge rounded-pill {{ $deal->status==='published' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }} text-capitalize">{{ $deal->status }}</span></td>
                                 <td class="text-end pe-4">
                                     <div class="d-flex justify-content-end gap-1">
@@ -29,7 +30,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center text-muted py-5">No deals found for this hotel.</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-5">No deals found for this hotel.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

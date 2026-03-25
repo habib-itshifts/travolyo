@@ -118,8 +118,8 @@ class HotelSeeder extends Seeder
                     'sale_price'        => 299.00,
                 ],
                 'rooms' => [
-                    ['room_type_slug' => 'deluxe-king-room',  'floor' => '5',  'quantity' => 10, 'base_price' => 299.00],
-                    ['room_type_slug' => 'executive-suite',   'floor' => '20', 'quantity' => 5,  'base_price' => 599.00],
+                    ['room_type_slug' => 'deluxe-king-room',  'floor' => '5',  'quantity' => 10, 'price_sgl_bb' => 299.00, 'price_dbl_bb' => 399.00],
+                    ['room_type_slug' => 'executive-suite',   'floor' => '20', 'quantity' => 5,  'price_sgl_bb' => 599.00, 'price_dbl_bb' => 749.00],
                 ],
             ],
             [
@@ -149,8 +149,8 @@ class HotelSeeder extends Seeder
                     'base_price'        => 180.00,
                 ],
                 'rooms' => [
-                    ['room_type_slug' => 'standard-twin-room',  'floor' => '2', 'quantity' => 20, 'base_price' => 180.00],
-                    ['room_type_slug' => 'family-beach-suite',  'floor' => '1', 'quantity' => 8,  'base_price' => 450.00],
+                    ['room_type_slug' => 'standard-twin-room',  'floor' => '2', 'quantity' => 20, 'price_sgl_bb' => 180.00, 'price_dbl_bb' => 240.00],
+                    ['room_type_slug' => 'family-beach-suite',  'floor' => '1', 'quantity' => 8,  'price_sgl_bb' => 450.00, 'price_dbl_bb' => 550.00],
                 ],
             ],
         ];
@@ -170,7 +170,8 @@ class HotelSeeder extends Seeder
                         'room_type_id' => $roomType->id,
                         'floor'        => $roomData['floor'],
                         'quantity'     => $roomData['quantity'],
-                        'base_price'   => $roomData['base_price'],
+                        'price_sgl_bb' => $roomData['price_sgl_bb'] ?? null,
+                        'price_dbl_bb' => $roomData['price_dbl_bb'] ?? null,
                         'is_active'    => true,
                     ]
                 );

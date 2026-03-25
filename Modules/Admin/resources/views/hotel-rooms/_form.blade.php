@@ -2,10 +2,8 @@
     $isEdit = isset($hotelRoom);
     $action = $isEdit ? route('admin.hotel-rooms.update', $hotelRoom->id) : route('admin.hotel-rooms.store');
     $selectedAmenities = $isEdit ? $hotelRoom->amenities->pluck('id')->all() : old('amenity_ids', []);
-    $bedConfiguration = old('bed_configuration_text', isset($hotelRoom) ? implode(', ', (array) $hotelRoom->bed_configuration) : '');
     $lockedHotelId = $lockedHotelId ?? null;
     $selectedHotelValue = old('hotel_id', $selectedHotelId ?? '');
-    $selectedCurrency = old('currency', $hotelRoom->currency ?? \App\Models\Currency::defaultCode());
     $roomImageId = old('image_id', $hotelRoom->image_id ?? '');
     $roomGalleryValue = (string) old('gallery', $hotelRoom->gallery ?? '');
     $resolveMediaUrl = function ($mediaId) {
@@ -62,19 +60,14 @@
                             @error('hotel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Room Name</label>
-                            <input type="text" name="name" value="{{ old('name', $hotelRoom->name ?? '') }}" class="form-control @error('name') is-invalid @enderror" placeholder="e.g. Deluxe King Room">
-                            @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Slug</label>
-                            <input type="text" name="slug" value="{{ old('slug', $hotelRoom->slug ?? '') }}" class="form-control @error('slug') is-invalid @enderror" placeholder="auto-from-name">
-                            @error('slug') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Room Type</label>
-                            <input type="text" name="room_type" value="{{ old('room_type', $hotelRoom->room_type ?? '') }}" class="form-control @error('room_type') is-invalid @enderror" placeholder="single, double, suite">
-                            @error('room_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <select name="room_type_id" class="form-select @error('room_type_id') is-invalid @enderror">
+                                <option value="">- Select Room Type -</option>
+                                @foreach ($roomTypes as $roomType)
+                                    <option value="{{ $roomType->id }}" {{ old('room_type_id', $hotelRoom->room_type_id ?? '') == $roomType->id ? 'selected' : '' }}>{{ $roomType->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('room_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Featured Image</label>
@@ -108,46 +101,10 @@
                             </div>
                             @error('gallery') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                         </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Bed Configuration</label>
-                            <input type="text" name="bed_configuration_text" value="{{ $bedConfiguration }}" class="form-control @error('bed_configuration_text') is-invalid @enderror" placeholder="king bed, sofa bed">
-                            <div class="form-text">Comma separated values.</div>
-                            @error('bed_configuration_text') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Max Adults</label>
-                            <input type="number" min="1" name="max_adults" value="{{ old('max_adults', $hotelRoom->max_adults ?? 2) }}" class="form-control @error('max_adults') is-invalid @enderror">
-                            @error('max_adults') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Max Children</label>
-                            <input type="number" min="0" name="max_children" value="{{ old('max_children', $hotelRoom->max_children ?? 0) }}" class="form-control @error('max_children') is-invalid @enderror">
-                            @error('max_children') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Max Occupancy</label>
-                            <input type="number" min="1" name="max_occupancy" value="{{ old('max_occupancy', $hotelRoom->max_occupancy ?? 2) }}" class="form-control @error('max_occupancy') is-invalid @enderror">
-                            @error('max_occupancy') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Size (sqm)</label>
-                            <input type="number" min="0" step="0.01" name="size_sqm" value="{{ old('size_sqm', $hotelRoom->size_sqm ?? '') }}" class="form-control @error('size_sqm') is-invalid @enderror">
-                            @error('size_sqm') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Floor</label>
                             <input type="text" name="floor" value="{{ old('floor', $hotelRoom->floor ?? '') }}" class="form-control @error('floor') is-invalid @enderror">
                             @error('floor') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">View Type</label>
-                            <input type="text" name="view_type" value="{{ old('view_type', $hotelRoom->view_type ?? '') }}" class="form-control @error('view_type') is-invalid @enderror" placeholder="city, sea, pool">
-                            @error('view_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Description</label>
-                            <textarea name="description" rows="4" class="form-control @error('description') is-invalid @enderror">{{ old('description', $hotelRoom->description ?? '') }}</textarea>
-                            @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                     </div>
                 </div>
@@ -179,32 +136,32 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <h6 class="fw-semibold mb-3">Pricing & Status</h6>
+                    <p class="text-muted mb-3" style="font-size:11px;">Fallback pricing when no deal applies.</p>
                     <div class="row g-3">
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Currency</label>
-                            <select name="currency" class="form-select @error('currency') is-invalid @enderror">
-                                @foreach (($currencies ?? \App\Models\Currency::supported()) as $code => $currency)
-                                    <option value="{{ $code }}" {{ strtoupper((string) $selectedCurrency) === strtoupper((string) $code) ? 'selected' : '' }}>
-                                        {{ $currency['label'] ?? $code }} - {{ $currency['name'] ?? $code }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('currency') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">SGL BB</label>
+                            <input type="number" min="0" step="0.01" name="price_sgl_bb" value="{{ old('price_sgl_bb', $hotelRoom->price_sgl_bb ?? '') }}" class="form-control @error('price_sgl_bb') is-invalid @enderror" placeholder="0.00">
+                            @error('price_sgl_bb') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">DBL BB</label>
+                            <input type="number" min="0" step="0.01" name="price_dbl_bb" value="{{ old('price_dbl_bb', $hotelRoom->price_dbl_bb ?? '') }}" class="form-control @error('price_dbl_bb') is-invalid @enderror" placeholder="0.00">
+                            @error('price_dbl_bb') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Extra Bed</label>
+                            <input type="number" min="0" step="0.01" name="extra_bed_price" value="{{ old('extra_bed_price', $hotelRoom->extra_bed_price ?? '') }}" class="form-control @error('extra_bed_price') is-invalid @enderror" placeholder="0.00">
+                            @error('extra_bed_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold">Child</label>
+                            <input type="number" min="0" step="0.01" name="child_price" value="{{ old('child_price', $hotelRoom->child_price ?? '') }}" class="form-control @error('child_price') is-invalid @enderror" placeholder="0.00">
+                            @error('child_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-semibold">Base Price</label>
-                            <input type="number" min="0" step="0.01" name="base_price" value="{{ old('base_price', $hotelRoom->base_price ?? '') }}" class="form-control @error('base_price') is-invalid @enderror">
-                            @error('base_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Extra Adult Price</label>
-                            <input type="number" min="0" step="0.01" name="extra_adult_price" value="{{ old('extra_adult_price', $hotelRoom->extra_adult_price ?? 0) }}" class="form-control @error('extra_adult_price') is-invalid @enderror">
-                            @error('extra_adult_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Extra Child Price</label>
-                            <input type="number" min="0" step="0.01" name="extra_child_price" value="{{ old('extra_child_price', $hotelRoom->extra_child_price ?? 0) }}" class="form-control @error('extra_child_price') is-invalid @enderror">
-                            @error('extra_child_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            <label class="form-label fw-semibold">Child BF</label>
+                            <input type="number" min="0" step="0.01" name="child_breakfast" value="{{ old('child_breakfast', $hotelRoom->child_breakfast ?? '') }}" class="form-control @error('child_breakfast') is-invalid @enderror" placeholder="0.00">
+                            @error('child_breakfast') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Quantity</label>

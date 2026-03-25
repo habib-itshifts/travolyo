@@ -13,17 +13,32 @@ class HotelDeal extends Model
         'hotel_id',
         'room_type_id',
         'release_period',
+        'release_type',
         'booking_window',
         'cancellation_policy',
-        'max_occupancy_label',
-        'allocation',
         'blackout_dates',
         'special_remarks',
+        'travel_date_start',
+        'travel_date_end',
+        'price_sgl_bb',
+        'price_dbl_bb',
+        'extra_bed_price',
+        'child_price',
+        'child_breakfast',
         'status',
     ];
 
     protected $casts = [
-        'blackout_dates' => 'array',
+        'release_period'   => 'integer',
+        'booking_window'   => 'date',
+        'blackout_dates'   => 'array',
+        'travel_date_start' => 'date',
+        'travel_date_end'   => 'date',
+        'price_sgl_bb'     => 'decimal:2',
+        'price_dbl_bb'     => 'decimal:2',
+        'extra_bed_price'  => 'decimal:2',
+        'child_price'      => 'decimal:2',
+        'child_breakfast'  => 'decimal:2',
     ];
 
     // Scopes
@@ -51,11 +66,6 @@ class HotelDeal extends Model
         return $this->belongsTo(RoomType::class);
     }
 
-    public function rates(): HasMany
-    {
-        return $this->hasMany(HotelDealRate::class);
-    }
-
     public function supplements(): HasMany
     {
         return $this->hasMany(HotelDealSupplement::class);
@@ -65,17 +75,6 @@ class HotelDeal extends Model
     {
         return $this->belongsToMany(PromoCode::class, 'hotel_deal_promo_code')
             ->withTimestamps();
-    }
-
-    /**
-     * Get the applicable rate for a given check-in date.
-     */
-    public function rateForDate(string $date): ?HotelDealRate
-    {
-        return $this->rates()
-            ->where('travel_date_start', '<=', $date)
-            ->where('travel_date_end', '>=', $date)
-            ->first();
     }
 
     /**

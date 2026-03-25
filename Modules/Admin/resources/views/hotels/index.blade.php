@@ -57,17 +57,19 @@
     {{-- Table --}}
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-body p-0">
-            <div class="table-responsive">
+            <div class="table-responsive" style="overflow:visible;">
                 <table class="table table-hover mb-0 align-middle" style="font-size:13px;">
                     <thead class="table-light border-bottom">
                         <tr>
                             <th class="ps-4 py-3" style="width:40px;">#</th>
                             <th class="py-3">Hotel</th>
+                            <th class="py-3">Owner</th>
                             <th class="py-3">Location</th>
                             <th class="py-3">Stars</th>
                             <th class="py-3">Rooms</th>
                             <th class="py-3">Status</th>
                             <th class="py-3">Featured</th>
+                            <th class="py-3">Currency</th>
                             <th class="py-3 text-end pe-4">Actions</th>
                         </tr>
                     </thead>
@@ -92,6 +94,10 @@
                                             </p>
                                         </div>
                                     </a>
+                                </td>
+
+                                <td>
+                                    <span class="fw-semibold">{{ $hotel->author?->name ?? '—' }}</span>
                                 </td>
 
                                 <td>
@@ -149,53 +155,51 @@
                                     @endif
                                 </td>
 
+                                <td>
+                                    <span class="text-uppercase">{{ $hotel->currency }}</span>
+                                </td>
+
                                 <td class="text-end pe-4">
-                                    <div class="d-flex justify-content-end gap-1">
-                                        @if ($hotel->trashed())
-                                            <form method="POST" action="{{ route('admin.hotels.restore', $hotel->id) }}">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Restore">
-                                                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        @else
-                                            <a href="{{ route('admin.hotel-rooms.index', ['hotel_id' => $hotel->id]) }}"
-                                               class="btn btn-sm btn-outline-dark" title="Manage Rooms">
-                                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M5 7l1 12h12l1-12M8 7V5a1 1 0 011-1h6a1 1 0 011 1v2"/>
+                                    @if ($hotel->trashed())
+                                        <form method="POST" action="{{ route('admin.hotels.restore', $hotel->id) }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Restore</button>
+                                        </form>
+                                    @else
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                                    <circle cx="8" cy="3" r="1.5"/>
+                                                    <circle cx="8" cy="8" r="1.5"/>
+                                                    <circle cx="8" cy="13" r="1.5"/>
                                                 </svg>
-                                            </a>
-                                            <a href="{{ route('admin.hotels.show', $hotel->id) }}"
-                                               class="btn btn-sm btn-outline-secondary" title="View">
-                                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                                </svg>
-                                            </a>
-                                            <a href="{{ route('admin.hotels.edit', $hotel->id) }}"
-                                               class="btn btn-sm btn-outline-primary" title="Edit">
-                                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                </svg>
-                                            </a>
-                                            <form method="POST" action="{{ route('admin.hotels.destroy', $hotel->id) }}"
-                                                  onsubmit="return confirm('Delete {{ addslashes($hotel->name) }}?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end" style="font-size:13px;">
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route('admin.hotels.deals.index', $hotel->id) }}">Manage Deals</a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route('admin.hotel-rooms.index', ['hotel_id' => $hotel->id]) }}">Manage Rooms</a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ route('admin.hotels.edit', $hotel->id) }}">Edit Hotel</a>
+                                                </li>
+                                                <li>
+                                                    <form method="POST" action="{{ route('admin.hotels.destroy', $hotel->id) }}"
+                                                          onsubmit="return confirm('Delete {{ addslashes($hotel->name) }}?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="dropdown-item text-danger">Delete</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-5">
+                                <td colspan="9" class="text-center text-muted py-5">
                                     <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-25">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                     </svg>
