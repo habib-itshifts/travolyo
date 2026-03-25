@@ -6,6 +6,8 @@ use App\Enums\BookingObjectModelEnum;
 use App\Models\Booking;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Modules\Activity\Actions\SearchActivityAction;
+use Modules\Activity\DTOs\SearchActivityDto;
 use Modules\Hotel\Actions\SearchHotelAction;
 use Modules\Hotel\DTOs\SearchHotelDto;
 
@@ -17,23 +19,20 @@ class BookingController extends Controller
             ->where('code', $code)
             ->firstOrFail();
 
-        $data = $booking->getJsonMeta('flight_details');
-
-        $dto = SearchHotelDto::fromArray([
-            'city' => $this->resolveAirportCity((string) ($data['arr_iata'] ?? '')) ?: 'Dubai',
-            'check_in' => Carbon::parse($data['arr_date'])->format('Y-m-d'),
-            'check_out' => Carbon::parse($data['arr_date'])->addDays(2)->format('Y-m-d'),
-            'adults' => (int) ($data['adults'] ?? 1),
-            'children' => (int) ($data['children'] ?? 0),
-            'rooms' => $this->resolveRooms((array) $data),
-        ]);
-
-        $offers = (new SearchHotelAction())->handle($dto);
-
         $financials = $this->financialBreakdown($booking);
 
         // Flight
         if ($booking->object_model === BookingObjectModelEnum::Flight->value) {
+            $data = $booking->getJsonMeta('flight_details') ?: [];
+            $dto = SearchHotelDto::fromArray([
+                'city' => $this->resolveAirportCity((string) ($data['arr_iata'] ?? '')) ?: 'Dubai',
+                'check_in' => Carbon::parse($data['arr_date'])->format('Y-m-d'),
+                'check_out' => Carbon::parse($data['arr_date'])->addDays(2)->format('Y-m-d'),
+                'adults' => (int) ($data['adults'] ?? 1),
+                'children' => (int) ($data['children'] ?? 0),
+                'rooms' => $this->resolveRooms((array) $data),
+            ]);
+            $offers = (new SearchHotelAction())->handle($dto);
             $passengers = $booking->getJsonMeta('flight_passengers') ?: [];
             $orderRef = $booking->getMeta('flight_pnr') ?: '';
 
@@ -50,10 +49,33 @@ class BookingController extends Controller
         if ($booking->object_model === BookingObjectModelEnum::Hotel->value) {
             $hotel = $booking->getJsonMeta('hotel_details');
             $gateway = $booking->getMeta('payment_gateway', '');
+            $activitySearchParams = [];
+            $activities = [];
 
             $nights = (isset($hotel['check_in'], $hotel['check_out']))
                 ? max(1, (int) Carbon::parse($hotel['check_in'])->diffInDays($hotel['check_out']))
                 : 1;
+
+            if (! empty($hotel['city'])) {
+                $activitySearchParams = [
+                    'city' => trim((string) $hotel['city']),
+                    'activity_date' => isset($hotel['check_in'])
+                        ? Carbon::parse($hotel['check_in'])->format('Y-m-d')
+                        : now()->toDateString(),
+                    'participants' => max(1, (int) ($hotel['adults'] ?? 1) + (int) ($hotel['children'] ?? 0)),
+                ];
+
+                
+                $activities = collect((new SearchActivityAction())->handle(SearchActivityDto::fromArray([
+                    'destination' => $activitySearchParams['city'],
+                    'activity_date' => $activitySearchParams['activity_date'],
+                    'participants' => $activitySearchParams['participants'],
+                    'currency' => strtoupper((string) ($hotel['currency'] ?? $booking->currency ?? 'AED')),
+                ]))['offers'] ?? [])
+                    ->take(3)
+                    ->values()
+                    ->all();
+            }
 
             $bookingData = [
                 'code' => $booking->code,
@@ -82,7 +104,13 @@ class BookingController extends Controller
                 'extra_price_items' => $hotel['extra_price_items'] ?? [],
             ];
 
-            return view('bookings.confirmation', compact('booking', 'bookingData', 'financials'));
+            return view('bookings.confirmation', compact(
+                'booking',
+                'bookingData',
+                'financials',
+                'activities',
+                'activitySearchParams'
+            ));
         }
 
         // Activity
