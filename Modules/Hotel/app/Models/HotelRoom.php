@@ -4,6 +4,7 @@ namespace Modules\Hotel\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admin\Models\MediaFile;
 
@@ -72,6 +73,13 @@ class HotelRoom extends Model
         return $this->belongsTo(Hotel::class);
     }
 
+    public function amenities(): BelongsToMany
+    {
+        return $this->belongsToMany(Amenity::class, 'hotel_room_amenity')
+            ->withPivot('notes')
+            ->withTimestamps();
+    }
+
     public function roomType(): BelongsTo
     {
         return $this->belongsTo(RoomType::class);
@@ -85,5 +93,10 @@ class HotelRoom extends Model
     public function bookingRooms(): HasMany
     {
         return $this->hasMany(BookingRoom::class);
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return (string) ($this->roomType?->name ?: $this->room_name ?: 'Room');
     }
 }
