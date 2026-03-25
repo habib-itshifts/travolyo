@@ -33,12 +33,33 @@ class HotelController extends Controller
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
 
-            $offers = (new SearchHotelAction)->handle($dto);
-
-            $total   = count($offers);
             $perPage = $dto->perPage;
             $page    = $dto->page;
-            $sliced  = array_slice($offers, ($page - 1) * $perPage, $perPage);
+
+            // Build a cache key from the search params (excluding page/perPage)
+            $cacheKey = 'hotel_search_' . md5(json_encode([
+                $dto->destination, $dto->checkIn, $dto->checkOut,
+                $dto->adults, $dto->children, $dto->rooms,
+                $dto->starRating, $dto->priceMin, $dto->priceMax,
+                $dto->amenityIds, $dto->currency, $dto->sortBy,
+            ]));
+
+            // On page 1 always do a fresh search; cache results for subsequent pages
+            if ($page === 1) {
+                $offers = (new SearchHotelAction)->handle($dto);
+                Cache::put($cacheKey, $offers, now()->addMinutes(15));
+            } else {
+                $offers = Cache::get($cacheKey, []);
+
+                // If cache expired, re-fetch
+                if (empty($offers)) {
+                    $offers = (new SearchHotelAction)->handle($dto);
+                    Cache::put($cacheKey, $offers, now()->addMinutes(15));
+                }
+            }
+
+            $total  = count($offers);
+            $sliced = array_slice($offers, ($page - 1) * $perPage, $perPage);
 
             return response()->json([
                 'success'      => true,

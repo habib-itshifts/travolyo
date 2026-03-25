@@ -462,7 +462,7 @@
             updateCount();
             updatePaginationUI();
 
-            if (page === 1) initPriceSlider();
+            initPriceSlider();
             filterCards();
 
         } catch (err) {
@@ -506,9 +506,12 @@
         const minP = Math.floor(Math.min(...prices));
         const maxP = Math.ceil(Math.max(...prices));
 
+        const oldMax    = +priceRange.max || 0;
+        const wasAtMax  = +priceRange.value >= oldMax || oldMax === 0;
+
         priceRange.min   = minP;
         priceRange.max   = maxP;
-        priceRange.value = maxP;
+        priceRange.value = wasAtMax ? maxP : priceRange.value;
 
         const fmt = v => `$${Math.round(v).toLocaleString()}`;
         if (priceRangeMin) priceRangeMin.textContent = fmt(minP);

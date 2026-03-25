@@ -20,7 +20,7 @@ class SearchHotelDto
         public readonly ?array             $amenityIds = null,
         public readonly string             $currency   = 'USD',
         public readonly string             $sortBy     = 'price_asc', // price_asc|price_desc|rating_desc|featured
-        public readonly int                $perPage    = 20,
+        public readonly int                $perPage    = 60,
         public readonly int                $page       = 1,
         public readonly ?HotelProviderEnum $provider   = null,        // null = all providers
     ) {}
