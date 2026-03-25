@@ -32,6 +32,21 @@ class ActivityController extends Controller
             });
         }
 
+        if ($country = trim((string) $request->query('country', ''))) {
+            $countryAliases = $this->buildCountrySearchTerms(
+                $country,
+                trim((string) $request->query('country_code', ''))
+            );
+
+            $query->where(function ($activityQuery) use ($country, $countryAliases) {
+                $activityQuery->where('country', 'like', '%'.$country.'%');
+
+                foreach ($countryAliases as $alias) {
+                    $activityQuery->orWhereRaw('UPPER(country) = ?', [$alias]);
+                }
+            });
+        }
+
         if ($category = trim((string) $request->query('category', ''))) {
             $query->where('category', $category);
         }
@@ -354,6 +369,22 @@ class ActivityController extends Controller
         $booking->updateMeta('activity_unit_price', (float) ($activity->price_per_person ?: 0));
         $booking->updateMeta('activity_currency', strtoupper((string) ($activity->currency ?: 'AED')));
         $booking->updateMeta('activity_special_requests', $specialRequests);
+    }
+
+    private function buildCountrySearchTerms(string $country, string $countryCode = ''): array
+    {
+        $segments = preg_split('/[\s\-]+/', trim($country)) ?: [];
+        $acronym = collect($segments)
+            ->filter()
+            ->map(fn (string $segment) => strtoupper(substr($segment, 0, 1)))
+            ->implode('');
+
+        return collect([$countryCode, $acronym, strtoupper(str_replace(' ', '', $country))])
+            ->filter()
+            ->map(fn (string $value) => strtoupper(trim($value)))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function limitParticipants(Activity $activity, int $participants): int
