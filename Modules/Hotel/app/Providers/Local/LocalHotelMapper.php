@@ -10,7 +10,7 @@ use Modules\Hotel\Models\HotelRoom;
 
 class LocalHotelMapper
 {
-    public function toOfferDto(Hotel $hotel, int $nights, string $currency): HotelOfferDto
+    public function toOfferDto(Hotel $hotel, int $nights, string $currency, int $adults = 1): HotelOfferDto
     {
         $images = collect([$hotel->featured_image_url, $hotel->banner_image_url])
             ->merge($hotel->gallery_urls ?? [])
@@ -21,11 +21,14 @@ class LocalHotelMapper
 
         $rooms = $hotel->rooms
             ->filter(fn (HotelRoom $r) => $r->is_active)
-            ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $currency))
+            ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $currency, $adults))
             ->values()
             ->all();
 
-        $lowestPrice = collect($rooms)->min('basePrice') ?? 0;
+        $lowestPrice = collect($rooms)
+            ->pluck('basePrice')
+            ->filter(fn ($price) => (float) $price > 0)
+            ->min() ?? (float) ($hotel->sale_price ?: $hotel->base_price ?: 0);
 
         return new HotelOfferDto(
             offerId:          (string) $hotel->id,
@@ -52,7 +55,7 @@ class LocalHotelMapper
         );
     }
 
-    public function toRoomOfferDto(HotelRoom $room, int $nights, string $currency): HotelRoomOfferDto
+    public function toRoomOfferDto(HotelRoom $room, int $nights, string $currency, int $adults = 1): HotelRoomOfferDto
     {
         $images = collect([$room->image_url])
             ->merge($room->gallery_urls)
@@ -60,23 +63,31 @@ class LocalHotelMapper
             ->unique()
             ->values()
             ->all();
+        $roomType = $room->roomType;
+        $basePrice = $adults <= 1
+            ? (float) ($roomType?->price_sgl_bb ?: $roomType?->price_dbl_bb ?: 0)
+            : (float) ($roomType?->price_dbl_bb ?: $roomType?->price_sgl_bb ?: 0);
+        if ($basePrice <= 0) {
+            $basePrice = (float) ($room->hotel?->sale_price ?: $room->hotel?->base_price ?: 0);
+        }
+        $amenityNames = [];
 
         return new HotelRoomOfferDto(
             roomId:           (string) $room->id,
-            name:             $room->name,
-            roomType:         $room->room_type,
-            bedConfiguration: (array) $room->bed_configuration,
-            maxAdults:        $room->max_adults,
-            maxChildren:      $room->max_children,
-            basePrice:        (float) $room->base_price,
-            totalPrice:       (float) ($room->base_price * $nights),
+            name:             $room->display_name,
+            roomType:         $roomType?->name ?? $room->display_name,
+            bedConfiguration: (array) ($roomType?->bed_configuration ?? []),
+            maxAdults:        (int) ($roomType?->max_adults ?? 2),
+            maxChildren:      (int) ($roomType?->max_children ?? 0),
+            basePrice:        $basePrice,
+            totalPrice:       (float) ($basePrice * $nights),
             nights:           $nights,
             currency:         $currency,
             isAvailable:      $room->is_active,
-            amenityNames:     $room->amenities->pluck('name')->all(),
-            sizeSqm:          $room->size_sqm ? (float) $room->size_sqm : null,
-            viewType:         $room->view_type,
-            description:      $room->description,
+            amenityNames:     $amenityNames,
+            sizeSqm:          $roomType?->size_sqm ? (float) $roomType->size_sqm : null,
+            viewType:         $roomType?->view_type,
+            description:      $roomType?->description,
             images:           $images,
         );
     }

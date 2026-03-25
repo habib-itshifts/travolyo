@@ -28,7 +28,11 @@ class LocalHotelProvider implements HotelProviderInterface
 
         $query = Hotel::query()
             ->active()
-            ->with(['amenities', 'services', 'rooms' => fn ($q) => $q->active()->with('amenities')])
+            ->with([
+                'amenities',
+                'services',
+                'rooms' => fn ($q) => $q->active()->with('roomType'),
+            ])
             ->where(function ($query) use ($dto) {
                 $query
                     ->where('city', 'like', '%' . $dto->destination . '%')
@@ -57,7 +61,7 @@ class LocalHotelProvider implements HotelProviderInterface
         $hotels = $query->get();
 
         return $hotels
-            ->map(fn (Hotel $h) => $this->mapper->toOfferDto($h, $nights, $dto->currency))
+            ->map(fn (Hotel $h) => $this->mapper->toOfferDto($h, $nights, $dto->currency, $dto->adults))
             ->all();
     }
 
@@ -85,7 +89,9 @@ class LocalHotelProvider implements HotelProviderInterface
 
         $nights = (int) now()->parse($dto->checkIn)->diffInDays($dto->checkOut);
 
-        return $this->mapper->toOfferDto($room->hotel, $nights, $dto->currency);
+        $room->loadMissing(['hotel.amenities', 'hotel.services', 'hotel.rooms.roomType']);
+
+        return $this->mapper->toOfferDto($room->hotel, $nights, $dto->currency, $dto->adults);
     }
 
     public function getOrder(string $orderId): HotelOrderDto
