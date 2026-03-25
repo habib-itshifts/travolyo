@@ -31,6 +31,13 @@ return new class extends Migration
             // Content
             $table->text('description')->nullable();
 
+            // Pricing (fallback when no deal applies)
+            $table->decimal('price_sgl_bb', 10, 2)->nullable();       // Single occupancy + breakfast
+            $table->decimal('price_dbl_bb', 10, 2)->nullable();       // Double occupancy + breakfast
+            $table->decimal('extra_bed_price', 10, 2)->nullable();    // Extra bed per night
+            $table->decimal('child_price', 10, 2)->nullable();        // Child per night
+            $table->decimal('child_breakfast', 10, 2)->nullable();    // Breakfast for child
+
             // Extra pricing (inherent to room type)
             $table->decimal('extra_adult_price', 10, 2)->default(0);
             $table->decimal('extra_child_price', 10, 2)->default(0);

@@ -26,8 +26,6 @@ class SaveHotelRoomAction
             $room = HotelRoom::create($payload);
         }
 
-        $room->amenities()->sync($data['amenity_ids'] ?? []);
-
         return $room;
     }
 
@@ -43,10 +41,8 @@ class SaveHotelRoomAction
 
         // Only keep columns that exist on hotel_rooms
         return array_intersect_key($data, array_flip([
-            'hotel_id', 'room_type_id', 'image_id', 'gallery',
-            'floor', 'quantity', 'price_sgl_bb', 'price_dbl_bb',
-            'extra_bed_price', 'child_price', 'child_breakfast',
-            'is_active', 'sort_order',
+            'hotel_id', 'room_type_id', 'room_name', 'image_id', 'gallery',
+            'floor', 'is_active', 'sort_order',
         ]));
     }
 

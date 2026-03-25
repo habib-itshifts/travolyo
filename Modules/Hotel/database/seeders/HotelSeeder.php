@@ -4,7 +4,6 @@ namespace Modules\Hotel\Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\RoomType;
@@ -15,7 +14,7 @@ class HotelSeeder extends Seeder
     {
         $vendor = User::where('email', 'vendor@travolyo.com')->first();
 
-        // Create global room types
+        // Create global room types (now with pricing)
         $roomTypes = [
             [
                 'name'              => 'Deluxe King Room',
@@ -27,6 +26,11 @@ class HotelSeeder extends Seeder
                 'size_sqm'          => 38.00,
                 'view_type'         => 'city',
                 'description'       => 'Spacious king room with premium furnishings.',
+                'price_sgl_bb'      => 299.00,
+                'price_dbl_bb'      => 399.00,
+                'extra_bed_price'   => 50.00,
+                'child_price'       => 25.00,
+                'child_breakfast'   => 15.00,
                 'extra_adult_price' => 50.00,
                 'extra_child_price' => 25.00,
                 'is_active'         => true,
@@ -42,6 +46,11 @@ class HotelSeeder extends Seeder
                 'size_sqm'          => 72.00,
                 'view_type'         => 'sea',
                 'description'       => 'Elegant suite with separate living area.',
+                'price_sgl_bb'      => 599.00,
+                'price_dbl_bb'      => 749.00,
+                'extra_bed_price'   => 80.00,
+                'child_price'       => 30.00,
+                'child_breakfast'   => 20.00,
                 'extra_adult_price' => 80.00,
                 'extra_child_price' => 30.00,
                 'is_active'         => true,
@@ -57,6 +66,8 @@ class HotelSeeder extends Seeder
                 'size_sqm'          => 28.00,
                 'view_type'         => 'garden',
                 'description'       => 'Comfortable twin room for budget-conscious travellers.',
+                'price_sgl_bb'      => 180.00,
+                'price_dbl_bb'      => 240.00,
                 'extra_adult_price' => 0.00,
                 'extra_child_price' => 0.00,
                 'is_active'         => true,
@@ -72,6 +83,11 @@ class HotelSeeder extends Seeder
                 'size_sqm'          => 85.00,
                 'view_type'         => 'sea',
                 'description'       => 'Spacious family suite with direct sea views.',
+                'price_sgl_bb'      => 450.00,
+                'price_dbl_bb'      => 550.00,
+                'extra_bed_price'   => 60.00,
+                'child_price'       => 20.00,
+                'child_breakfast'   => 12.00,
                 'extra_adult_price' => 60.00,
                 'extra_child_price' => 20.00,
                 'is_active'         => true,
@@ -88,7 +104,7 @@ class HotelSeeder extends Seeder
             $createdTypes[$rt->slug] = $rt;
         }
 
-        // Hotels with rooms
+        // Hotels with individual rooms
         $hotels = [
             [
                 'hotel' => [
@@ -118,8 +134,11 @@ class HotelSeeder extends Seeder
                     'sale_price'        => 299.00,
                 ],
                 'rooms' => [
-                    ['room_type_slug' => 'deluxe-king-room',  'floor' => '5',  'quantity' => 10, 'price_sgl_bb' => 299.00, 'price_dbl_bb' => 399.00],
-                    ['room_type_slug' => 'executive-suite',   'floor' => '20', 'quantity' => 5,  'price_sgl_bb' => 599.00, 'price_dbl_bb' => 749.00],
+                    ['room_type_slug' => 'deluxe-king-room',  'room_name' => '501', 'floor' => '5'],
+                    ['room_type_slug' => 'deluxe-king-room',  'room_name' => '502', 'floor' => '5'],
+                    ['room_type_slug' => 'deluxe-king-room',  'room_name' => '503', 'floor' => '5'],
+                    ['room_type_slug' => 'executive-suite',   'room_name' => '2001', 'floor' => '20'],
+                    ['room_type_slug' => 'executive-suite',   'room_name' => '2002', 'floor' => '20'],
                 ],
             ],
             [
@@ -149,8 +168,11 @@ class HotelSeeder extends Seeder
                     'base_price'        => 180.00,
                 ],
                 'rooms' => [
-                    ['room_type_slug' => 'standard-twin-room',  'floor' => '2', 'quantity' => 20, 'price_sgl_bb' => 180.00, 'price_dbl_bb' => 240.00],
-                    ['room_type_slug' => 'family-beach-suite',  'floor' => '1', 'quantity' => 8,  'price_sgl_bb' => 450.00, 'price_dbl_bb' => 550.00],
+                    ['room_type_slug' => 'standard-twin-room',  'room_name' => '201', 'floor' => '2'],
+                    ['room_type_slug' => 'standard-twin-room',  'room_name' => '202', 'floor' => '2'],
+                    ['room_type_slug' => 'standard-twin-room',  'room_name' => '203', 'floor' => '2'],
+                    ['room_type_slug' => 'family-beach-suite',  'room_name' => '101', 'floor' => '1'],
+                    ['room_type_slug' => 'family-beach-suite',  'room_name' => '102', 'floor' => '1'],
                 ],
             ],
         ];
@@ -164,14 +186,12 @@ class HotelSeeder extends Seeder
             foreach ($entry['rooms'] as $roomData) {
                 $roomType = $createdTypes[$roomData['room_type_slug']];
                 HotelRoom::firstOrCreate(
-                    ['hotel_id' => $hotel->id, 'room_type_id' => $roomType->id],
+                    ['hotel_id' => $hotel->id, 'room_name' => $roomData['room_name']],
                     [
                         'hotel_id'     => $hotel->id,
                         'room_type_id' => $roomType->id,
+                        'room_name'    => $roomData['room_name'],
                         'floor'        => $roomData['floor'],
-                        'quantity'     => $roomData['quantity'],
-                        'price_sgl_bb' => $roomData['price_sgl_bb'] ?? null,
-                        'price_dbl_bb' => $roomData['price_dbl_bb'] ?? null,
                         'is_active'    => true,
                     ]
                 );

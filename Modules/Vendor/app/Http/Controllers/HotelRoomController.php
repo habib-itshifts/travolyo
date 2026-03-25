@@ -2,7 +2,6 @@
 
 namespace Modules\Vendor\Http\Controllers;
 
-use App\Models\Currency;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -10,9 +9,9 @@ use Illuminate\View\View;
 use Modules\Hotel\Actions\SaveHotelRoomAction;
 use Modules\Hotel\Http\Requests\Vendor\StoreHotelRoomRequest;
 use Modules\Hotel\Http\Requests\Vendor\UpdateHotelRoomRequest;
-use Modules\Hotel\Models\Amenity;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
+use Modules\Hotel\Models\RoomType;
 
 /**
  * Vendor HotelRoomController
@@ -44,14 +43,11 @@ class HotelRoomController extends Controller
             ->get(['id', 'name']);
 
         $rooms = HotelRoom::query()
-            ->with(['hotel'])
+            ->with(['hotel', 'roomType'])
             // Scope: only rooms for hotels the vendor owns.
             ->whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
             ->when($request->filled('hotel_id'), fn ($q) => $q->where('hotel_id', (int) $request->hotel_id))
-            ->when($request->filled('search'), fn ($q) => $q->where(function ($inner) use ($request) {
-                $inner->where('name',       'like', '%' . $request->search . '%')
-                      ->orWhere('room_type', 'like', '%' . $request->search . '%');
-            }))
+            ->when($request->filled('search'), fn ($q) => $q->where('room_name', 'like', '%' . $request->search . '%'))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -78,8 +74,7 @@ class HotelRoomController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
-        $currencies      = Currency::supported();
+        $roomTypes       = RoomType::active()->where('user_id', auth()->id())->orderBy('sort_order')->get(['id', 'name']);
         $selectedHotelId = $request->integer('hotel_id') ?: null;
 
         // Reject a pre-selected hotel_id that does not belong to the vendor.
@@ -90,7 +85,7 @@ class HotelRoomController extends Controller
         // Non-null = hotel select rendered as disabled + hidden input.
         $lockedHotelId = $selectedHotelId;
 
-        return view('vendor::hotel-rooms.create', compact('hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
+        return view('vendor::hotel-rooms.create', compact('hotels', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
     }
 
     /**
@@ -112,7 +107,7 @@ class HotelRoomController extends Controller
 
         return redirect()
             ->route('vendor.hotel-rooms.index', ['hotel_id' => $room->hotel_id])
-            ->with('success', 'Room "' . $room->name . '" created successfully.');
+            ->with('success', 'Room "' . $room->room_name . '" created successfully.');
     }
 
     // -------------------------------------------------------------------------
@@ -130,19 +125,16 @@ class HotelRoomController extends Controller
         $room = HotelRoom::whereHas('hotel', fn ($q) => $q->where('author_id', auth()->id()))
             ->findOrFail($hotelRoom);
 
-        $room->load('amenities');
-
         $hotels = Hotel::query()
             ->where('author_id', auth()->id())
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
-        $currencies      = Currency::supported();
+        $roomTypes       = RoomType::active()->where('user_id', auth()->id())->orderBy('sort_order')->get(['id', 'name']);
         $selectedHotelId = $room->hotel_id;
         $lockedHotelId   = null;  // vendor may reassign room to one of their own hotels
 
-        return view('vendor::hotel-rooms.edit', compact('room', 'hotels', 'amenities', 'currencies', 'selectedHotelId', 'lockedHotelId'));
+        return view('vendor::hotel-rooms.edit', compact('room', 'hotels', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
     }
 
     /**
@@ -165,7 +157,7 @@ class HotelRoomController extends Controller
 
         return redirect()
             ->route('vendor.hotel-rooms.index', ['hotel_id' => $room->hotel_id])
-            ->with('success', 'Room "' . $room->name . '" updated successfully.');
+            ->with('success', 'Room "' . $room->room_name . '" updated successfully.');
     }
 
     // -------------------------------------------------------------------------

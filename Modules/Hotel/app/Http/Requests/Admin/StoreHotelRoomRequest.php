@@ -15,10 +15,10 @@ class StoreHotelRoomRequest extends FormRequest
     public function rules(): array
     {
         return array_merge($this->baseRules(), [
-            'room_type_id' => [
+            'room_name' => [
                 'required',
-                'integer',
-                'exists:room_types,id',
+                'string',
+                'max:50',
                 Rule::unique('hotel_rooms')
                     ->where(fn ($query) => $query->where('hotel_id', $this->input('hotel_id'))),
             ],
@@ -28,20 +28,13 @@ class StoreHotelRoomRequest extends FormRequest
     protected function baseRules(): array
     {
         return [
-            'hotel_id'        => ['required', 'integer', 'exists:hotels,id'],
-            'image_id'        => ['nullable', 'integer', 'exists:media_files,id'],
-            'gallery'         => ['nullable', 'string'],
-            'floor'           => ['nullable', 'string', 'max:20'],
-            'quantity'        => ['required', 'integer', 'min:1'],
-            'price_sgl_bb'    => ['nullable', 'numeric', 'min:0'],
-            'price_dbl_bb'    => ['nullable', 'numeric', 'min:0'],
-            'extra_bed_price' => ['nullable', 'numeric', 'min:0'],
-            'child_price'     => ['nullable', 'numeric', 'min:0'],
-            'child_breakfast' => ['nullable', 'numeric', 'min:0'],
-            'is_active'       => ['nullable', 'boolean'],
-            'sort_order'      => ['nullable', 'integer', 'min:0'],
-            'amenity_ids'     => ['nullable', 'array'],
-            'amenity_ids.*'   => ['integer', 'exists:amenities,id'],
+            'hotel_id'      => ['required', 'integer', 'exists:hotels,id'],
+            'room_type_id'  => ['required', 'integer', 'exists:room_types,id'],
+            'image_id'      => ['nullable', 'integer', 'exists:media_files,id'],
+            'gallery'       => ['nullable', 'string'],
+            'floor'         => ['nullable', 'string', 'max:20'],
+            'is_active'     => ['nullable', 'boolean'],
+            'sort_order'    => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

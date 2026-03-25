@@ -11,10 +11,10 @@ class UpdateHotelRoomRequest extends StoreHotelRoomRequest
         $roomId = (int) $this->route('hotel_room');
 
         return array_merge($this->baseRules(), [
-            'room_type_id' => [
+            'room_name' => [
                 'required',
-                'integer',
-                'exists:room_types,id',
+                'string',
+                'max:50',
                 Rule::unique('hotel_rooms')
                     ->ignore($roomId)
                     ->where(fn ($query) => $query->where('hotel_id', $this->input('hotel_id'))),

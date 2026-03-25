@@ -9,7 +9,6 @@ use Illuminate\View\View;
 use Modules\Hotel\Actions\SaveHotelRoomAction;
 use Modules\Hotel\Http\Requests\Admin\StoreHotelRoomRequest;
 use Modules\Hotel\Http\Requests\Admin\UpdateHotelRoomRequest;
-use Modules\Hotel\Models\Amenity;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
 use Modules\Hotel\Models\RoomType;
@@ -46,7 +45,7 @@ class HotelRoomController extends Controller
         $rooms = HotelRoom::query()
             ->with(['hotel', 'roomType'])
             ->when($request->filled('hotel_id'), fn ($q) => $q->where('hotel_id', (int) $request->hotel_id))
-            ->when($request->filled('search'), fn ($q) => $q->whereHas('roomType', fn ($rt) => $rt->where('name', 'like', '%' . $request->search . '%')))
+            ->when($request->filled('search'), fn ($q) => $q->where('room_name', 'like', '%' . $request->search . '%'))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -66,13 +65,12 @@ class HotelRoomController extends Controller
     public function create(Request $request): View
     {
         $hotels          = Hotel::query()->orderBy('name')->get(['id', 'name']);
-        $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
         $roomTypes       = RoomType::active()->orderBy('sort_order')->get(['id', 'name']);
         $selectedHotelId = $request->integer('hotel_id') ?: null;
         // A non-null $lockedHotelId renders the hotel select as disabled with a hidden input.
         $lockedHotelId   = $selectedHotelId;
 
-        return view('admin::hotel-rooms.create', compact('hotels', 'amenities', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
+        return view('admin::hotel-rooms.create', compact('hotels', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
     }
 
     /**
@@ -91,7 +89,7 @@ class HotelRoomController extends Controller
 
         return redirect()
             ->route('admin.hotel-rooms.index', ['hotel_id' => $room->hotel_id])
-            ->with('success', 'Room "' . $room->name . '" created successfully.');
+            ->with('success', 'Room "' . $room->room_name . '" created successfully.');
     }
 
     // -------------------------------------------------------------------------
@@ -100,15 +98,12 @@ class HotelRoomController extends Controller
 
     public function edit(HotelRoom $hotelRoom): View
     {
-        $hotelRoom->load('amenities');
-
         $hotels          = Hotel::query()->orderBy('name')->get(['id', 'name']);
-        $amenities       = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
         $roomTypes       = RoomType::active()->orderBy('sort_order')->get(['id', 'name']);
         $selectedHotelId = $hotelRoom->hotel_id;
         $lockedHotelId   = null;  // on edit the admin may reassign the room to a different hotel
 
-        return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'amenities', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
+        return view('admin::hotel-rooms.edit', compact('hotelRoom', 'hotels', 'roomTypes', 'selectedHotelId', 'lockedHotelId'));
     }
 
     /**
@@ -126,7 +121,7 @@ class HotelRoomController extends Controller
 
         return redirect()
             ->route('admin.hotel-rooms.index', ['hotel_id' => $hotelRoom->hotel_id])
-            ->with('success', 'Room "' . $hotelRoom->name . '" updated successfully.');
+            ->with('success', 'Room "' . $hotelRoom->room_name . '" updated successfully.');
     }
 
     // -------------------------------------------------------------------------

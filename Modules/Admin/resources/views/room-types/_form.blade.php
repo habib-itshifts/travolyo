@@ -1,4 +1,7 @@
-@php $rt = $roomType ?? null; @endphp
+@php
+    $rt = $roomType ?? null;
+    $selectedAmenities = $rt ? $rt->amenities->pluck('id')->all() : old('amenity_ids', []);
+@endphp
 
 <div class="row g-4">
     <div class="col-md-8">
@@ -30,6 +33,29 @@
                 </div>
             </div>
         </div>
+
+        @if (isset($amenities) && $amenities->count())
+        <div class="card border-0 shadow-sm rounded-3 mt-4">
+            <div class="card-header bg-transparent fw-semibold border-bottom">Room Amenities</div>
+            <div class="card-body">
+                <div class="row g-2">
+                    @foreach ($amenities->groupBy('category') as $category => $items)
+                        <div class="col-12">
+                            <p class="text-uppercase fw-bold mb-2 mt-2" style="font-size:11px;color:var(--clr-primary);letter-spacing:.05em;">{{ ucwords(str_replace('_', ' ', $category)) }}</p>
+                        </div>
+                        @foreach ($items as $amenity)
+                            <div class="col-md-4 col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="amenity_ids[]" value="{{ $amenity->id }}" id="ra_{{ $amenity->id }}" {{ in_array($amenity->id, $selectedAmenities) ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="ra_{{ $amenity->id }}">{{ $amenity->name }}</label>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
 
         <div class="card border-0 shadow-sm rounded-3 mt-4">
             <div class="card-header bg-transparent fw-semibold border-bottom">Bed Configuration</div>
@@ -70,8 +96,32 @@
         </div>
 
         <div class="card border-0 shadow-sm rounded-3 mt-4">
-            <div class="card-header bg-transparent fw-semibold border-bottom">Extra Pricing</div>
+            <div class="card-header bg-transparent fw-semibold border-bottom">Pricing</div>
             <div class="card-body">
+                <p class="text-muted mb-3" style="font-size:11px;">Fallback pricing when no deal applies.</p>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">SGL BB</label>
+                        <input type="number" step="0.01" min="0" name="price_sgl_bb" value="{{ old('price_sgl_bb', $rt?->price_sgl_bb) }}" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">DBL BB</label>
+                        <input type="number" step="0.01" min="0" name="price_dbl_bb" value="{{ old('price_dbl_bb', $rt?->price_dbl_bb) }}" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Extra Bed</label>
+                        <input type="number" step="0.01" min="0" name="extra_bed_price" value="{{ old('extra_bed_price', $rt?->extra_bed_price) }}" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Child</label>
+                        <input type="number" step="0.01" min="0" name="child_price" value="{{ old('child_price', $rt?->child_price) }}" class="form-control" placeholder="0.00">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Child BF</label>
+                        <input type="number" step="0.01" min="0" name="child_breakfast" value="{{ old('child_breakfast', $rt?->child_breakfast) }}" class="form-control" placeholder="0.00">
+                    </div>
+                </div>
+                <hr class="my-3">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Extra Adult Price <span class="text-danger">*</span></label>
                     <input type="number" step="0.01" name="extra_adult_price" value="{{ old('extra_adult_price', $rt?->extra_adult_price ?? 0) }}" class="form-control" required min="0">

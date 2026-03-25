@@ -44,7 +44,7 @@
                             <th class="py-3">Name</th>
                             <th class="py-3">Capacity</th>
                             <th class="py-3">Size</th>
-                            <th class="py-3">Extra Pricing</th>
+                            <th class="py-3">SGL / DBL</th>
                             <th class="py-3">Status</th>
                             <th class="py-3 text-end pe-4">Actions</th>
                         </tr>
@@ -59,7 +59,7 @@
                                 </td>
                                 <td><span class="text-muted" style="font-size:12px;">{{ $rt->max_adults }}A / {{ $rt->max_children }}C (max {{ $rt->max_occupancy }})</span></td>
                                 <td>{{ $rt->size_sqm ? $rt->size_sqm . ' sqm' : '-' }}</td>
-                                <td><span style="font-size:12px;">Adult: {{ number_format($rt->extra_adult_price, 2) }} | Child: {{ number_format($rt->extra_child_price, 2) }}</span></td>
+                                <td><span style="font-size:12px;">{{ $rt->price_sgl_bb ?? '—' }} / {{ $rt->price_dbl_bb ?? '—' }}</span></td>
                                 <td>
                                     <span class="badge rounded-pill {{ $rt->is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
                                         {{ $rt->is_active ? 'Active' : 'Inactive' }}

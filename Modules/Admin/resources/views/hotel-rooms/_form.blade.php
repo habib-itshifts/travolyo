@@ -1,7 +1,6 @@
 ﻿@php
     $isEdit = isset($hotelRoom);
     $action = $isEdit ? route('admin.hotel-rooms.update', $hotelRoom->id) : route('admin.hotel-rooms.store');
-    $selectedAmenities = $isEdit ? $hotelRoom->amenities->pluck('id')->all() : old('amenity_ids', []);
     $lockedHotelId = $lockedHotelId ?? null;
     $selectedHotelValue = old('hotel_id', $selectedHotelId ?? '');
     $roomImageId = old('image_id', $hotelRoom->image_id ?? '');
@@ -69,6 +68,11 @@
                             </select>
                             @error('room_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Room Name / Number</label>
+                            <input type="text" name="room_name" value="{{ old('room_name', $hotelRoom->room_name ?? '') }}" class="form-control @error('room_name') is-invalid @enderror" placeholder="e.g. 101, 201-A">
+                            @error('room_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Featured Image</label>
                             <input type="hidden" name="image_id" id="room-image-id" value="{{ $roomImageId }}">
@@ -110,64 +114,14 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h6 class="fw-semibold mb-3">Room Amenities</h6>
-                    <div class="row g-2">
-                        @foreach ($amenities->groupBy('category') as $category => $items)
-                            <div class="col-12">
-                                <p class="text-uppercase fw-bold mb-2 mt-2" style="font-size:11px;color:var(--clr-primary);letter-spacing:.05em;">{{ ucwords(str_replace('_', ' ', $category)) }}</p>
-                            </div>
-                            @foreach ($items as $amenity)
-                                <div class="col-md-4 col-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="amenity_ids[]" value="{{ $amenity->id }}" id="ra_{{ $amenity->id }}" {{ in_array($amenity->id, $selectedAmenities) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="ra_{{ $amenity->id }}">{{ $amenity->name }}</label>
-                                    </div>
-                                </div>
-                            @endforeach
-                        @endforeach
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <h6 class="fw-semibold mb-3">Pricing & Status</h6>
-                    <p class="text-muted mb-3" style="font-size:11px;">Fallback pricing when no deal applies.</p>
+                    <h6 class="fw-semibold mb-3">Settings</h6>
+                    <p class="text-muted mb-3" style="font-size:11px;">Pricing is managed on the Room Type.</p>
                     <div class="row g-3">
-                        <div class="col-6">
-                            <label class="form-label fw-semibold">SGL BB</label>
-                            <input type="number" min="0" step="0.01" name="price_sgl_bb" value="{{ old('price_sgl_bb', $hotelRoom->price_sgl_bb ?? '') }}" class="form-control @error('price_sgl_bb') is-invalid @enderror" placeholder="0.00">
-                            @error('price_sgl_bb') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label fw-semibold">DBL BB</label>
-                            <input type="number" min="0" step="0.01" name="price_dbl_bb" value="{{ old('price_dbl_bb', $hotelRoom->price_dbl_bb ?? '') }}" class="form-control @error('price_dbl_bb') is-invalid @enderror" placeholder="0.00">
-                            @error('price_dbl_bb') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label fw-semibold">Extra Bed</label>
-                            <input type="number" min="0" step="0.01" name="extra_bed_price" value="{{ old('extra_bed_price', $hotelRoom->extra_bed_price ?? '') }}" class="form-control @error('extra_bed_price') is-invalid @enderror" placeholder="0.00">
-                            @error('extra_bed_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label fw-semibold">Child</label>
-                            <input type="number" min="0" step="0.01" name="child_price" value="{{ old('child_price', $hotelRoom->child_price ?? '') }}" class="form-control @error('child_price') is-invalid @enderror" placeholder="0.00">
-                            @error('child_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Child BF</label>
-                            <input type="number" min="0" step="0.01" name="child_breakfast" value="{{ old('child_breakfast', $hotelRoom->child_breakfast ?? '') }}" class="form-control @error('child_breakfast') is-invalid @enderror" placeholder="0.00">
-                            @error('child_breakfast') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Quantity</label>
-                            <input type="number" min="1" name="quantity" value="{{ old('quantity', $hotelRoom->quantity ?? 1) }}" class="form-control @error('quantity') is-invalid @enderror">
-                            @error('quantity') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                        </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Sort Order</label>
                             <input type="number" min="0" name="sort_order" value="{{ old('sort_order', $hotelRoom->sort_order ?? 0) }}" class="form-control @error('sort_order') is-invalid @enderror">

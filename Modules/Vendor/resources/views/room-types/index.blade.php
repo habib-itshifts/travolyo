@@ -36,7 +36,7 @@
                             <th class="ps-4 py-3" style="width:40px;">#</th>
                             <th class="py-3">Name</th>
                             <th class="py-3">Capacity</th>
-                            <th class="py-3">Extra Pricing</th>
+                            <th class="py-3">SGL / DBL</th>
                             <th class="py-3">Status</th>
                             <th class="py-3 text-end pe-4">Actions</th>
                         </tr>
@@ -50,7 +50,7 @@
                                     <p class="mb-0 text-muted" style="font-size:11px;">{{ $rt->view_type ?? '-' }}</p>
                                 </td>
                                 <td><span class="text-muted" style="font-size:12px;">{{ $rt->max_adults }}A / {{ $rt->max_children }}C (max {{ $rt->max_occupancy }})</span></td>
-                                <td><span style="font-size:12px;">Adult: {{ number_format($rt->extra_adult_price, 2) }} | Child: {{ number_format($rt->extra_child_price, 2) }}</span></td>
+                                <td><span style="font-size:12px;">{{ $rt->price_sgl_bb ?? '—' }} / {{ $rt->price_dbl_bb ?? '—' }}</span></td>
                                 <td>
                                     <span class="badge rounded-pill {{ $rt->is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
                                         {{ $rt->is_active ? 'Active' : 'Inactive' }}

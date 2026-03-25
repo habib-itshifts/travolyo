@@ -4,7 +4,6 @@ namespace Modules\Hotel\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admin\Models\MediaFile;
 
@@ -13,30 +12,19 @@ class HotelRoom extends Model
     protected $fillable = [
         'hotel_id',
         'room_type_id',
+        'room_name',
         'image_id',
         'gallery',
         'floor',
-        'quantity',
-        'price_sgl_bb',
-        'price_dbl_bb',
-        'extra_bed_price',
-        'child_price',
-        'child_breakfast',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'room_type_id'    => 'integer',
-        'image_id'        => 'integer',
-        'price_sgl_bb'    => 'decimal:2',
-        'price_dbl_bb'    => 'decimal:2',
-        'extra_bed_price' => 'decimal:2',
-        'child_price'     => 'decimal:2',
-        'child_breakfast' => 'decimal:2',
-        'quantity'        => 'integer',
-        'is_active'       => 'boolean',
-        'sort_order'      => 'integer',
+        'room_type_id' => 'integer',
+        'image_id'     => 'integer',
+        'is_active'    => 'boolean',
+        'sort_order'   => 'integer',
     ];
 
     protected function mediaPathFromId(?int $id): ?string
@@ -92,13 +80,6 @@ class HotelRoom extends Model
     public function featuredMedia(): BelongsTo
     {
         return $this->belongsTo(MediaFile::class, 'image_id');
-    }
-
-    public function amenities(): BelongsToMany
-    {
-        return $this->belongsToMany(Amenity::class, 'hotel_room_amenity')
-            ->withPivot('notes')
-            ->withTimestamps();
     }
 
     public function bookingRooms(): HasMany

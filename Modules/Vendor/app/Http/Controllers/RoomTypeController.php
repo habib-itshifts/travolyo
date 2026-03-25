@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\View\View;
+use Modules\Hotel\Models\Amenity;
 use Modules\Hotel\Models\RoomType;
 use Modules\Hotel\Services\RoomTypeService;
 
@@ -21,7 +22,8 @@ class RoomTypeController extends Controller
 
     public function create(): View
     {
-        return view('vendor::room-types.create');
+        $amenities = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
+        return view('vendor::room-types.create', compact('amenities'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -36,9 +38,16 @@ class RoomTypeController extends Controller
             'size_sqm'          => 'nullable|numeric|min:0',
             'view_type'         => 'nullable|string|max:50',
             'description'       => 'nullable|string',
+            'price_sgl_bb'      => 'nullable|numeric|min:0',
+            'price_dbl_bb'      => 'nullable|numeric|min:0',
+            'extra_bed_price'   => 'nullable|numeric|min:0',
+            'child_price'       => 'nullable|numeric|min:0',
+            'child_breakfast'   => 'nullable|numeric|min:0',
             'extra_adult_price' => 'required|numeric|min:0',
             'extra_child_price' => 'required|numeric|min:0',
             'is_active'         => 'boolean',
+            'amenity_ids'       => 'nullable|array',
+            'amenity_ids.*'     => 'integer|exists:amenities,id',
         ]);
         $data['is_active'] = $request->boolean('is_active');
         $data['user_id'] = auth()->id();
@@ -50,7 +59,9 @@ class RoomTypeController extends Controller
     public function edit(RoomType $roomType): View
     {
         abort_unless($roomType->user_id === auth()->id(), 403);
-        return view('vendor::room-types.edit', compact('roomType'));
+        $roomType->load('amenities');
+        $amenities = Amenity::forRooms()->active()->orderBy('category')->orderBy('sort_order')->get();
+        return view('vendor::room-types.edit', compact('roomType', 'amenities'));
     }
 
     public function update(Request $request, RoomType $roomType): RedirectResponse
@@ -66,9 +77,16 @@ class RoomTypeController extends Controller
             'size_sqm'          => 'nullable|numeric|min:0',
             'view_type'         => 'nullable|string|max:50',
             'description'       => 'nullable|string',
+            'price_sgl_bb'      => 'nullable|numeric|min:0',
+            'price_dbl_bb'      => 'nullable|numeric|min:0',
+            'extra_bed_price'   => 'nullable|numeric|min:0',
+            'child_price'       => 'nullable|numeric|min:0',
+            'child_breakfast'   => 'nullable|numeric|min:0',
             'extra_adult_price' => 'required|numeric|min:0',
             'extra_child_price' => 'required|numeric|min:0',
             'is_active'         => 'boolean',
+            'amenity_ids'       => 'nullable|array',
+            'amenity_ids.*'     => 'integer|exists:amenities,id',
         ]);
         $data['is_active'] = $request->boolean('is_active');
 

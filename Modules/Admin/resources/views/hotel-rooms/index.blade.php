@@ -45,11 +45,10 @@
                     <thead class="table-light border-bottom">
                         <tr>
                             <th class="ps-4 py-3">#</th>
+                            <th class="py-3">Room</th>
                             <th class="py-3">Hotel</th>
                             <th class="py-3">Type</th>
-                            <th class="py-3">Occupancy</th>
-                            <th class="py-3">SGL / DBL</th>
-                            <th class="py-3">Quantity</th>
+                            <th class="py-3">Floor</th>
                             <th class="py-3">Status</th>
                             <th class="py-3 text-end pe-4">Actions</th>
                         </tr>
@@ -58,15 +57,14 @@
                         @forelse ($rooms as $room)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $room->id }}</td>
+                                <td class="fw-semibold">{{ $room->room_name }}</td>
                                 <td>
                                     <a href="{{ route('admin.hotel-rooms.index', ['hotel_id' => $room->hotel_id]) }}" class="text-decoration-none">
                                         {{ $room->hotel?->name }}
                                     </a>
                                 </td>
                                 <td class="text-capitalize">{{ $room->roomType?->name ?? '—' }}</td>
-                                <td>{{ $room->roomType?->max_adults ?? 0 }}A / {{ $room->roomType?->max_children ?? 0 }}C / {{ $room->roomType?->max_occupancy ?? 0 }} Total</td>
-                                <td>{{ $room->price_sgl_bb ?? '—' }} / {{ $room->price_dbl_bb ?? '—' }}</td>
-                                <td>{{ $room->quantity }}</td>
+                                <td>{{ $room->floor ?? '—' }}</td>
                                 <td>
                                     <span class="badge rounded-pill {{ $room->is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
                                         {{ $room->is_active ? 'Active' : 'Inactive' }}
@@ -79,7 +77,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                             </svg>
                                         </a>
-                                        <form method="POST" action="{{ route('admin.hotel-rooms.destroy', $room->id) }}" onsubmit="return confirm('Delete {{ addslashes($room->name) }}?')">
+                                        <form method="POST" action="{{ route('admin.hotel-rooms.destroy', $room->id) }}" onsubmit="return confirm('Delete {{ addslashes($room->room_name) }}?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -93,7 +91,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center text-muted py-5">
+                                <td colspan="7" class="text-center text-muted py-5">
                                     No rooms found.
                                 </td>
                             </tr>

@@ -21,16 +21,27 @@ class RoomTypeService
 
     public function store(array $data): RoomType
     {
+        $amenityIds = $data['amenity_ids'] ?? [];
+        unset($data['amenity_ids']);
+
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
         $data['bed_configuration'] = $this->normalizeBedConfig($data['bed_configuration'] ?? []);
-        return RoomType::create($data);
+        $roomType = RoomType::create($data);
+        $roomType->amenities()->sync($amenityIds);
+
+        return $roomType;
     }
 
     public function update(RoomType $roomType, array $data): RoomType
     {
+        $amenityIds = $data['amenity_ids'] ?? [];
+        unset($data['amenity_ids']);
+
         $data['slug'] = $data['slug'] ?? Str::slug($data['name']);
         $data['bed_configuration'] = $this->normalizeBedConfig($data['bed_configuration'] ?? []);
         $roomType->update($data);
+        $roomType->amenities()->sync($amenityIds);
+
         return $roomType;
     }
 

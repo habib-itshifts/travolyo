@@ -69,9 +69,7 @@
                             <th class="py-3">Room</th>
                             <th class="py-3">Hotel</th>
                             <th class="py-3">Type</th>
-                            <th class="py-3">Occupancy</th>
-                            <th class="py-3">Base Price</th>
-                            <th class="py-3">Qty</th>
+                            <th class="py-3">Floor</th>
                             <th class="py-3">Status</th>
                             <th class="py-3 text-end pe-4">Actions</th>
                         </tr>
@@ -80,21 +78,14 @@
                         @forelse ($rooms as $room)
                             <tr>
                                 <td class="ps-4 text-muted">{{ $room->id }}</td>
-                                <td>
-                                    <div>
-                                        <p class="mb-0 fw-semibold text-dark">{{ $room->name }}</p>
-                                        <p class="mb-0 text-muted" style="font-size:11px;">{{ $room->slug }}</p>
-                                    </div>
-                                </td>
+                                <td class="fw-semibold">{{ $room->room_name }}</td>
                                 <td>
                                     <a href="{{ route('vendor.hotel-rooms.index', ['hotel_id' => $room->hotel_id]) }}" class="text-decoration-none">
                                         {{ $room->hotel?->name }}
                                     </a>
                                 </td>
-                                <td class="text-capitalize">{{ $room->room_type }}</td>
-                                <td>{{ $room->max_adults }}A / {{ $room->max_children }}C / {{ $room->max_occupancy }} Total</td>
-                                <td>{{ strtoupper($room->currency ?? 'USD') }} {{ number_format((float) $room->base_price, 2) }}</td>
-                                <td>{{ $room->quantity }}</td>
+                                <td class="text-capitalize">{{ $room->roomType?->name ?? '—' }}</td>
+                                <td>{{ $room->floor ?? '—' }}</td>
                                 <td>
                                     <span class="badge rounded-pill {{ $room->is_active ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">
                                         {{ $room->is_active ? 'Active' : 'Inactive' }}
@@ -109,7 +100,7 @@
                                             </svg>
                                         </a>
                                         <form method="POST" action="{{ route('vendor.hotel-rooms.destroy', $room->id) }}"
-                                              onsubmit="return confirm('Delete {{ addslashes($room->name) }}?')">
+                                              onsubmit="return confirm('Delete {{ addslashes($room->room_name) }}?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
@@ -123,7 +114,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-5">
+                                <td colspan="7" class="text-center text-muted py-5">
                                     <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-25">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7h16M5 7l1 12h12l1-12M8 7V5a1 1 0 011-1h6a1 1 0 011 1v2"/>
                                     </svg>
