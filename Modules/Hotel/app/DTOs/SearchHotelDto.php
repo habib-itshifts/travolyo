@@ -21,6 +21,7 @@ class SearchHotelDto
         public readonly string             $currency   = 'USD',
         public readonly string             $sortBy     = 'price_asc', // price_asc|price_desc|rating_desc|featured
         public readonly int                $perPage    = 20,
+        public readonly int                $page       = 1,
         public readonly ?HotelProviderEnum $provider   = null,        // null = all providers
     ) {}
 
@@ -40,6 +41,7 @@ class SearchHotelDto
             currency:   $data['currency'] ?? 'USD',
             sortBy:     $data['sort_by'] ?? 'price_asc',
             perPage:    (int) ($data['per_page'] ?? 20),
+            page:       (int) ($data['page'] ?? 1),
             provider:   isset($data['provider']) ? HotelProviderEnum::from($data['provider']) : null,
         );
     }

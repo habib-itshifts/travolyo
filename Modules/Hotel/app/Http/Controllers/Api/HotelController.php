@@ -29,17 +29,25 @@ class HotelController extends Controller
 
 
     public function search(SearchHotelRequest $request): JsonResponse
-    {        
-        
+    {
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
 
             $offers = (new SearchHotelAction)->handle($dto);
 
+            $total   = count($offers);
+            $perPage = $dto->perPage;
+            $page    = $dto->page;
+            $sliced  = array_slice($offers, ($page - 1) * $perPage, $perPage);
+
             return response()->json([
-                'success' => true,
-                'count'   => count($offers),
-                'data'    => HotelOfferResource::collection(collect($offers)),
+                'success'      => true,
+                'count'        => count($sliced),
+                'total'        => $total,
+                'per_page'     => $perPage,
+                'current_page' => $page,
+                'last_page'    => (int) ceil($total / $perPage),
+                'data'         => HotelOfferResource::collection(collect($sliced)),
             ]);
 
         } catch (HotelException $e) {

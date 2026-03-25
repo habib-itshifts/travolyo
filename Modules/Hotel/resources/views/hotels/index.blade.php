@@ -189,6 +189,15 @@
             <div id="hotel-offers" class="d-none"></div>
             <div id="hotel-error"  class="d-none alert alert-danger rounded-3"></div>
 
+            {{-- Load More button --}}
+            <div id="load-more-wrap" class="d-none text-center mt-3 mb-4">
+                <button class="btn btn-outline-primary px-4 py-2 fw-semibold" id="load-more-btn">
+                    <span id="load-more-text">Load More Hotels</span>
+                    <span id="load-more-spinner" class="d-none spinner-border spinner-border-sm ms-2" role="status"></span>
+                </button>
+                <p class="text-muted small mt-2" id="pagination-info"></p>
+            </div>
+
         @endif
 
     </div>
@@ -228,7 +237,11 @@
     const header    = document.getElementById('results-header');
     const countEl   = document.getElementById('results-count');
 
-    let allHotels = [];
+    let allHotels   = [];
+    let currentPage = 1;
+    let lastPage    = 1;
+    let totalHotels = 0;
+    let isLoading   = false;
 
     // ── Stars html ──────────────────────────────────────
     function stars(n) {
@@ -372,8 +385,33 @@
         `;
     }
 
+    // ── Pagination elements ──────────────────────────────
+    const loadMoreWrap    = document.getElementById('load-more-wrap');
+    const loadMoreBtn     = document.getElementById('load-more-btn');
+    const loadMoreText    = document.getElementById('load-more-text');
+    const loadMoreSpinner = document.getElementById('load-more-spinner');
+    const paginationInfo  = document.getElementById('pagination-info');
+
+    function updatePaginationUI() {
+        if (currentPage < lastPage) {
+            loadMoreWrap.classList.remove('d-none');
+            paginationInfo.textContent = `Showing ${allHotels.length} of ${totalHotels} hotels`;
+        } else {
+            loadMoreWrap.classList.add('d-none');
+        }
+    }
+
     // ── Fetch hotels ─────────────────────────────────────
-    async function loadHotels() {
+    async function loadHotels(page = 1) {
+        if (isLoading) return;
+        isLoading = true;
+
+        if (page > 1) {
+            loadMoreText.textContent = 'Loading…';
+            loadMoreSpinner.classList.remove('d-none');
+            loadMoreBtn.disabled = true;
+        }
+
         try {
             const res  = await fetch(searchUrl, {
                 method:  'POST',
@@ -388,6 +426,7 @@
                     check_out:  params.check_out,
                     adults:     parseInt(params.adults ?? 1, 10),
                     children:   parseInt(params.children ?? 0, 10),
+                    page:       page,
                 }),
             });
 
@@ -395,33 +434,63 @@
             loading.classList.add('d-none');
 
             if (!data.success || !data.data?.length) {
-                errorEl.textContent = data.message ?? 'No hotels found for your search.';
-                errorEl.classList.remove('d-none');
+                if (page === 1) {
+                    errorEl.textContent = data.message ?? 'No hotels found for your search.';
+                    errorEl.classList.remove('d-none');
+                }
+                isLoading = false;
                 return;
             }
 
-            allHotels = data.data;
-            offersEl.innerHTML = allHotels.map(h => renderCard(h)).join('');
+            currentPage = data.current_page;
+            lastPage    = data.last_page;
+            totalHotels = data.total;
+
+            allHotels = allHotels.concat(data.data);
+
+            // Append new cards (don't overwrite existing ones on page > 1)
+            const newHtml = data.data.map(h => renderCard(h)).join('');
+            if (page === 1) {
+                offersEl.innerHTML = newHtml;
+            } else {
+                offersEl.insertAdjacentHTML('beforeend', newHtml);
+            }
             offersEl.classList.remove('d-none');
 
             header.classList.remove('d-none');
             header.classList.add('d-flex');
             updateCount();
+            updatePaginationUI();
 
-            initPriceSlider();
+            if (page === 1) initPriceSlider();
             filterCards();
 
         } catch (err) {
             loading.classList.add('d-none');
-            errorEl.textContent = 'Failed to load hotels. Please try again.';
-            errorEl.classList.remove('d-none');
+            if (page === 1) {
+                errorEl.textContent = 'Failed to load hotels. Please try again.';
+                errorEl.classList.remove('d-none');
+            }
             console.error(err);
+        } finally {
+            isLoading = false;
+            loadMoreText.textContent = 'Load More Hotels';
+            loadMoreSpinner.classList.add('d-none');
+            loadMoreBtn.disabled = false;
         }
     }
 
+    // ── Load More click ──────────────────────────────────
+    loadMoreBtn?.addEventListener('click', () => {
+        if (currentPage < lastPage) {
+            loadHotels(currentPage + 1);
+        }
+    });
+
     function updateCount() {
         const visible = offersEl.querySelectorAll('.js-hotel-card:not([style*="none"])').length;
-        countEl.textContent = `Showing ${visible} hotel${visible !== 1 ? 's' : ''} in ${params.city ?? ''}`;
+        const totalStr = totalHotels ? ` of ${totalHotels}` : '';
+        countEl.textContent = `Showing ${visible}${totalStr} hotel${visible !== 1 ? 's' : ''} in ${params.city ?? ''}`;
     }
 
     // ── Price slider ──────────────────────────────────────
@@ -607,7 +676,7 @@
         btn.textContent = 'Select Room';
     });
 
-    loadHotels();
+    loadHotels(1);
 
 })();
 </script>
