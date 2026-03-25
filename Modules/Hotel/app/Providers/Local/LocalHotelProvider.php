@@ -31,7 +31,7 @@ class LocalHotelProvider implements HotelProviderInterface
             ->with([
                 'amenities',
                 'services',
-                'rooms' => fn ($q) => $q->active()->with('roomType'),
+                'rooms' => fn ($q) => $q->active()->with('roomType.amenities'),
             ])
             ->where(function ($query) use ($dto) {
                 $query
@@ -80,7 +80,7 @@ class LocalHotelProvider implements HotelProviderInterface
     public function prebook(PrebookHotelDto $dto): HotelOfferDto
     {
         $room = HotelRoom::active()
-            ->with(['hotel.amenities', 'hotel.services', 'amenities'])
+            ->with(['hotel.amenities', 'hotel.services', 'roomType.amenities'])
             ->find((int) $dto->roomId);
 
         if (! $room) {

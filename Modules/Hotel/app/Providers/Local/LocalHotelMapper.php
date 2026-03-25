@@ -70,7 +70,7 @@ class LocalHotelMapper
         if ($basePrice <= 0) {
             $basePrice = (float) ($room->hotel?->sale_price ?: $room->hotel?->base_price ?: 0);
         }
-        $amenityNames = [];
+        $amenityNames = $roomType?->amenities?->pluck('name')->all() ?? [];
 
         return new HotelRoomOfferDto(
             roomId:           (string) $room->id,

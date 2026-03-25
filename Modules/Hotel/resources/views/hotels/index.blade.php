@@ -340,7 +340,7 @@
                         <div>
                             <div class="room-card__name">${r.name}</div>
                             <div class="room-card__meta">
-                                ${r.bed_configuration ? `<i class="bi bi-moon me-1"></i>${r.bed_configuration} &nbsp;` : ''}
+                                ${r.bed_configuration ? `<i class="bi bi-moon me-1"></i>${Array.isArray(r.bed_configuration) ? r.bed_configuration.join(', ') : r.bed_configuration} &nbsp;` : ''}
                                 ${r.max_adults ? `<i class="bi bi-person me-1"></i>${r.max_adults} Adults` : ''}
                                 ${r.size_sqm ? ` &nbsp;<i class="bi bi-aspect-ratio me-1"></i>${r.size_sqm} m²` : ''}
                             </div>

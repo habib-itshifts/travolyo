@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Booking extends Model
@@ -185,6 +186,12 @@ class Booking extends Model
         $this->paid    = $this->pay_now;
         $this->applyCommission();
         $this->save();
+
+        // Sync booking_rooms status to confirmed
+        DB::table('booking_rooms')
+            ->where('booking_id', $this->id)
+            ->where('status', 'pending')
+            ->update(['status' => 'confirmed', 'updated_at' => now()]);
     }
 
     public function markAsPaymentFailed(): void
