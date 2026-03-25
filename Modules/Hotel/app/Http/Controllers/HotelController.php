@@ -7,8 +7,9 @@ use App\Models\Booking;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
+
 class HotelController extends Controller
 {
     /**
@@ -26,23 +27,24 @@ class HotelController extends Controller
                 $request->merge($resolved);
             }
         }
+
         $params = [
             'destination' => (string) $request->query('destination', ''),
-            'country'    => (string) $request->query('country', ''),
+            'country' => (string) $request->query('country', ''),
             'country_code' => (string) $request->query('country_code', ''),
-            'location'   => (string) $request->query('location', ''),
-            'city'       => (string) $request->query('city', ''),
+            'location' => (string) $request->query('location', ''),
+            'city' => (string) $request->query('city', ''),
             'search_mode' => (string) $request->query('search_mode', ''),
             'search_cities' => array_values(array_filter(array_map(
                 'trim',
                 explode('|', (string) $request->query('search_cities', ''))
             ))),
-            'check_in'   => (string) $request->query('check_in', now()->addDays(4)->toDateString()),
-            'check_out'  => (string) $request->query('check_out', now()->addDays(8)->toDateString()),
-            'adults'     => max(1, (int) $request->query('adults', 1)),
-            'children'   => max(0, (int) $request->query('children', 0)),
-            'rooms'      => max(1, (int) $request->query('rooms', 1)),
-            'provider'   => (string) $request->query('provider', ''),
+            'check_in' => (string) $request->query('check_in', now()->addDays(4)->toDateString()),
+            'check_out' => (string) $request->query('check_out', now()->addDays(8)->toDateString()),
+            'adults' => max(1, (int) $request->query('adults', 1)),
+            'children' => max(0, (int) $request->query('children', 0)),
+            'rooms' => max(1, (int) $request->query('rooms', 1)),
+            'provider' => (string) $request->query('provider', ''),
         ];
 
         $destinationExplorer = $this->loadJsonFile('data/hotel-destination-explorer.json');
@@ -76,15 +78,13 @@ class HotelController extends Controller
             return [];
         }
 
-        $resolved = [
+        return [
             'destination' => (string) ($item['destination'] ?? $item['country'] ?? $item['label'] ?? $destination),
             'country' => (string) ($item['country'] ?? $item['label'] ?? ''),
             'country_code' => (string) ($item['country_code'] ?? ''),
             'location' => '',
             'city' => '',
         ];
-
-        return $resolved;
     }
 
     private function loadJsonFile(string $relativePath): array
@@ -100,14 +100,13 @@ class HotelController extends Controller
         return is_array($payload) ? $payload : [];
     }
 
-
     /**
-     * Hotel checkout page — loads prebook data from cache via token.
+     * Hotel checkout page loads prebook data from cache via token.
      */
     public function checkout(Request $request): View|RedirectResponse
     {
         $token = $request->get('token');
-        $hc    = $token ? Cache::get('hotel_checkout_' . $token) : null;
+        $hc = $token ? Cache::get('hotel_checkout_' . $token) : null;
 
         if (! $hc) {
             return redirect()->route('hotels.index');
@@ -130,7 +129,7 @@ class HotelController extends Controller
         }
 
         $hotelDetails = $booking->getJsonMeta('hotel_details') ?? [];
-        $gateway      = $booking->getMeta('payment_gateway') ?? '—';
+        $gateway = $booking->getMeta('payment_gateway') ?? '-';
 
         return view('hotel::hotels.confirmation', compact('booking', 'hotelDetails', 'gateway'));
     }

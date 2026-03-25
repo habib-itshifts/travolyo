@@ -4,6 +4,8 @@
 
 @php
     $h = $hotelDetails ?? [];
+    $activities = $activities ?? [];
+    $activitySearchParams = $activitySearchParams ?? [];
     $statusClass = match(strtolower((string) $booking->status)) {
         'confirmed', 'paid', 'completed' => 'completed',
         'draft', 'unpaid'                => 'draft',
@@ -14,6 +16,8 @@
     if (!empty($h['check_in']) && !empty($h['check_out'])) {
         $nights = \Carbon\Carbon::parse($h['check_in'])->diffInDays(\Carbon\Carbon::parse($h['check_out']));
     }
+    $activitySearchUrl = route('activities.index', $activitySearchParams);
+    $activityLocation = trim((string) (($activitySearchParams['city'] ?? '') ?: ($h['city'] ?? '')));
 @endphp
 
 @push('styles')
@@ -57,6 +61,19 @@
 .btn-action--primary:hover { background: var(--primary-dark, #0097a7); color: #fff; }
 .btn-action--outline { background: transparent; color: var(--primary); border: 1.5px solid var(--primary); }
 .btn-action--outline:hover { background: var(--primary-light, #e0f7fa); }
+
+.activity-card { display: flex; gap: .8rem; padding: .85rem; border: 1px solid #e5e7eb; border-radius: 12px; text-decoration: none; color: inherit; transition: all .2s ease; }
+.activity-card + .activity-card { margin-top: .85rem; }
+.activity-card:hover { border-color: #b6eff5; box-shadow: 0 10px 22px rgba(14, 154, 167, .12); transform: translateY(-1px); }
+.activity-card__image { width: 86px; height: 86px; border-radius: 12px; object-fit: cover; flex-shrink: 0; background: #f1f5f9; }
+.activity-card__title { font-size: .95rem; font-weight: 700; line-height: 1.35; color: #1a2942; margin: 0 0 .2rem; }
+.activity-card__meta { font-size: .77rem; color: #6c757d; margin-bottom: .35rem; }
+.activity-card__tag { display: inline-flex; align-items: center; gap: .25rem; padding: .24rem .55rem; border-radius: 999px; background: #ecfeff; color: #0f766e; font-size: .72rem; font-weight: 600; margin-right: .35rem; margin-bottom: .35rem; }
+.activity-card__bottom { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .45rem; }
+.activity-card__price { font-size: .72rem; color: #6c757d; }
+.activity-card__price strong { display: block; color: var(--primary); font-size: 1.05rem; line-height: 1.1; }
+.activity-card__cta { display: inline-flex; align-items: center; justify-content: center; min-width: 102px; padding: .45rem .8rem; border-radius: 999px; background: #dff9fd; color: #11bcd6; font-size: .8rem; font-weight: 700; }
+.activity-sidebar-btn { width: 100%; justify-content: center; margin-top: 1rem; }
 </style>
 @endpush
 
@@ -228,6 +245,59 @@
     {{-- RIGHT ──────────────────────────── --}}
     <div class="col-12 col-lg-4">
         <div style="position:sticky; top:80px;">
+
+            @if(!empty($activities))
+            <div class="detail-card">
+                <div class="detail-card__header">
+                    <div class="detail-card__icon"><i class="bi bi-map"></i></div>
+                    <div>
+                        <p class="detail-card__title">Recommended Activities</p>
+                        <p class="detail-card__subtitle">Top things to do in {{ $activityLocation ?: 'your destination' }}</p>
+                    </div>
+                </div>
+                <div class="detail-card__body">
+                    @foreach($activities as $activity)
+                        @php
+                            $activityImage = $activity->imageUrl ?: asset('assets/images/favicon/favicon1.png');
+                            $activityCheckoutUrl = route('activities.checkout', [
+                                'activity' => $activity->dbActivityId ?: $activity->offerId,
+                                'city' => $activitySearchParams['city'] ?? '',
+                                'date' => $activitySearchParams['activity_date'] ?? now()->toDateString(),
+                                'participants' => $activitySearchParams['participants'] ?? 1,
+                            ]);
+                        @endphp
+                        <a href="{{ $activityCheckoutUrl }}" class="activity-card">
+                            <img src="{{ $activityImage }}" alt="{{ $activity->title }}" class="activity-card__image" loading="lazy">
+                            <div class="flex-grow-1">
+                                <h6 class="activity-card__title">{{ $activity->title }}</h6>
+                                <div class="activity-card__meta">
+                                    {{ $activity->city ?: ($activityLocation ?: '-') }}{{ $activity->country ? ', ' . $activity->country : '' }}
+                                </div>
+                                <div>
+                                    @if($activity->category)
+                                        <span class="activity-card__tag">{{ $activity->category }}</span>
+                                    @endif
+                                    @if($activity->duration)
+                                        <span class="activity-card__tag"><i class="bi bi-clock"></i>{{ $activity->duration }}</span>
+                                    @endif
+                                </div>
+                                <div class="activity-card__bottom">
+                                    <div class="activity-card__price">
+                                        from
+                                        <strong>{{ $activity->currency }} {{ number_format((float) $activity->pricePerPerson, 2) }}</strong>
+                                    </div>
+                                    <span class="activity-card__cta">Book Now</span>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+
+                    <a href="{{ $activitySearchUrl }}" class="btn-action btn-action--outline activity-sidebar-btn">
+                        <i class="bi bi-search"></i> Explore More Activities
+                    </a>
+                </div>
+            </div>
+            @endif
 
             <div class="detail-card">
                 <div class="detail-card__header">

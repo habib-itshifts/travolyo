@@ -79,6 +79,93 @@
             font-weight: 700;
             color: #111827;
         }
+
+        .activity-card {
+            display: flex;
+            gap: .65rem;
+            padding: .7rem;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            text-decoration: none;
+            color: inherit;
+            transition: all .2s ease;
+        }
+        .activity-card + .activity-card { margin-top: .7rem; }
+        .activity-card:hover {
+            border-color: #9be7f4;
+            box-shadow: 0 10px 22px rgba(58, 181, 212, .12);
+            transform: translateY(-1px);
+        }
+        .activity-card__image {
+            width: 72px;
+            height: 72px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: #eef2ff;
+        }
+        .activity-card__title {
+            font-size: .82rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+            margin-bottom: .1rem;
+        }
+        .activity-card__meta {
+            font-size: .72rem;
+            color: #6b7280;
+            margin-bottom: .25rem;
+        }
+        .activity-card__tag {
+            display: inline-flex;
+            align-items: center;
+            gap: .25rem;
+            padding: .18rem .45rem;
+            border-radius: 999px;
+            background: #ecfeff;
+            color: #0f766e;
+            font-size: .64rem;
+            font-weight: 600;
+            margin-right: .25rem;
+            margin-bottom: .2rem;
+        }
+        .activity-card__bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: .55rem;
+            margin-top: .25rem;
+        }
+        .activity-card__price {
+            font-size: .66rem;
+            color: #6b7280;
+        }
+        .activity-card__price strong {
+            display: block;
+            color: #17b7cf;
+            font-size: .88rem;
+            line-height: 1.1;
+        }
+        .activity-card__cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+            padding: .38rem .65rem;
+            border-radius: 999px;
+            background: #dff9fd;
+            color: #17b7cf;
+            font-size: .7rem;
+            font-weight: 700;
+        }
+        .activity-sidebar-btn {
+            width: 100%;
+            margin-top: .8rem;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: .55rem .85rem;
+            font-size: .82rem;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +189,10 @@
 <div class="container py-4">
 
     @php
+        $activities = $activities ?? [];
+        $activitySearchParams = $activitySearchParams ?? [];
+        $activitySearchUrl = route('activities.index', $activitySearchParams);
+        $activityLocation = trim((string) ($activitySearchParams['city'] ?? ''));
         $statusSlug = strtolower($bookingData['status'] ?? '');
         $statusOk   = in_array($statusSlug, ['paid', 'completed', 'confirmed'], true);
         $statusFail = in_array($statusSlug, ['cancelled', 'booking_failed'], true);
@@ -241,6 +332,55 @@
 
         {{-- ── Right column: payment summary ─────────────────────── --}}
         <div class="col-lg-4">
+            @if (!empty($activities))
+            <div class="conf-card mb-3">
+                <div class="conf-card__head">Recommended Activities</div>
+                <div class="conf-card__body">
+                    <div class="text-muted small mb-3">Top things to do in {{ $activityLocation ?: 'your destination' }}</div>
+                    @foreach ($activities as $activity)
+                        @php
+                            $activityImage = $activity->imageUrl ?: asset('assets/images/favicon/favicon1.png');
+                            $activityCheckoutUrl = route('activities.checkout', [
+                                'activity' => $activity->slug ?: $activity->dbActivityId ?: $activity->offerId,
+                                'city' => $activitySearchParams['city'] ?? '',
+                                'date' => $activitySearchParams['activity_date'] ?? now()->toDateString(),
+                                'participants' => $activitySearchParams['participants'] ?? 1,
+                            ]);
+                        @endphp
+                        <a href="{{ $activityCheckoutUrl }}" class="activity-card">
+                            <img src="{{ $activityImage }}" alt="{{ $activity->title }}" class="activity-card__image" loading="lazy">
+                            <div class="flex-grow-1">
+                                <div class="activity-card__title">{{ $activity->title }}</div>
+                                <div class="activity-card__meta">
+                                    {{ $activity->city ?: ($activitySearchParams['city'] ?? '-') }}{{ $activity->country ? ', ' . $activity->country : '' }}
+                                </div>
+                                <div>
+                                    @if ($activity->category)
+                                        <span class="activity-card__tag">{{ $activity->category }}</span>
+                                    @endif
+                                    @if ($activity->duration)
+                                        <span class="activity-card__tag"><i class="bi bi-clock"></i>{{ $activity->duration }}</span>
+                                    @endif
+                                </div>
+                                <div class="activity-card__bottom">
+                                    <div class="activity-card__price">
+                                        from
+                                        <strong>{{ $activity->currency }} {{ number_format((float) $activity->pricePerPerson, 2) }}</strong>
+                                    </div>
+                                    <span class="activity-card__cta">Book Now</span>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+
+                    <a href="{{ $activitySearchUrl }}"
+                       class="btn btn-outline-info d-inline-flex align-items-center justify-content-center gap-2 activity-sidebar-btn">
+                        <i class="bi bi-search"></i> Explore More Activities
+                    </a>
+                </div>
+            </div>
+            @endif
+
             <div class="conf-card">
                 <div class="conf-card__head">Payment Summary</div>
                 <div class="conf-card__body">
