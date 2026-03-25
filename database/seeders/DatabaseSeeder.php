@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\Activity\Database\Seeders\ActivitySeeder;
 use Modules\Hotel\Database\Seeders\HotelDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,7 +19,8 @@ class DatabaseSeeder extends Seeder
             // Modules - Hotel
             HotelDatabaseSeeder::class,
 
-          
+            // Modules - Activity
+            ActivitySeeder::class,
 
         ]);
     }
