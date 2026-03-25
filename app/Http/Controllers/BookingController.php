@@ -65,6 +65,7 @@ class BookingController extends Controller
                     'participants' => max(1, (int) ($hotel['adults'] ?? 1) + (int) ($hotel['children'] ?? 0)),
                 ];
 
+                
                 $activities = collect((new SearchActivityAction())->handle(SearchActivityDto::fromArray([
                     'destination' => $activitySearchParams['city'],
                     'activity_date' => $activitySearchParams['activity_date'],
