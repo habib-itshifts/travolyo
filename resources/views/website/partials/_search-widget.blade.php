@@ -44,52 +44,15 @@
         <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET">
             <div class="row g-3">
 
-                {{-- Country Picker (options loaded via AJAX) --}}
-                <div class="col-12 col-md-3">
-                    <label class="form-label text-muted small mb-1">Country</label>
-                    <div class="custom-picker" data-picker data-country-picker data-hidden-id="countryCodeInput"
-                         id="countryPicker"
-                         data-countries-url="{{ route('api.locations.countries') }}"
-                         data-selected-code="{{ $selectedCountryCode }}"
-                         data-selected-name="{{ $selectedCountryName }}">
-                        <div class="input-icon-wrap picker-trigger" role="button" tabindex="0" aria-expanded="false">
-                            <i class="bi bi-globe2 input-icon"></i>
-                            <input type="text" name="country" id="countryDisplayInput"
-                                   class="form-control search-input picker-input"
-                                   placeholder="Select country" autocomplete="off"
-                                   value="{{ $selectedCountryName }}" />
-                        </div>
-                        <div class="picker-menu" id="countryPickerMenu">
-                            <div class="p-2 text-muted small">Loading countries&hellip;</div>
-                        </div>
-                    </div>
-                    <input type="hidden" name="country_code" id="countryCodeInput" value="{{ $selectedCountryCode }}" />
-                </div>
-
-                {{-- City Picker --}}
-                <div class="col-12 col-md-3">
-                    <label class="form-label text-muted small mb-1">City</label>
-                    <div class="custom-picker" data-picker
-                         id="cityPicker"
-                         data-cities-url="{{ url('api/locations/cities') }}"
-                         data-initial-country="{{ $selectedCountryCode }}">
-                        <div class="input-icon-wrap picker-trigger" role="button" tabindex="0" aria-expanded="false">
-                            <i class="bi bi-geo-alt input-icon"></i>
-                            <input type="text" name="city" id="cityDisplayInput"
-                                   class="form-control search-input picker-input"
-                                   placeholder="Select city" autocomplete="off"
-                                   value="{{ request('city', '') }}" />
-                        </div>
-                        <div class="picker-menu" id="cityPickerMenu">
-                            @if($selectedCountryCode)
-                                <div class="p-2 text-muted small">Loading cities&hellip;</div>
-                            @else
-                                <div class="p-2 text-muted small">Select a country first</div>
-                            @endif
-                        </div>
-                    </div>
-                    <input type="hidden" name="location" id="locationInput" value="{{ request('location', '') }}" />
-                </div>
+                @include('website.partials._country-city-picker', [
+                    'prefix' => 'hotel',
+                    'selectedCountryCode' => $selectedCountryCode,
+                    'selectedCountryName' => $selectedCountryName,
+                    'selectedCityName' => request('city', ''),
+                    'selectedCityCode' => request('location', ''),
+                    'countryColumnClass' => 'col-12 col-md-3',
+                    'cityColumnClass' => 'col-12 col-md-3',
+                ])
 
                 {{-- Check In --}}
                 <div class="col-12 col-md-3">
@@ -378,16 +341,17 @@
             {{-- ── Activities Pane ── --}}
             <div data-tab-pane="activities" class="{{ $activeTab !== 'activities' ? 'd-none' : '' }}">
                 <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label text-muted small mb-1">City</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-geo-alt input-icon"></i>
-                            <input type="text" class="form-control search-input" name="city"
-                                   value="{{ request('city', '') }}"
-                                   placeholder="e.g. Dubai" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
+                    @include('website.partials._country-city-picker', [
+                        'prefix' => 'activity',
+                        'selectedCountryCode' => $selectedCountryCode,
+                        'selectedCountryName' => $selectedCountryName,
+                        'selectedCityName' => request('city', ''),
+                        'selectedCityCode' => request('location', ''),
+                        'countryColumnClass' => 'col-12 col-md-3',
+                        'cityColumnClass' => 'col-12 col-md-3',
+                        'disabled' => $activeTab !== 'activities',
+                    ])
+                    <div class="col-12 col-md-3">
                         <label class="form-label text-muted small mb-1">Date</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-calendar3 input-icon"></i>
@@ -396,7 +360,7 @@
                                    {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-3">
                         <label class="form-label text-muted small mb-1">Participants</label>
                         <div class="input-icon-wrap">
                             <i class="bi bi-people input-icon"></i>
@@ -504,25 +468,10 @@
     // Initialise to server-rendered active tab
     setActiveTopTab(activeTabInit);
 
-    // Hotel country/city picker (works on flights page widget too)
+    // Country/city pickers
     (function () {
-        const countryPicker = document.getElementById('countryPicker');
-        const countryMenu = document.getElementById('countryPickerMenu');
-        const countryInput = document.getElementById('countryDisplayInput');
-        const countryCodeInput = document.getElementById('countryCodeInput');
-
-        const cityPicker = document.getElementById('cityPicker');
-        const cityMenu = document.getElementById('cityPickerMenu');
-        const cityInput = document.getElementById('cityDisplayInput');
-        const locationInput = document.getElementById('locationInput');
-
-        if (!countryPicker || !countryMenu || !cityPicker || !cityMenu) return;
-
-        const countriesUrl = countryPicker.dataset.countriesUrl || '';
-        const citiesUrl = cityPicker.dataset.citiesUrl || '';
-        const preselectedCode = countryPicker.dataset.selectedCode || '';
-        const preselectedName = countryPicker.dataset.selectedName || '';
-        const initialCountryForCities = cityPicker.dataset.initialCountry || preselectedCode;
+        const countryPickers = [...document.querySelectorAll('[data-role="country-picker"][data-location-group]')];
+        if (!countryPickers.length) return;
 
         const esc = (value) => String(value ?? '')
             .replaceAll('&', '&amp;')
@@ -531,7 +480,10 @@
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#039;');
 
-        const allPickers = [countryPicker, cityPicker];
+        const allPickers = [...document.querySelectorAll('[data-picker][data-location-group]')];
+        const countryRequestCache = new Map();
+        const cityRequestCache = new Map();
+
         const closePickers = () => {
             allPickers.forEach((picker) => {
                 picker.classList.remove('is-open');
@@ -559,7 +511,10 @@
             });
 
             input.addEventListener('focus', () => openPicker(picker));
-            input.addEventListener('click', (e) => e.stopPropagation());
+            input.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPicker(picker);
+            });
 
             trigger.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -569,102 +524,163 @@
             });
         };
 
-        bindPickerOpen(countryPicker, countryInput);
-        bindPickerOpen(cityPicker, cityInput);
-        document.addEventListener('click', closePickers);
-
-        const renderCountries = (countries) => {
-            if (!countries.length) {
-                countryMenu.innerHTML = '<div class="p-2 text-muted small">No countries available</div>';
-                return;
-            }
-
-            countryMenu.innerHTML = countries.map((country) => `
-                <button type="button" class="picker-option"
-                        data-value="${esc(country.country_name)}"
-                        data-code="${esc(country.country_code)}">
-                    <i class="bi bi-globe2"></i>
-                    <span>${esc(country.country_name)}</span>
-                    <span class="picker-code">${esc(country.country_code)}</span>
-                </button>
-            `).join('');
-
-            if (preselectedCode && !countryInput?.value) {
-                const match = countries.find((country) => country.country_code === preselectedCode);
-                if (match && countryInput) countryInput.value = match.country_name;
-            } else if (!countryInput?.value && preselectedName && countryInput) {
-                countryInput.value = preselectedName;
-            }
-        };
-
-        const renderCities = (cities) => {
-            if (!cities.length) {
-                cityMenu.innerHTML = '<div class="p-2 text-muted small">No cities found</div>';
-                return;
-            }
-
-            cityMenu.innerHTML = cities.map((city) => `
-                <button type="button" class="picker-option"
-                        data-value="${esc(city.city_name)}"
-                        data-code="${esc(city.city_code)}">
-                    <i class="bi bi-geo-alt"></i>
-                    <span>${esc(city.city_name)}</span>
-                    <span class="picker-code">${esc(city.city_code)}</span>
-                </button>
-            `).join('');
-        };
-
-        const fetchCities = (countryCode) => {
-            if (!countryCode || !citiesUrl) {
-                cityMenu.innerHTML = '<div class="p-2 text-muted small">Select a country first</div>';
-                return;
-            }
-
-            cityMenu.innerHTML = '<div class="p-2 text-muted small">Loading cities...</div>';
-
-            const url = citiesUrl.replace(/\/$/, '') + '/' + countryCode;
-
-            fetch(url, {
+        const fetchJson = async (url) => {
+            const response = await fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            })
-                .then((r) => r.json())
-                .then((payload) => renderCities(Array.isArray(payload.data) ? payload.data : []))
-                .catch(() => {
-                    cityMenu.innerHTML = '<div class="p-2 text-muted small text-danger">Failed to load cities</div>';
-                });
-        };
-
-        countryMenu.addEventListener('click', (e) => {
-            const option = e.target.closest('.picker-option');
-            if (!option) return;
-            if (countryInput) countryInput.value = option.dataset.value || '';
-            if (countryCodeInput) countryCodeInput.value = option.dataset.code || '';
-            if (cityInput) cityInput.value = '';
-            if (locationInput) locationInput.value = '';
-            closePickers();
-            fetchCities(option.dataset.code || '');
-        });
-
-        cityMenu.addEventListener('click', (e) => {
-            const option = e.target.closest('.picker-option');
-            if (!option) return;
-            if (cityInput) cityInput.value = option.dataset.value || '';
-            if (locationInput) locationInput.value = option.dataset.code || '';
-            closePickers();
-        });
-
-        fetch(countriesUrl, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-        })
-            .then((r) => r.json())
-            .then((payload) => renderCountries(Array.isArray(payload.data) ? payload.data : []))
-            .catch(() => {
-                countryMenu.innerHTML = '<div class="p-2 text-muted small">Unable to load countries</div>';
             });
 
-        if (initialCountryForCities) {
-            fetchCities(initialCountryForCities);
-        }
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+
+            return response.json();
+        };
+
+        const getCountries = (url) => {
+            if (!countryRequestCache.has(url)) {
+                countryRequestCache.set(url, fetchJson(url).then((payload) => Array.isArray(payload.data) ? payload.data : []));
+            }
+
+            return countryRequestCache.get(url);
+        };
+
+        const getCities = (url, countryCode) => {
+            const cacheKey = `${url}|${countryCode}`;
+            if (!cityRequestCache.has(cacheKey)) {
+                const cityUrl = `${url.replace(/\/$/, '')}/${encodeURIComponent(countryCode)}`;
+                cityRequestCache.set(cacheKey, fetchJson(cityUrl).then((payload) => Array.isArray(payload.data) ? payload.data : []));
+            }
+
+            return cityRequestCache.get(cacheKey);
+        };
+
+        countryPickers.forEach((countryPicker) => {
+            const groupKey = countryPicker.dataset.locationGroup || '';
+            const selector = (role) => `[data-role="${role}"][data-location-group="${groupKey}"]`;
+
+            const countryMenu = document.querySelector(selector('country-menu'));
+            const countryInput = document.querySelector(selector('country-input'));
+            const countryCodeInput = document.querySelector(selector('country-code'));
+            const cityPicker = document.querySelector(selector('city-picker'));
+            const cityMenu = document.querySelector(selector('city-menu'));
+            const cityInput = document.querySelector(selector('city-input'));
+            const locationInput = document.querySelector(selector('city-code'));
+
+            if (!countryPicker || !countryMenu || !countryInput || !countryCodeInput || !cityPicker || !cityMenu || !cityInput || !locationInput) {
+                return;
+            }
+
+            const countriesUrl = countryPicker.dataset.countriesUrl || '';
+            const citiesUrl = cityPicker.dataset.citiesUrl || '';
+            const preselectedCode = countryPicker.dataset.selectedCode || '';
+            const preselectedName = countryPicker.dataset.selectedName || '';
+            const initialCountryForCities = cityPicker.dataset.initialCountry || preselectedCode;
+
+            const renderCountries = (countries) => {
+                if (!countries.length) {
+                    countryMenu.innerHTML = '<div class="p-2 text-muted small">No countries available</div>';
+                    return;
+                }
+
+                countryMenu.innerHTML = countries.map((country) => `
+                    <button type="button" class="picker-option"
+                            data-value="${esc(country.country_name)}"
+                            data-code="${esc(country.country_code)}">
+                        <i class="bi bi-globe2"></i>
+                        <span>${esc(country.country_name)}</span>
+                        <span class="picker-code">${esc(country.country_code)}</span>
+                    </button>
+                `).join('');
+
+                if (preselectedCode && !countryInput.value) {
+                    const match = countries.find((country) => country.country_code === preselectedCode);
+                    if (match) {
+                        countryInput.value = match.country_name;
+                    }
+                } else if (!countryInput.value && preselectedName) {
+                    countryInput.value = preselectedName;
+                }
+            };
+
+            const renderCities = (cities) => {
+                if (!cities.length) {
+                    cityMenu.innerHTML = '<div class="p-2 text-muted small">No cities found</div>';
+                    return;
+                }
+
+                cityMenu.innerHTML = cities.map((city) => `
+                    <button type="button" class="picker-option"
+                            data-value="${esc(city.city_name)}"
+                            data-code="${esc(city.city_code)}">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>${esc(city.city_name)}</span>
+                        <span class="picker-code">${esc(city.city_code)}</span>
+                    </button>
+                `).join('');
+            };
+
+            const fetchCities = (countryCode) => {
+                if (!countryCode || !citiesUrl) {
+                    cityMenu.innerHTML = '<div class="p-2 text-muted small">Select a country first</div>';
+                    return;
+                }
+
+                cityMenu.innerHTML = '<div class="p-2 text-muted small">Loading cities...</div>';
+
+                getCities(citiesUrl, countryCode)
+                    .then((cities) => renderCities(cities))
+                    .catch(() => {
+                        cityMenu.innerHTML = '<div class="p-2 text-muted small text-danger">Failed to load cities</div>';
+                    });
+            };
+
+            bindPickerOpen(countryPicker, countryInput);
+            bindPickerOpen(cityPicker, cityInput);
+
+            countryMenu.addEventListener('click', (e) => {
+                const option = e.target.closest('.picker-option');
+                if (!option) return;
+
+                countryInput.value = option.dataset.value || '';
+                countryCodeInput.value = option.dataset.code || '';
+                cityInput.value = '';
+                locationInput.value = '';
+                cityPicker.dataset.initialCountry = option.dataset.code || '';
+                closePickers();
+                fetchCities(option.dataset.code || '');
+            });
+
+            cityMenu.addEventListener('click', (e) => {
+                const option = e.target.closest('.picker-option');
+                if (!option) return;
+
+                cityInput.value = option.dataset.value || '';
+                locationInput.value = option.dataset.code || '';
+                closePickers();
+            });
+
+            if (countriesUrl) {
+                getCountries(countriesUrl)
+                    .then((countries) => renderCountries(countries))
+                    .catch(() => {
+                        countryMenu.innerHTML = '<div class="p-2 text-muted small">Unable to load countries</div>';
+                    });
+            } else {
+                countryMenu.innerHTML = '<div class="p-2 text-muted small">Unable to load countries</div>';
+            }
+
+            if (initialCountryForCities) {
+                fetchCities(initialCountryForCities);
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-location-group]')) {
+                return;
+            }
+
+            closePickers();
+        });
     })();
 
     // Hotel guests picker (multi-room)
@@ -1024,12 +1040,24 @@
             if (activeTopTab === 'activities') {
                 try {
                     const qs = new URLSearchParams();
+                    const country = String(fd.get('country') || '').trim();
+                    const countryCode = String(fd.get('country_code') || '').trim();
                     const city = String(fd.get('city') || '').trim();
+                    const location = String(fd.get('location') || '').trim();
                     const activityDate = String(fd.get('activity_date') || '').trim();
                     const participants = Math.max(1, parseInt(fd.get('participants') || '1', 10));
 
+                    if (country) {
+                        qs.set('country', country);
+                    }
+                    if (countryCode) {
+                        qs.set('country_code', countryCode);
+                    }
                     if (city) {
                         qs.set('city', city);
+                    }
+                    if (location) {
+                        qs.set('location', location);
                     }
                     if (activityDate) {
                         qs.set('activity_date', activityDate);

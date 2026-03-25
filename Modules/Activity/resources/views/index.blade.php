@@ -25,11 +25,16 @@
             <div class="col-12 col-lg-9">
                 <div class="results-header d-flex justify-content-between align-items-center mb-3">
                     <div>
+                        @php
+                            $searchedLocation = collect([request('city'), request('country')])
+                                ->filter(fn ($value) => filled($value))
+                                ->implode(', ');
+                        @endphp
                         <h5 class="results-header__title mb-0">Available Activities</h5>
                         <p class="text-muted small mb-0">
                             Showing {{ $activities->count() }} {{ \Illuminate\Support\Str::plural('activity', $activities->count()) }}
-                            @if (request('city'))
-                                in <strong>{{ request('city') }}</strong>
+                            @if ($searchedLocation)
+                                in <strong>{{ $searchedLocation }}</strong>
                             @endif
                             @if (request('activity_date'))
                                 for <strong>{{ request('activity_date') }}</strong>
