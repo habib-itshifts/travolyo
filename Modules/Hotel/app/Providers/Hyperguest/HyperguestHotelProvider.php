@@ -290,7 +290,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     private function matchesSearch(array $hotel, SearchHotelDto $dto): bool
     {
-        if (! str_contains(mb_strtolower($hotel['city'] ?? ''), mb_strtolower($dto->city))) {
+        if (! str_contains(mb_strtolower($hotel['city'] ?? ''), mb_strtolower($dto->destination))) {
             return false;
         }
 
