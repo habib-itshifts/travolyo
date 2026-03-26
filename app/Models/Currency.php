@@ -9,25 +9,39 @@ use Illuminate\Support\Facades\Schema;
 class Currency extends Model
 {
     protected $fillable = [
-        'code',
-        'label',
-        'symbol',
-        'flag',
         'name',
-        'is_active',
-        'is_default',
-        'sort_order',
+        'code',
+        'symbol',
+        'format',
+        'exchange_rate',
+        'active',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'is_default' => 'boolean',
-        'sort_order' => 'integer',
+        'active' => 'boolean',
+        'exchange_rate' => 'decimal:8',
     ];
 
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('is_active', true);
+        return $query->where('active', true);
+    }
+
+    /**
+     * Map currency code to country flag code.
+     */
+    private static function flagFromCode(string $code): string
+    {
+        $map = [
+            'USD' => 'us', 'GBP' => 'gb', 'EUR' => 'eu', 'AED' => 'ae',
+            'SAR' => 'sa', 'TRY' => 'tr', 'PKR' => 'pk', 'INR' => 'in',
+            'CAD' => 'ca', 'AUD' => 'au', 'JPY' => 'jp', 'CNY' => 'cn',
+            'CHF' => 'ch', 'SGD' => 'sg', 'MYR' => 'my', 'THB' => 'th',
+            'QAR' => 'qa', 'KWD' => 'kw', 'BHD' => 'bh', 'OMR' => 'om',
+            'EGP' => 'eg', 'JOD' => 'jo', 'MAD' => 'ma', 'NZD' => 'nz',
+        ];
+
+        return $map[strtoupper($code)] ?? strtolower(substr($code, 0, 2));
     }
 
     public static function supported(): array
@@ -38,8 +52,6 @@ class Currency extends Model
 
         $items = static::query()
             ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
             ->orderBy('code')
             ->get();
 
@@ -50,10 +62,10 @@ class Currency extends Model
         return $items->mapWithKeys(function (self $currency) {
             return [
                 strtoupper($currency->code) => [
-                    'label' => $currency->label ?: strtoupper($currency->code),
+                    'label'  => strtoupper($currency->code),
                     'symbol' => $currency->symbol ?: strtoupper($currency->code),
-                    'flag' => strtolower($currency->flag ?: 'us'),
-                    'name' => $currency->name ?: strtoupper($currency->code),
+                    'flag'   => self::flagFromCode($currency->code),
+                    'name'   => $currency->name ?: strtoupper($currency->code),
                 ],
             ];
         })->all();
@@ -67,8 +79,7 @@ class Currency extends Model
 
         $default = static::query()
             ->active()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
+            ->orderBy('code')
             ->value('code');
 
         return strtoupper((string) ($default ?: config('currency.default', 'USD')));

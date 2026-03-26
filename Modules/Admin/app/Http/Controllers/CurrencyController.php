@@ -21,37 +21,20 @@ class CurrencyController extends Controller
                 'size:3',
                 Rule::unique('currencies', 'code')->ignore($currency?->id),
             ],
-            'label' => ['required', 'string', 'max:10'],
-            'symbol' => ['required', 'string', 'max:20'],
-            'flag' => ['required', 'string', 'max:5'],
-            'name' => ['required', 'string', 'max:100'],
-            'is_active' => ['nullable', 'boolean'],
-            'is_default' => ['nullable', 'boolean'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'name'          => ['required', 'string', 'max:100'],
+            'symbol'        => ['required', 'string', 'max:25'],
+            'format'        => ['required', 'string', 'max:50'],
+            'exchange_rate' => ['required', 'numeric', 'min:0'],
+            'active'        => ['nullable', 'boolean'],
         ];
     }
 
     protected function payload(Request $request, array $validated): array
     {
-        $validated['code'] = strtoupper($validated['code']);
-        $validated['label'] = strtoupper($validated['label']);
-        $validated['flag'] = strtolower($validated['flag']);
-        $validated['is_active'] = $request->boolean('is_active');
-        $validated['is_default'] = $request->boolean('is_default');
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
+        $validated['code']   = strtoupper($validated['code']);
+        $validated['active'] = $request->boolean('active');
 
         return $validated;
-    }
-
-    protected function normalizeDefault(Currency $currency): void
-    {
-        if ($currency->is_default) {
-            Currency::query()
-                ->where('id', '!=', $currency->id)
-                ->update(['is_default' => false]);
-        } elseif (!Currency::query()->where('is_default', true)->exists()) {
-            $currency->forceFill(['is_default' => true])->save();
-        }
     }
 
     protected function stats(): array
@@ -59,18 +42,15 @@ class CurrencyController extends Controller
         $currencies = Currency::query()->get();
 
         return [
-            'total' => $currencies->count(),
-            'active' => $currencies->where('is_active', true)->count(),
-            'default' => $currencies->where('is_default', true)->count(),
-            'inactive' => $currencies->where('is_active', false)->count(),
+            'total'    => $currencies->count(),
+            'active'   => $currencies->where('active', true)->count(),
+            'inactive' => $currencies->where('active', false)->count(),
         ];
     }
 
     public function index(): View
     {
         $currencies = Currency::query()
-            ->orderByDesc('is_default')
-            ->orderBy('sort_order')
             ->orderBy('code')
             ->get();
 
@@ -83,13 +63,12 @@ class CurrencyController extends Controller
     {
         $validated = $request->validate($this->rules());
         $currency = Currency::create($this->payload($request, $validated));
-        $this->normalizeDefault($currency);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Currency created successfully.',
-                'item' => $currency->fresh(),
-                'stats' => $this->stats(),
+                'item'    => $currency->fresh(),
+                'stats'   => $this->stats(),
             ]);
         }
 
@@ -100,13 +79,12 @@ class CurrencyController extends Controller
     {
         $validated = $request->validate($this->rules($currency));
         $currency->update($this->payload($request, $validated));
-        $this->normalizeDefault($currency);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Currency updated successfully.',
-                'item' => $currency->fresh(),
-                'stats' => $this->stats(),
+                'item'    => $currency->fresh(),
+                'stats'   => $this->stats(),
             ]);
         }
 
@@ -115,17 +93,12 @@ class CurrencyController extends Controller
 
     public function destroy(Request $request, Currency $currency): JsonResponse|RedirectResponse
     {
-        $wasDefault = $currency->is_default;
         $currency->delete();
-
-        if ($wasDefault) {
-            Currency::query()->orderBy('sort_order')->orderBy('code')->first()?->update(['is_default' => true]);
-        }
 
         if ($request->expectsJson()) {
             return response()->json([
                 'message' => 'Currency deleted successfully.',
-                'stats' => $this->stats(),
+                'stats'   => $this->stats(),
             ]);
         }
 
