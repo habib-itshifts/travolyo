@@ -54,8 +54,8 @@ class SearchHotelAction
     private function resolveProvider(HotelProviderEnum $provider): HotelProviderInterface
     {
         return match ($provider) {
-            HotelProviderEnum::Local       => new LocalHotelProvider(),
-            // HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
+            // HotelProviderEnum::Local       => new LocalHotelProvider(),
+            HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
             // HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }

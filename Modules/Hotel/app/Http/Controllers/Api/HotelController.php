@@ -183,6 +183,7 @@ class HotelController extends Controller
                 'unit_price'  => $room?->basePrice ?? $offer->lowestPrice,
                 'total_price' => $room?->totalPrice ?? $offer->lowestPrice,
                 'currency'    => $offer->currency,
+                'deal_id'     => $room?->dealId,  // track which deal was applied (null = no deal)
             ];
 
             $token = Str::uuid()->toString();

@@ -21,5 +21,7 @@ class HotelRoomOfferDto
         public readonly ?string $viewType  = null,
         public readonly ?string $description = null,
         public readonly array   $images    = [],
+        public readonly ?int    $dealId    = null,  // HotelDeal ID if pricing came from a deal
+        public readonly ?float  $originalPrice = null, // RoomType price before deal (null = no deal applied)
     ) {}
 }

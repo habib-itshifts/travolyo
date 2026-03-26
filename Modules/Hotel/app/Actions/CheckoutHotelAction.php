@@ -143,6 +143,7 @@ class CheckoutHotelAction
                 BookingRoom::create([
                     'booking_id'       => $booking->id,
                     'hotel_room_id'    => $room->id,
+                    'hotel_deal_id'    => $hotel['deal_id'] ?? null, // links to the deal that set the price
                     'check_in'         => $checkIn->toDateString(),
                     'check_out'        => $checkOut->toDateString(),
                     'nights'           => $nights,

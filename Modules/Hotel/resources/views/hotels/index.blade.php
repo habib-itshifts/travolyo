@@ -349,7 +349,8 @@
                             </div>` : ''}
                         </div>
                         <div class="text-end ms-3">
-                            <div class="room-card__price">${r.currency ?? h.currency} ${parseFloat(r.base_price ?? r.total_price ?? 0).toLocaleString()}</div>
+                            ${r.original_price ? `<div style="font-size:.75rem;color:#b91c1c;text-decoration:line-through;">${r.currency ?? h.currency} ${parseFloat(r.original_price).toLocaleString()}</div>` : ''}
+                            <div class="room-card__price">${r.currency ?? h.currency} ${parseFloat(r.base_price ?? r.total_price ?? 0).toLocaleString()}${r.deal_id ? ' <span class="badge bg-success" style="font-size:.65rem;vertical-align:middle;">Deal</span>' : ''}</div>
                             <div style="font-size:.75rem;color:#6c757d;">${r.nights ? r.nights + ' nights total: ' + parseFloat(r.total_price ?? 0).toLocaleString() : 'per night'}</div>
                             <button class="btn btn-primary btn-select-room mt-2 js-select-room"
                                 data-offer-id="${h.id}"
@@ -362,7 +363,8 @@
                                 data-check-in="${params.check_in ?? ''}"
                                 data-check-out="${params.check_out ?? ''}"
                                 data-adults="${params.adults ?? 1}"
-                                data-children="${params.children ?? 0}">
+                                data-children="${params.children ?? 0}"
+                                data-deal-id="${r.deal_id ?? ''}">
                                 Select Room
                             </button>
                         </div>

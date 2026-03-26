@@ -60,8 +60,11 @@ class LocalHotelProvider implements HotelProviderInterface
 
         $hotels = $query->get();
 
+        // Pass check-in/check-out so the mapper can look up deal pricing
         return $hotels
-            ->map(fn (Hotel $h) => $this->mapper->toOfferDto($h, $nights, $dto->currency, $dto->adults))
+            ->map(fn (Hotel $h) => $this->mapper->toOfferDto(
+                $h, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
+            ))
             ->all();
     }
 
@@ -91,7 +94,10 @@ class LocalHotelProvider implements HotelProviderInterface
 
         $room->loadMissing(['hotel.amenities', 'hotel.services', 'hotel.rooms.roomType']);
 
-        return $this->mapper->toOfferDto($room->hotel, $nights, $dto->currency, $dto->adults);
+        // Pass check-in/check-out so the mapper can apply deal pricing
+        return $this->mapper->toOfferDto(
+            $room->hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
+        );
     }
 
     public function getOrder(string $orderId): HotelOrderDto

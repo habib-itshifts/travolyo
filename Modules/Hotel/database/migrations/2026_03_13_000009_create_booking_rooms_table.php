@@ -30,6 +30,9 @@ return new class extends Migration
             $table->json('extra_services')->nullable();              // add-ons chosen at checkout
             $table->text('special_requests')->nullable();
 
+            // Deal reference — which deal was applied at booking time (null = standard room-type price)
+            $table->foreignId('hotel_deal_id')->nullable()->constrained('hotel_deals')->nullOnDelete();
+
             // Status
             $table->string('status', 30)->default('pending');       // pending|confirmed|checked_in|checked_out|cancelled
 
