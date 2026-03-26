@@ -15,6 +15,7 @@ class HotelRoomOfferDto
         public readonly float   $totalPrice,       // for the full stay
         public readonly int     $nights,
         public readonly string  $currency,
+        public readonly string  $displayCurrency,
         public readonly bool    $isAvailable,
         public readonly array   $amenityNames,     // ["AC", "TV", "Safe", ...]
         public readonly ?float  $sizeSqm   = null,

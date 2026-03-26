@@ -13,9 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        // GLOBAL — runs on EVERY request
-        // web browser + mobile app + all nwidart modules
-        $middleware->append([
+        // WEB — runs on web requests (session available)
+        $middleware->web(append: [
             \Torann\Currency\Middleware\CurrencyMiddleware::class,
             \App\Http\Middleware\SetLocale::class,
         ]);

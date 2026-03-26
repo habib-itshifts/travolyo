@@ -36,6 +36,7 @@ class SearchHotelAction
                     priceMax:   $dto->priceMax,
                     amenityIds: $dto->amenityIds,
                     currency:   $dto->currency,
+                    displayCurrency:   $dto->displayCurrency,
                     sortBy:     $dto->sortBy,
                     perPage:    $dto->perPage,
                     provider:   $providerEnum,
@@ -55,8 +56,8 @@ class SearchHotelAction
     {
         return match ($provider) {
             HotelProviderEnum::Local       => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
-            HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
+            // HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
+            // HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }
 }

@@ -423,12 +423,13 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                 },
                 body: JSON.stringify({
-                    city:       params.city,
-                    check_in:   params.check_in,
-                    check_out:  params.check_out,
-                    adults:     parseInt(params.adults ?? 1, 10),
-                    children:   parseInt(params.children ?? 0, 10),
-                    page:       page,
+                    city:             params.city,
+                    check_in:         params.check_in,
+                    check_out:        params.check_out,
+                    adults:           parseInt(params.adults ?? 1, 10),
+                    children:         parseInt(params.children ?? 0, 10),
+                    page:             page,
+                    display_currency: document.querySelector('meta[name="display-currency"]')?.content ?? 'USD',
                 }),
             });
 
@@ -651,7 +652,8 @@
             check_out:  btn.dataset.checkOut,
             adults:     parseInt(btn.dataset.adults ?? 1, 10),
             children:   parseInt(btn.dataset.children ?? 0, 10),
-            currency:   'USD',
+            currency:         'USD',
+            display_currency: document.querySelector('meta[name="display-currency"]')?.content ?? 'USD',
         };
 
         try {

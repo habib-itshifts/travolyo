@@ -530,7 +530,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold" style="font-size:13px;">Currency</label>
                         <select name="currency" class="form-select form-select-sm @error('currency') is-invalid @enderror">
-                            @foreach (config('currency.supported') as $code => $cur)
+                            @foreach (\App\Models\Currency::supported() as $code => $cur)
                                 <option value="{{ $code }}" {{ old('currency', $hotel->currency ?? config('currency.default')) === $code ? 'selected' : '' }}>{{ $code }} - {{ $cur['name'] }}</option>
                             @endforeach
                         </select>

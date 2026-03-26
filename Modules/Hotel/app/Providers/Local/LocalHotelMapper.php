@@ -22,9 +22,10 @@ class LocalHotelMapper
         Hotel  $hotel,
         int    $nights,
         string $currency,
-        int    $adults   = 1,
-        string $checkIn  = '',
-        string $checkOut = '',
+        int    $adults           = 1,
+        string $checkIn          = '',
+        string $checkOut         = '',
+        string $displayCurrency,
     ): HotelOfferDto {
         $images = collect([$hotel->featured_image_url, $hotel->banner_image_url])
             ->merge($hotel->gallery_urls ?? [])
@@ -36,7 +37,7 @@ class LocalHotelMapper
         // Build room offer DTOs — each room checks for an applicable deal first
         $rooms = $hotel->rooms
             ->filter(fn (HotelRoom $r) => $r->is_active)
-            ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $currency, $adults, $checkIn, $checkOut))
+            ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $currency, $adults, $checkIn, $checkOut, $displayCurrency))
             ->values()
             ->all();
 
@@ -44,6 +45,9 @@ class LocalHotelMapper
             ->pluck('basePrice')
             ->filter(fn ($price) => (float) $price > 0)
             ->min() ?? (float) ($hotel->sale_price ?: $hotel->base_price ?: 0);
+        
+        // lowestPrice already comes from room DTOs which are converted to displayCurrency
+        $convertedLowestPrice = $lowestPrice;
 
         return new HotelOfferDto(
             offerId:          (string) $hotel->id,
@@ -62,8 +66,9 @@ class LocalHotelMapper
             images:           $images,
             amenityNames:     $hotel->amenities->pluck('name')->all(),
             serviceNames:     $hotel->services->pluck('name')->all(),
-            lowestPrice:      (float) $lowestPrice,
-            currency:         $currency,
+            lowestPrice:      (float)  $convertedLowestPrice,
+            currency:         $hotel->currency ?? $currency,
+            displayCurrency:  $displayCurrency,
             rooms:            $rooms,
             dbHotelId:        $hotel->id,
             slug:             $hotel->slug,
@@ -82,9 +87,10 @@ class LocalHotelMapper
         HotelRoom $room,
         int       $nights,
         string    $currency,
-        int       $adults   = 1,
-        string    $checkIn  = '',
-        string    $checkOut = '',
+        int       $adults           = 1,
+        string    $checkIn          = '',
+        string    $checkOut         = '',
+        string    $displayCurrency  = 'USD',
     ): HotelRoomOfferDto {
         $images = collect([$room->image_url])
             ->merge($room->gallery_urls)
@@ -140,6 +146,17 @@ class LocalHotelMapper
             $basePrice = (float) ($room->hotel?->sale_price ?: $room->hotel?->base_price ?: 0);
         }
 
+        // Convert prices from hotel currency to display currency
+        $convertedBase     = $basePrice;
+        $convertedOriginal = $originalPrice;
+
+        if ($currency !== $displayCurrency) {
+            $convertedBase = (float) currency()->convert($basePrice, $currency, $displayCurrency, false);
+            if ($originalPrice !== null) {
+                $convertedOriginal = (float) currency()->convert($originalPrice, $currency, $displayCurrency, false);
+            }
+        }
+
         return new HotelRoomOfferDto(
             roomId:           (string) $room->id,
             name:             $room->display_name,
@@ -147,10 +164,11 @@ class LocalHotelMapper
             bedConfiguration: (array) ($roomType?->bed_configuration ?? []),
             maxAdults:        (int) ($roomType?->max_adults ?? 2),
             maxChildren:      (int) ($roomType?->max_children ?? 0),
-            basePrice:        $basePrice,
-            totalPrice:       (float) ($basePrice * $nights),
+            basePrice:        $convertedBase,
+            totalPrice:       (float) ($convertedBase * $nights),
             nights:           $nights,
             currency:         $currency,
+            displayCurrency:  $displayCurrency,
             isAvailable:      $room->is_active,
             amenityNames:     $amenityNames,
             sizeSqm:          $roomType?->size_sqm ? (float) $roomType->size_sqm : null,
@@ -158,7 +176,7 @@ class LocalHotelMapper
             description:      $roomType?->description,
             images:           $images,
             dealId:           $dealId,
-            originalPrice:    $originalPrice,
+            originalPrice:    $convertedOriginal,
         );
     }
 

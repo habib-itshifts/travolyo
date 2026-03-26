@@ -11,18 +11,25 @@ class TestController extends Controller
      */
     public function index()
     {
+        dd( currency()->getUserCurrency());
+        return response()->json([
+    'formatted' => currency(100, 'USD', 'GBP'),           // "£79.00"
+    'raw'       => currency()->convert(100, 'USD', 'GBP'), // 79.0
+]);
+
+        
         return response()->json([
             // current active currency
             'current_currency'  => currency()->getCurrency(),
 
-            // // convert a price — 100 USD to current currency
-            // 'converted_price'   => currency(100),
+            // convert a price — 100 USD to current currency
+            'converted_price'   => currency(100),
 
-            // // raw currency config/details
-            // 'currency_details'  => currency()->getCurrency(),
+            // raw currency config/details
+            'currency_details'  => currency()->getCurrency(),
 
-            // // what currency driver is using
-            // 'driver'            => config('currency.driver'),
+            // what currency driver is using
+            'driver'            => config('currency.driver'),
         ]);
     }
 

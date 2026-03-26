@@ -10,64 +10,54 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('currencies', function (Blueprint $table) {
-            $table->id();
-            $table->string('code', 3)->unique();
-            $table->string('label', 10);
-            $table->string('symbol', 20);
-            $table->string('flag', 5)->default('us');
-            $table->string('name', 100);
-            $table->boolean('is_active')->default(true);
-            $table->boolean('is_default')->default(false);
-            $table->unsignedInteger('sort_order')->default(0);
+            $table->increments('id');
+            $table->string('name');
+            $table->string('code', 10)->index();
+            $table->string('symbol', 25);
+            $table->string('format', 50);
+            $table->string('exchange_rate');
+            $table->boolean('active')->default(false);
             $table->timestamps();
         });
 
         DB::table('currencies')->insert([
             [
-                'code' => 'USD',
-                'label' => 'USD',
-                'symbol' => '$',
-                'flag' => 'us',
                 'name' => 'US Dollar',
-                'is_active' => true,
-                'is_default' => true,
-                'sort_order' => 0,
+                'code' => 'USD',
+                'symbol' => '$',
+                'format' => '$1,0.00',
+                'exchange_rate' => '1.00000000',
+                'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'code' => 'GBP',
-                'label' => 'GBP',
-                'symbol' => 'GBP',
-                'flag' => 'gb',
                 'name' => 'British Pound',
-                'is_active' => true,
-                'is_default' => false,
-                'sort_order' => 1,
+                'code' => 'GBP',
+                'symbol' => '£',
+                'format' => '£1,0.00',
+                'exchange_rate' => '0.79000000',
+                'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'code' => 'EUR',
-                'label' => 'EUR',
-                'symbol' => 'EUR',
-                'flag' => 'eu',
                 'name' => 'Euro',
-                'is_active' => true,
-                'is_default' => false,
-                'sort_order' => 2,
+                'code' => 'EUR',
+                'symbol' => '€',
+                'format' => '1.0,00€',
+                'exchange_rate' => '0.92000000',
+                'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'code' => 'AED',
-                'label' => 'AED',
-                'symbol' => 'AED',
-                'flag' => 'ae',
                 'name' => 'UAE Dirham',
-                'is_active' => true,
-                'is_default' => false,
-                'sort_order' => 3,
+                'code' => 'AED',
+                'symbol' => 'د.إ',
+                'format' => '1,0.00 د.إ',
+                'exchange_rate' => '3.67000000',
+                'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

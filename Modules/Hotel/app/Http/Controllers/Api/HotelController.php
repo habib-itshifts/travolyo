@@ -33,6 +33,7 @@ class HotelController extends Controller
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
 
+
             $perPage = $dto->perPage;
             $page    = $dto->page;
 
@@ -41,8 +42,9 @@ class HotelController extends Controller
                 $dto->destination, $dto->checkIn, $dto->checkOut,
                 $dto->adults, $dto->children, $dto->rooms,
                 $dto->starRating, $dto->priceMin, $dto->priceMax,
-                $dto->amenityIds, $dto->currency, $dto->sortBy,
+                $dto->amenityIds, $dto->currency,$dto->displayCurrency, $dto->sortBy,
             ]));
+
 
             // On page 1 always do a fresh search; cache results for subsequent pages
             if ($page === 1) {

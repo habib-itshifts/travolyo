@@ -60,10 +60,11 @@ class LocalHotelProvider implements HotelProviderInterface
 
         $hotels = $query->get();
 
+
         // Pass check-in/check-out so the mapper can look up deal pricing
         return $hotels
             ->map(fn (Hotel $h) => $this->mapper->toOfferDto(
-                $h, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
+                $h, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut, $dto->displayCurrency
             ))
             ->all();
     }
@@ -96,7 +97,7 @@ class LocalHotelProvider implements HotelProviderInterface
 
         // Pass check-in/check-out so the mapper can apply deal pricing
         return $this->mapper->toOfferDto(
-            $room->hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
+            $room->hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut, $dto->displayCurrency
         );
     }
 
