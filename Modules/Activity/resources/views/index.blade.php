@@ -3,17 +3,7 @@
 @section('title', 'Activities')
 
 @section('content')
-<section class="hero-section hero-section--compact d-flex align-items-center">
-    <div class="container text-center text-white">
-        <h1 class="hero-title fw-bold mb-2">Find Amazing Activities</h1>
-        <p class="hero-subtitle mb-4">
-            Search city-wise activities and experiences<br class="d-none d-md-block">
-            for your selected date
-        </p>
-
-        @include('website.partials._search-widget', ['activeTab' => 'activities'])
-    </div>
-</section>
+@include('website.partials._search-section', ['activeTab' => 'activities'])
 
 <section class="section-padding bg-light-gray">
     <div class="container">

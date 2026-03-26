@@ -1,427 +1,1483 @@
 @php
-    $activeTab           = $activeTab ?? 'hotels';
-    $selectedCountryCode = request('country_code', '');
-    $selectedCountryName = request('country', '');
+    $activeTab = $activeTab
+        ?? (request()->routeIs('flights.*')
+            ? 'flights'
+            : (request()->routeIs('activities.*')
+                ? 'activities'
+                : 'hotels'));
+    $widgetVariant = $widgetVariant ?? 'inline';
+    $isHeroWidget = $widgetVariant === 'hero';
+    $defaultSearchCity = 'Dubai';
     $defaultHotelCheckIn = $defaultHotelCheckIn ?? now()->addDays(4)->format('Y-m-d');
     $defaultHotelCheckOut = $defaultHotelCheckOut ?? now()->addDays(8)->format('Y-m-d');
+    $hotelDestinationValue = request('city', request('destination', $defaultSearchCity));
+    $activityCityValue = request('city', $defaultSearchCity);
+    $initialHotelAdults = max(1, (int) request('adults', 1));
+    $initialHotelChildren = max(0, (int) request('children', 0));
+    $initialHotelUnits = max(1, (int) request('unit', request('rooms', 1)));
 @endphp
 
-<div class="search-widget bg-white rounded-4 shadow-lg p-4 text-start">
+@push('styles')
+<style>
 
-    {{-- ── Category Tabs ── --}}
-    <ul class="nav search-tabs mb-4 gap-1" id="searchTabs">
-        <li class="nav-item">
-            <button type="button" class="search-tab-btn {{ $activeTab === 'hotels' ? 'active' : '' }}" data-tab="hotels">
-                <i class="bi bi-building me-2"></i>Hotels
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="search-tab-btn {{ $activeTab === 'flights' ? 'active' : '' }}" data-tab="flights">
-                <i class="bi bi-airplane me-2"></i>Flights
-            </button>
-        </li>
-        <!-- <li class="nav-item">
-            <button type="button" class="search-tab-btn {{ in_array($activeTab, ['home']) ? 'active' : '' }}" data-tab="home">
-                <i class="bi bi-house me-2"></i>Home &amp; Apts
-            </button>
-        </li>
-        <li class="nav-item">
-            <button type="button" class="search-tab-btn {{ $activeTab === 'events' ? 'active' : '' }}" data-tab="events">
-                <i class="bi bi-calendar-event me-2"></i>Events
-            </button>
-        </li> -->
-        <li class="nav-item">
-            <button type="button" class="search-tab-btn {{ $activeTab === 'activities' ? 'active' : '' }}" data-tab="activities">
-                <i class="bi bi-compass me-2"></i>Activities
-            </button>
-        </li>
-    </ul>
+.trav-search-widget { 
+    position: relative; 
+    z-index: 3; 
+}
 
-    {{-- ════════════════════════════════════════════
-         HOTELS FORM
-    ════════════════════════════════════════════ --}}
-    <div id="sw-hotels-form" class="{{ $activeTab !== 'hotels' ? 'd-none' : '' }}">
-        <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET">
-            <div class="row g-3">
+.trav-search-widget--hero { 
+    margin: 0 auto; 
+    max-width: 990px; 
+}
 
-                @include('website.partials._country-city-picker', [
-                    'prefix' => 'hotel',
-                    'selectedCountryCode' => $selectedCountryCode,
-                    'selectedCountryName' => $selectedCountryName,
-                    'selectedCityName' => request('city', ''),
-                    'selectedCityCode' => request('location', ''),
-                    'countryColumnClass' => 'col-12 col-md-3',
-                    'cityColumnClass' => 'col-12 col-md-3',
-                ])
+.trav-search-widget__shell { 
+    border-radius: 34px; 
+    overflow: visible; 
+}
 
-                {{-- Check In --}}
-                <div class="col-12 col-md-3">
-                    <label class="form-label text-muted small mb-1">Check In</label>
-                    <div class="input-icon-wrap">
-                        <i class="bi bi-calendar3 input-icon"></i>
-                        <input type="date" name="check_in" class="form-control search-input"
-                               value="{{ request('check_in', $defaultHotelCheckIn) }}" />
-                    </div>
-                </div>
+.trav-search-widget__nav { 
+    position: relative; 
+    z-index: 10; 
+}
 
-                {{-- Check Out --}}
-                <div class="col-12 col-md-3">
-                    <label class="form-label text-muted small mb-1">Check Out</label>
-                    <div class="input-icon-wrap">
-                        <i class="bi bi-calendar3 input-icon"></i>
-                        <input type="date" name="check_out" class="form-control search-input"
-                               value="{{ request('check_out', $defaultHotelCheckOut) }}" />
-                    </div>
-                </div>
+.trav-search-widget--hero .trav-search-widget__shell {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+    padding: 0;
+    position: relative;
+}
 
-                {{-- Guests --}}
-                <div class="col-12 col-md-4">
-                    <label class="form-label text-muted small mb-1">Guests</label>
-                    <div class="guests-picker" id="guestsPicker">
-                        <div class="input-icon-wrap guests-trigger" role="button" tabindex="0" aria-expanded="false">
-                            <i class="bi bi-people-fill input-icon"></i>
-                            <input id="guestsSummary" type="text" class="form-control search-input guests-summary-input"
-                                   value="1 Unit - 1 Adult - 0 Children" readonly />
-                        </div>
-                        <div class="guests-menu" id="guestsMenu">
-                            <div id="roomsContainer"></div>
-                            <button type="button" class="btn-add-room" id="addRoomBtn" style="display:none;">+ Add Room</button>
-                        </div>
-                    </div>
-                    <div id="guestsHiddenFields"></div>
-                </div>
+.trav-search-widget--hero .trav-search-widget__shell::before { 
+    display: none; 
+}
 
-            </div>
-            <div class="text-center mt-4">
-                <button type="submit" class="btn btn-search px-5 py-2">
-                    <i class="bi bi-search me-2"></i>Search Hotels
+.trav-search-widget--inline .trav-search-widget__shell {
+    background: #ffffff;
+    border: 1px solid #d8e7f1;
+    box-shadow: 0 18px 44px rgba(18, 38, 63, 0.08);
+    padding: 18px;
+}
+
+.trav-search-widget__topbar { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    margin-bottom: 18px; 
+}
+
+/* ========== NAV DESIGN - LESS BLUR (Background image clear dikhegi) ========== */
+.trav-search-widget--hero .trav-search-widget__nav {
+    margin: 0 auto;
+    width: calc(100% - 48px);
+    max-width: 870px;
+    padding: 16px 20px 0;
+    position: relative;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-bottom: none;
+    border-radius: 28px 28px 0 0;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 6px 20px rgba(27, 73, 99, 0.06);
+}
+
+.trav-search-widget--hero .trav-search-widget__nav::before {
+    display: none;
+}
+
+.trav-search-widget--hero .trav-search-widget__nav::after {
+    display: none;
+}
+
+.trav-search-widget--hero .trav-search-widget__nav.has-subtabs {
+    border-radius: 28px 28px 0 0;
+    padding-bottom: 4px;
+}
+
+.trav-search-widget--hero .trav-search-widget__topbar {
+    align-items: center;
+    gap: 12px;
+    justify-content: flex-start;
+    margin: 0;
+    min-height: 44px;
+    padding: 0;
+    position: relative;
+    z-index: 3;
+}
+
+/* ========== FORM DESIGN - LESS BLUR (Background image clear dikhegi) ========== */
+.trav-search-widget--hero #sw-hotels-form,
+.trav-search-widget--hero #sw-flights-form-container {
+    margin-top: -4px;
+    position: relative;
+    z-index: 5;
+}
+
+.trav-search-widget--hero .trav-search-form {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 10px 30px rgba(27, 73, 99, 0.10);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 24px 20px 20px;
+    margin-top: 0;
+    position: relative;
+    border-radius: 20px;
+}
+
+.trav-search-widget--hero .trav-search-form::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: transparent;
+    border-radius: 28px 28px 0 0;
+    pointer-events: none;
+}
+
+/* ========== TAB STYLING ========== */
+.trav-search-tab {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(144, 184, 208, 0.4);
+    border-radius: 999px;
+    color: #1e4a6e;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.95rem;
+    font-weight: 700;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 18px;
+    transition: all 0.18s ease;
+}
+
+.trav-search-widget--inline .trav-search-tab { 
+    background: #f6fbff; 
+    min-height: 44px; 
+}
+
+.trav-search-widget--hero .trav-search-tab {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(144, 184, 208, 0.4);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    font-size: 0.78rem;
+    font-weight: 700;
+    min-height: 38px;
+    padding: 0 16px;
+}
+
+.trav-search-widget--hero .trav-search-tab i { 
+    font-size: .74rem; 
+}
+
+.trav-search-tab:hover { 
+    border-color: rgba(23, 195, 206, 0.7); 
+    color: #0b7da7; 
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+.trav-search-tab.active {
+    background: linear-gradient(135deg, #0f88ca 0%, #19cfe3 100%);
+    box-shadow: 0 6px 14px rgba(12, 125, 167, 0.25);
+    color: #ffffff;
+    border-color: transparent;
+}
+
+.trav-search-tab--placeholder { 
+    color: #6f8ba1; 
+    cursor: default; 
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.trav-search-tab--placeholder:hover { 
+    border-color: rgba(144, 184, 208, 0.4); 
+    transform: none; 
+    color: #6f8ba1;
+    background: rgba(255, 255, 255, 0.75);
+}
+
+/* ========== FORM GRID ========== */
+.trav-search-form { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 18px; 
+}
+
+.trav-search-grid { 
+    display: grid; 
+    gap: 14px; 
+    grid-template-columns: repeat(12, minmax(0, 1fr)); 
+}
+
+.trav-search-widget--hero .trav-search-grid { 
+    gap: 12px; 
+}
+
+.trav-field { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+}
+
+.trav-search-widget--hero .trav-field { 
+    gap: 0; 
+}
+
+.trav-field--wide { 
+    grid-column: span 12; 
+}
+
+.trav-field--third { 
+    grid-column: span 4; 
+}
+
+.trav-field--half { 
+    grid-column: span 6; 
+}
+
+.trav-field__label {
+    color: #1e4a6e;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    margin: 0;
+    padding-left: 8px;
+    text-transform: uppercase;
+}
+
+.trav-field__surface {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(16, 109, 160, 0.2);
+    border-radius: 24px;
+    min-height: 74px;
+    padding: 10px 14px;
+    transition: all 0.2s ease;
+}
+
+.trav-field__surface:hover {
+    border-color: rgba(23, 195, 206, 0.5);
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.trav-search-widget--inline .trav-field__surface { 
+    background: #f9fcfe; 
+}
+
+.trav-search-widget--hero .trav-field__label { 
+    display: none; 
+}
+
+.trav-search-widget--hero .trav-field__surface {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(186, 210, 224, 0.6);
+    border-radius: 12px;
+    min-height: 54px;
+    padding: 3px 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.trav-search-widget--hero .trav-field__surface--date {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 4px;
+    padding-top: 6px;
+}
+
+.trav-search-widget--hero .trav-field__surface--date .input-icon-wrap { 
+    width: 100%; 
+}
+
+.trav-search-widget--hero .trav-field--wide .trav-field__surface { 
+    min-height: 54px; 
+}
+
+.trav-search-widget--hero .trav-field--third .trav-field__surface { 
+    min-height: 68px; 
+}
+
+.trav-field__surface .search-input,
+.trav-field__surface .form-select {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 0;
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    color: #11314d;
+    font-size: 1rem;
+    font-weight: 600;
+    height: 52px;
+    padding-left: 44px;
+    width: 100%;
+}
+
+.trav-field__surface .search-input::placeholder { 
+    color: #89a4ba; 
+    font-weight: 500; 
+}
+
+.trav-field__surface .search-input:focus,
+.trav-field__surface .form-select:focus {
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+}
+
+.trav-search-widget--hero .trav-field__surface--date .search-input { 
+    height: 36px; 
+}
+
+.trav-search-widget--hero .trav-field__surface .search-input,
+.trav-search-widget--hero .trav-field__surface .form-select {
+    font-size: 0.9rem;
+    font-weight: 700;
+    height: 44px;
+    padding-left: 38px;
+}
+
+.trav-search-widget--hero .trav-field__surface .search-input::placeholder {
+    color: #6f8fa8;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.trav-search-widget--hero .trav-field__surface .input-icon {
+    font-size: 1rem;
+    left: 14px;
+    color: #0f88ca;
+}
+
+.input-icon-wrap { 
+    position: relative; 
+}
+
+.trav-field__helper { 
+    color: #4a6f8a; 
+    font-size: 0.84rem; 
+    margin-top: -4px; 
+    padding-left: 8px; 
+}
+
+.trav-search-widget--hero .trav-field__helper {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1;
+    min-height: 12px;
+    padding-left: 38px;
+    text-align: left;
+    width: 100%;
+}
+
+/* ========== FLIGHT SUBTABS ========== */
+.trav-flight-subtabs { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 12px; 
+    margin-bottom: 4px; 
+}
+
+.trip-type-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(14, 124, 167, 0.3);
+    border-radius: 999px;
+    color: #2c5a7a;
+    font-size: 0.86rem;
+    font-weight: 700;
+    min-height: 40px;
+    padding: 0 18px;
+    transition: all 0.18s ease;
+    cursor: pointer;
+}
+
+.trip-type-btn.active, .trip-type-btn:hover {
+    background: rgba(23, 195, 206, 0.25);
+    border-color: rgba(23, 195, 206, 0.7);
+    color: #0f88ca;
+}
+
+.trav-search-widget__subtabs {
+    align-items: center;
+    display: flex;
+    justify-content: flex-start;
+    margin: 0;
+    position: relative;
+    width: 100%;
+    z-index: 3;
+}
+
+.trav-search-widget--hero .trav-search-widget__subtabs {
+    background: transparent;
+    padding: 8px 0 4px 12px;
+}
+
+.trav-search-widget--hero .trav-flight-subtabs {
+    gap: 10px;
+    justify-content: flex-start;
+    margin: 0;
+}
+
+.trav-search-widget--hero .trip-type-btn {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(154, 191, 210, 0.6);
+    color: #2c5a7a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    min-height: 36px;
+    padding: 0 18px;
+}
+
+.trav-search-widget--hero .trip-type-btn.active,
+.trav-search-widget--hero .trip-type-btn:hover {
+    background: linear-gradient(135deg, #14cfe4 0%, #0b7ec8 100%);
+    border-color: transparent;
+    color: #ffffff;
+}
+
+/* ========== FLIGHT GRID ADJUSTMENTS ========== */
+.trav-search-widget--hero [data-tab-pane="flights"] .trav-search-grid { 
+    gap: 12px; 
+}
+
+.trav-search-widget--hero [data-tab-pane="flights"] .trav-field--third,
+.trav-search-widget--hero [data-tab-pane="flights"] .trav-field--half { 
+    grid-column: span 6; 
+}
+
+.trav-search-widget--hero [data-tab-pane="flights"] .trav-field__surface { 
+    min-height: 58px; 
+}
+
+.trav-search-widget--hero [data-tab-pane="flights"] .trav-field__surface .search-input,
+.trav-search-widget--hero [data-tab-pane="flights"] .trav-field__surface .form-select { 
+    font-size: 0.9rem; 
+    height: 48px; 
+}
+
+/* ========== UPSELL SECTION ========== */
+.trav-flight-upsell {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    margin-top: 6px;
+}
+
+.trav-search-widget--hero .trav-flight-upsell { 
+    margin-top: 8px; 
+}
+
+.trav-flight-upsell__label {
+    align-items: center;
+    color: #1e4a6e;
+    display: inline-flex;
+    font-size: 0.74rem;
+    font-weight: 600;
+    gap: 8px;
+}
+
+.trav-flight-upsell__badge {
+    background: linear-gradient(135deg, #ff7247 0%, #ff4a43 100%);
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    padding: 6px 12px;
+}
+
+/* ========== FORM META ========== */
+.trav-search-form__meta {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    justify-content: space-between;
+}
+
+.trav-search-widget--hero .trav-search-form__meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.trav-search-badges { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 12px; 
+}
+
+.trav-search-widget--hero .trav-search-badges { 
+    gap: 10px 18px; 
+}
+
+.trav-search-badge {
+    align-items: center;
+    color: #1e4a6e;
+    display: inline-flex;
+    font-size: 0.9rem;
+    font-weight: 600;
+    gap: 8px;
+}
+
+.trav-search-widget--hero .trav-search-badge { 
+    font-size: 0.74rem; 
+    gap: 8px; 
+    cursor: pointer; 
+}
+
+.trav-search-check {
+    appearance: none;
+    background: #ffffff;
+    border: 1.8px solid #54c7ea;
+    border-radius: 4px;
+    display: inline-block;
+    height: 16px;
+    margin: 0;
+    position: relative;
+    width: 16px;
+}
+
+.trav-search-check[disabled] { 
+    cursor: default; 
+    opacity: 1; 
+}
+
+.trav-search-check:checked { 
+    background: #1bcbea; 
+    border-color: #1bcbea; 
+}
+
+.trav-search-check:checked::after {
+    border-bottom: 2px solid #ffffff;
+    border-right: 2px solid #ffffff;
+    content: "";
+    height: 8px;
+    left: 4px;
+    position: absolute;
+    top: 1px;
+    transform: rotate(45deg);
+    width: 4px;
+}
+
+.trav-search-link {
+    background: transparent;
+    border: 0;
+    color: #0f88ca;
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 0;
+    cursor: pointer;
+}
+
+.trav-search-widget--hero .trav-search-link { 
+    font-size: 0.84rem; 
+}
+
+.trav-search-link:hover { 
+    color: #0d6f98; 
+}
+
+.trav-search-form__actions { 
+    display: flex; 
+    justify-content: center; 
+}
+
+.trav-search-widget--hero .trav-search-form__actions { 
+    margin-top: 6px; 
+}
+
+.btn-search {
+    background: linear-gradient(135deg, #1ed4ea 0%, #0a81c8 100%);
+    border: 0;
+    border-radius: 999px;
+    box-shadow: 0 12px 28px rgba(10, 129, 200, 0.3);
+    color: #ffffff;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    min-height: 54px;
+    min-width: min(100%, 360px);
+    padding: 0 46px;
+    text-transform: uppercase;
+    transition: all 0.18s ease;
+    cursor: pointer;
+}
+
+.trav-search-widget--hero .btn-search {
+    box-shadow: 0 8px 18px rgba(10, 129, 200, 0.28);
+    font-size: 0.84rem;
+    min-height: 38px;
+    min-width: min(100%, 190px);
+    padding: 0 28px;
+}
+
+.btn-search:hover {
+    background: linear-gradient(135deg, #10c8e0 0%, #0976b8 100%);
+    box-shadow: 0 14px 28px rgba(10, 129, 200, 0.38);
+    transform: translateY(-2px);
+}
+
+/* ========== GUESTS PICKER ========== */
+.guests-picker, .flight-passenger-picker, .flight-airport-field { 
+    position: relative; 
+}
+
+.guests-trigger, .flight-passenger-trigger { 
+    cursor: pointer; 
+}
+
+.guests-summary-input, .flight-passenger-summary { 
+    cursor: pointer; 
+}
+
+.guests-menu, .flight-passenger-menu, .airport-suggest-list {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 20px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+    display: none;
+    left: 0;
+    right: 0;
+    top: calc(100% + 12px);
+    padding: 12px;
+    z-index: 100;
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+.guests-menu::before, .guests-menu::after,
+.flight-passenger-menu::before, .flight-passenger-menu::after,
+.guests-picker::before, .guests-picker::after {
+    display: none !important;
+    content: none !important;
+}
+
+.trav-search-widget--hero .guests-menu {
+    width: 300px;
+    left: auto;
+    right: 0;
+    top: calc(100% + 12px);
+}
+
+.guests-picker.is-open .guests-menu,
+.flight-passenger-picker.is-open .flight-passenger-menu,
+.airport-suggest-list:not(.d-none) { 
+    display: block; 
+}
+
+/* ========== ROOM CARD ========== */
+.room-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 18px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.room-card:last-child { 
+    margin-bottom: 0; 
+}
+
+.room-card__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f4f9;
+}
+
+.room-title {
+    color: #1e3a4d;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.room-remove {
+    background: transparent;
+    border: none;
+    color: #e0746f;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.room-remove:hover { 
+    background: #fff5f5; 
+    color: #c23d38; 
+}
+
+.guest-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.guest-row + .guest-row { 
+    margin-top: 0; 
+}
+
+.guest-label {
+    color: #2c4a6e;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.guest-sub {
+    color: #8ba0ae;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.counter-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8fafc;
+    border-radius: 30px;
+    padding: 2px 6px;
+}
+
+.counter-btn {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 25px;
+    color: #2c7da0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    height: 28px;
+    width: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.counter-btn:hover {
+    background: #2c7da0;
+    border-color: #2c7da0;
+    color: white;
+}
+
+.counter-val {
+    color: #1e3a4d;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.room-divider {
+    border-top: 1px solid #f0f4f9;
+    margin: 12px 0;
+}
+
+.child-age-row {
+    background: #fafcff;
+    border-radius: 12px;
+    padding: 6px 10px;
+    margin-top: 8px;
+}
+
+.child-age-row .guest-label { 
+    font-size: 0.7rem; 
+}
+
+.btn-add-room {
+    background: #f8fafc;
+    border: 1px dashed #cbdde6;
+    border-radius: 30px;
+    color: #2c7da0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 10px;
+    padding: 8px 14px;
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-add-room:hover {
+    background: #f1f9ff;
+    border-color: #2c7da0;
+}
+
+/* ========== FLIGHT PASSENGER PICKER ========== */
+.flight-passenger-menu {
+    padding: 12px;
+}
+
+.flight-passenger-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.flight-passenger-row + .flight-passenger-row { 
+    margin-top: 4px; 
+}
+
+.flight-passenger-label {
+    color: #2c4a6e;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.flight-passenger-sub {
+    color: #8ba0ae;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.flight-passenger-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8fafc;
+    border-radius: 30px;
+    padding: 2px 6px;
+}
+
+.flight-passenger-btn {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 25px;
+    color: #2c7da0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    height: 28px;
+    width: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.flight-passenger-btn:hover {
+    background: #2c7da0;
+    border-color: #2c7da0;
+    color: white;
+}
+
+.flight-passenger-val {
+    color: #1e3a4d;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* ========== AIRPORT SUGGESTIONS ========== */
+.airport-suggest-list {
+    max-height: 300px;
+}
+
+.airport-suggest-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.airport-suggest-item:hover { 
+    background: #f4fbff; 
+}
+
+.airport-suggest-code {
+    background: #e7f7fc;
+    border-radius: 999px;
+    color: #0f88ca;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    margin-left: auto;
+}
+
+.airport-suggest-meta { 
+    display: flex; 
+    flex-direction: column; 
+}
+
+.airport-suggest-name { 
+    font-weight: 700; 
+    color: #12314d; 
+}
+
+.airport-suggest-sub { 
+    font-size: 0.75rem; 
+    color: #7893a7; 
+}
+
+.d-none { 
+    display: none !important; 
+}
+
+.flight-round-trip-only.d-none, 
+.flight-one-way-only.d-none { 
+    display: none !important; 
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 991.98px) {
+    .trav-field--third, .trav-field--half { 
+        grid-column: span 6; 
+    }
+    .trav-search-widget--hero .trav-search-widget__nav { 
+        width: calc(100% - 24px); 
+    }
+}
+
+@media (max-width: 767.98px) {
+    .trav-search-widget--hero { 
+        max-width: 100%; 
+    }
+    .trav-search-widget--hero .trav-search-widget__shell { 
+        border-radius: 26px; 
+    }
+    .trav-search-widget__topbar { 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        padding-bottom: 4px; 
+    }
+    .trav-search-widget__topbar::-webkit-scrollbar { 
+        display: none; 
+    }
+    .trav-search-tab { 
+        flex: 0 0 auto; 
+        font-size: 0.88rem; 
+        min-height: 42px; 
+        padding: 0 14px; 
+    }
+    
+    .trav-search-widget--hero .trav-search-widget__nav {
+        width: calc(100% - 16px);
+        padding: 12px 14px 0;
+        margin: 0 auto;
+        border-radius: 22px 22px 0 0;
+    }
+    
+    .trav-search-widget--hero #sw-hotels-form,
+    .trav-search-widget--hero #sw-flights-form-container { 
+        margin-top: -2px; 
+    }
+    
+    .trav-search-widget--hero .trav-search-form {
+        border-radius: 0 0 22px 22px;
+        padding: 20px 14px 18px;
+    }
+    
+    .trav-search-widget--hero [data-tab-pane="flights"] .trav-field--third,
+    .trav-search-widget--hero [data-tab-pane="flights"] .trav-field--half { 
+        grid-column: span 12; 
+    }
+    
+    .trav-search-widget--hero .guests-menu {
+        width: calc(100% - 20px);
+        left: 10px;
+        right: 10px;
+    }
+    
+    .trav-field--third, .trav-field--half, .trav-field--wide { 
+        grid-column: span 12; 
+    }
+    .trav-field__surface { 
+        min-height: 68px; 
+    }
+    .trav-search-form__meta { 
+        align-items: flex-start; 
+        flex-direction: column; 
+    }
+    .trav-search-badges { 
+        gap: 10px 14px; 
+    }
+    .btn-search { 
+        min-width: 100%; 
+    }
+    
+    .trav-search-widget__subtabs { 
+        overflow-x: auto; 
+        padding-bottom: 4px; 
+    }
+    .trav-search-widget__subtabs::-webkit-scrollbar { 
+        display: none; 
+    }
+    .trav-search-widget--hero .trav-search-widget__subtabs { 
+        padding: 8px 0 4px 8px; 
+    }
+
+}
+</style>
+@endpush
+
+<div class="trav-search-widget trav-search-widget--{{ $widgetVariant }}">
+    <div class="trav-search-widget__shell">
+        <div class="trav-search-widget__nav {{ $activeTab === 'flights' ? 'has-subtabs' : '' }}" id="searchTabsWrap">
+            <div class="trav-search-widget__topbar" id="searchTabs">
+                <button type="button" class="trav-search-tab search-tab-btn {{ $activeTab === 'hotels' ? 'active' : '' }}" data-tab="hotels">
+                    <i class="bi bi-building"></i>
+                    <span>Hotels</span>
                 </button>
+                <button type="button" class="trav-search-tab search-tab-btn {{ $activeTab === 'flights' ? 'active' : '' }}" data-tab="flights">
+                    <i class="bi bi-airplane"></i>
+                    <span>Flights</span>
+                </button>
+                <button type="button" class="trav-search-tab search-tab-btn {{ $activeTab === 'activities' ? 'active' : '' }}" data-tab="activities">
+                    <i class="bi bi-compass"></i>
+                    <span>Activities</span>
+                </button>
+                @if ($isHeroWidget)
+                    <button type="button" class="trav-search-tab trav-search-tab--placeholder">
+                        <i class="bi bi-house-door"></i>
+                        <span>Homes &amp; Apts</span>
+                    </button>
+                    <button type="button" class="trav-search-tab trav-search-tab--placeholder">
+                        <i class="bi bi-stars"></i>
+                        <span>Flight + Hotel</span>
+                    </button>
+                    <button type="button" class="trav-search-tab trav-search-tab--placeholder">
+                        <i class="bi bi-car-front"></i>
+                        <span>Airport transfer</span>
+                    </button>
+                @endif
             </div>
-        </form>
-    </div>
 
-    {{-- ════════════════════════════════════════════
-         FLIGHTS / HOME / EVENTS FORM CONTAINER
-    ════════════════════════════════════════════ --}}
-    <div id="sw-flights-form-container" class="{{ $activeTab === 'hotels' ? 'd-none' : '' }}">
-
-        {{-- Trip Type Sub-tabs --}}
-        <div id="flight-subtabs" class="mb-3 {{ in_array($activeTab, ['home', 'events', 'activities']) ? 'd-none' : '' }}">
-            <button class="trip-type-btn {{ request('trip_type', 'one_way') === 'one_way' ? 'active' : '' }}"
-                    id="oneWayBtn" data-type="one_way">One-way</button>
-            <button class="trip-type-btn {{ request('trip_type') === 'round_trip' ? 'active' : '' }}"
-                    id="roundTripBtn" data-type="round_trip">Round-Trip</button>
+            <div class="trav-search-widget__subtabs {{ $activeTab !== 'flights' ? 'd-none' : '' }}" id="flightSubtabsWrap">
+                <div id="flight-subtabs" class="trav-flight-subtabs {{ $activeTab !== 'flights' ? 'd-none' : '' }}">
+                    <button class="trip-type-btn {{ request('trip_type', 'one_way') === 'one_way' ? 'active' : '' }}" id="oneWayBtn" data-type="one_way" type="button">One-way</button>
+                    <button class="trip-type-btn {{ request('trip_type') === 'round_trip' ? 'active' : '' }}" id="roundTripBtn" data-type="round_trip" type="button">Round trip</button>
+                </div>
+            </div>
         </div>
 
-        <form action="{{ Route::has('flights.index') ? route('flights.index') : '#' }}" method="GET"
-              id="flightSearchForm"
-              data-airports-url="{{ route('api.locations.airports.search') }}">
-            <input type="hidden" name="trip_type" id="tripTypeInput" value="{{ request('trip_type', 'one_way') }}" />
-
-            {{-- ── Flights Pane ── --}}
-            <div data-tab-pane="flights" class="{{ $activeTab !== 'flights' ? 'd-none' : '' }}">
-                <div class="row g-3 align-items-end">
-
-                    {{-- From --}}
-                    <div class="col-12 col-md-3">
-                        <label class="form-label text-muted small mb-1">From</label>
-                        <div class="input-icon-wrap flight-airport-field">
-                            <i class="bi bi-send input-icon"></i>
-                            <input type="text" name="origin" class="form-control search-input airport-autocomplete"
-                                   placeholder="Departure city or IATA" value="{{ request('origin') }}"
-                                   autocomplete="off" data-airport-input="origin" />
-                            <div class="airport-suggest-list d-none" data-airport-list="origin"></div>
-                        </div>
-                    </div>
-
-                    {{-- To --}}
-                    <div class="col-12 col-md-3">
-                        <label class="form-label text-muted small mb-1">To</label>
-                        <div class="input-icon-wrap flight-airport-field">
-                            <i class="bi bi-geo-alt input-icon"></i>
-                            <input type="text" name="destination" class="form-control search-input airport-autocomplete"
-                                   placeholder="Destination city or IATA" value="{{ request('destination') }}"
-                                   autocomplete="off" data-airport-input="destination" />
-                            <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
-                        </div>
-                    </div>
-
-                    {{-- Departure --}}
-                    <div class="col-12 col-md-3">
-                        <label class="form-label text-muted small mb-1">Departure</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-calendar3 input-icon"></i>
-                            <input type="date" name="departure_date" class="form-control search-input"
-                                   value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" />
-                        </div>
-                    </div>
-
-                    {{-- Passengers (one-way row) --}}
-                    <div class="col-12 col-md-3 flight-one-way-only">
-                        <label class="form-label text-muted small mb-1">Passengers</label>
-                        <div class="flight-passenger-picker" data-flight-pax-picker>
-                            <div class="input-icon-wrap flight-passenger-trigger" role="button" tabindex="0" aria-expanded="false">
-                                <i class="bi bi-people input-icon"></i>
-                                <input type="text" class="form-control search-input flight-passenger-summary" value="" readonly />
-                            </div>
-                            <div class="flight-passenger-menu">
-                                <div class="flight-passenger-row" data-type="adults" data-min="1" data-max="9">
-                                    <div>
-                                        <div class="flight-passenger-label">Adult</div>
-                                        <div class="flight-passenger-sub">18+ years old</div>
-                                    </div>
-                                    <div class="flight-passenger-counter">
-                                        <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
-                                        <span class="flight-passenger-val">1</span>
-                                        <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
-                                    </div>
-                                </div>
-                                <div class="flight-passenger-row" data-type="children" data-min="0" data-max="9">
-                                    <div>
-                                        <div class="flight-passenger-label">Child</div>
-                                        <div class="flight-passenger-sub">0-17 years old</div>
-                                    </div>
-                                    <div class="flight-passenger-counter">
-                                        <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
-                                        <span class="flight-passenger-val">0</span>
-                                        <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
-                                    </div>
-                                </div>
-                                <div class="flight-passenger-row" data-type="infants" data-min="0" data-max="9">
-                                    <div>
-                                        <div class="flight-passenger-label">Infant</div>
-                                        <div class="flight-passenger-sub">Under 2 years old</div>
-                                    </div>
-                                    <div class="flight-passenger-counter">
-                                        <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
-                                        <span class="flight-passenger-val">0</span>
-                                        <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="adults"   value="{{ max(1, (int) request('adults', 1)) }}">
-                                <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}">
-                                <input type="hidden" name="infants"  value="{{ max(0, (int) request('infants', 0)) }}">
+        <div id="sw-hotels-form" class="{{ $activeTab !== 'hotels' ? 'd-none' : '' }}">
+            <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET" class="trav-search-form">
+                <div class="trav-search-grid">
+                    <div class="trav-field trav-field--wide">
+                        <label class="trav-field__label">Destination</label>
+                        <div class="trav-field__surface">
+                            <div class="input-icon-wrap">
+                                <i class="bi bi-search input-icon"></i>
+                                <input id="hotelDestinationInput" type="text" name="city" class="form-control search-input" placeholder="Enter a destination or property" value="{{ $hotelDestinationValue }}" autocomplete="off" />
+                                <input type="hidden" name="destination" id="hotelDestinationMirror" value="{{ request('destination', $hotelDestinationValue) }}" />
+                                <input type="hidden" name="country" value="{{ request('country', '') }}" />
+                                <input type="hidden" name="country_code" value="{{ request('country_code', '') }}" />
+                                <input type="hidden" name="location" value="{{ request('location', '') }}" />
                             </div>
                         </div>
                     </div>
 
-                    {{-- Return date (round-trip only) --}}
-                    <div class="col-12 col-md-3 flight-round-trip-only d-none" id="returnDateWrap">
-                        <label class="form-label text-muted small mb-1">Return</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-calendar3 input-icon"></i>
-                            <input type="date" name="return_date" class="form-control search-input"
-                                   value="{{ request('return_date') }}" />
+                    <div class="trav-field trav-field--third">
+                        <label class="trav-field__label">Check In</label>
+                        <div class="trav-field__surface trav-field__surface--date">
+                            <div class="input-icon-wrap">
+                                <i class="bi bi-calendar3 input-icon"></i>
+                                <input type="date" name="check_in" id="hotelCheckInInput" class="form-control search-input" value="{{ request('check_in', $defaultHotelCheckIn) }}" />
+                            </div>
+                            <div class="trav-field__helper" id="hotelCheckInDay">{{ \Carbon\Carbon::parse(request('check_in', $defaultHotelCheckIn))->format('l') }}</div>
                         </div>
+                    </div>
+
+                    <div class="trav-field trav-field--third">
+                        <label class="trav-field__label">Check Out</label>
+                        <div class="trav-field__surface trav-field__surface--date">
+                            <div class="input-icon-wrap">
+                                <i class="bi bi-calendar3 input-icon"></i>
+                                <input type="date" name="check_out" id="hotelCheckOutInput" class="form-control search-input" value="{{ request('check_out', $defaultHotelCheckOut) }}" />
+                            </div>
+                            <div class="trav-field__helper" id="hotelCheckOutDay">{{ \Carbon\Carbon::parse(request('check_out', $defaultHotelCheckOut))->format('l') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="trav-field trav-field--third">
+                        <label class="trav-field__label">Guests</label>
+                        <div class="guests-picker" id="guestsPicker">
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap guests-trigger" role="button" tabindex="0" aria-expanded="false">
+                                    <i class="bi bi-people input-icon"></i>
+                                    <input id="guestsSummary" type="text" class="form-control search-input guests-summary-input" value="" readonly />
+                                </div>
+                            </div>
+                            <div class="guests-menu" id="guestsMenu">
+                                <div id="roomsContainer"></div>
+                                <button type="button" class="btn-add-room" id="addRoomBtn" style="display:none;">+ Add Room</button>
+                            </div>
+                        </div>
+                        <div id="guestsHiddenFields"></div>
                     </div>
                 </div>
 
-                <div class="row g-3 align-items-end mt-0">
-                    {{-- Cabin (one-way row) --}}
-                    <div class="col-12 col-md-3 flight-one-way-only">
-                        <label class="form-label text-muted small mb-1">Cabin</label>
-                        <select name="cabin_class" class="form-select search-input">
-                            @foreach(['ECONOMY' => 'Economy', 'PREMIUM_ECONOMY' => 'Premium Economy', 'BUSINESS' => 'Business', 'FIRST' => 'First'] as $val => $label)
-                                <option value="{{ $val }}" {{ request('cabin_class', 'ECONOMY') === $val ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
+                @if ($isHeroWidget)
+                    <div class="trav-search-form__meta">
+                        <div class="trav-search-badges">
+                            <label class="trav-search-badge">
+                                <input class="trav-search-check" type="checkbox" checked disabled>
+                                <span>Free breakfast</span>
+                            </label>
+                            <label class="trav-search-badge">
+                                <input class="trav-search-check" type="checkbox" checked disabled>
+                                <span>Free cancellation</span>
+                            </label>
+                            <label class="trav-search-badge">
+                                <input class="trav-search-check" type="checkbox" checked disabled>
+                                <span>Star Rating: 4+</span>
+                            </label>
+                            <label class="trav-search-badge">
+                                <input class="trav-search-check" type="checkbox" checked disabled>
+                                <span>Review score: 8+</span>
+                            </label>
+                        </div>
+                        <button type="button" class="trav-search-link" data-tab-jump="flights">+ Add a flight</button>
                     </div>
+                @endif
 
-                    {{-- Passengers + Cabin (round-trip row) --}}
-                    <div class="col-12 flight-round-trip-only d-none">
-                        <div class="row g-3">
-                            <div class="col-12 col-md-3">
-                                <label class="form-label text-muted small mb-1">Passengers</label>
-                                <div class="flight-passenger-picker" data-flight-pax-picker>
+                <div class="trav-search-form__actions">
+                    <button type="submit" class="btn btn-search">
+                        <i class="bi bi-search me-2"></i>Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div id="sw-flights-form-container" class="{{ $activeTab === 'hotels' ? 'd-none' : '' }}">
+            <form action="{{ Route::has('flights.index') ? route('flights.index') : '#' }}" method="GET" id="flightSearchForm" class="trav-search-form" data-airports-url="{{ route('api.locations.airports.search') }}">
+                <input type="hidden" name="trip_type" id="tripTypeInput" value="{{ request('trip_type', 'one_way') }}" />
+
+                <div data-tab-pane="flights" class="{{ $activeTab !== 'flights' ? 'd-none' : '' }}">
+                    <div class="trav-search-grid">
+                        <div class="trav-field trav-field--third flight-one-way-only">
+                            <label class="trav-field__label">From</label>
+                            <div class="trav-field__surface flight-airport-field">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-send input-icon"></i>
+                                    <input type="text" name="origin" class="form-control search-input airport-autocomplete" placeholder="Departure city or IATA" value="{{ request('origin') }}" autocomplete="off" data-airport-input="origin" />
+                                    <div class="airport-suggest-list d-none" data-airport-list="origin"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-one-way-only">
+                            <label class="trav-field__label">To</label>
+                            <div class="trav-field__surface flight-airport-field">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-geo-alt input-icon"></i>
+                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ request('destination') }}" autocomplete="off" data-airport-input="destination" />
+                                    <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-one-way-only">
+                            <label class="trav-field__label">Departure</label>
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-calendar3 input-icon"></i>
+                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-one-way-only">
+                            <label class="trav-field__label">Passengers</label>
+                            <div class="flight-passenger-picker" data-flight-pax-picker>
+                                <div class="trav-field__surface">
                                     <div class="input-icon-wrap flight-passenger-trigger" role="button" tabindex="0" aria-expanded="false">
                                         <i class="bi bi-people input-icon"></i>
                                         <input type="text" class="form-control search-input flight-passenger-summary" value="" readonly />
                                     </div>
-                                    <div class="flight-passenger-menu">
-                                        <div class="flight-passenger-row" data-type="adults" data-min="1" data-max="9">
-                                            <div>
-                                                <div class="flight-passenger-label">Adult</div>
-                                                <div class="flight-passenger-sub">18+ years old</div>
-                                            </div>
-                                            <div class="flight-passenger-counter">
-                                                <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
-                                                <span class="flight-passenger-val">1</span>
-                                                <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
-                                            </div>
+                                </div>
+                                <div class="flight-passenger-menu">
+                                    <div class="flight-passenger-row" data-type="adults" data-min="1" data-max="9">
+                                        <div><div class="flight-passenger-label">Adult</div><div class="flight-passenger-sub">18+ years old</div></div>
+                                        <div class="flight-passenger-counter">
+                                            <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                            <span class="flight-passenger-val">1</span>
+                                            <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
                                         </div>
-                                        <div class="flight-passenger-row" data-type="children" data-min="0" data-max="9">
-                                            <div>
-                                                <div class="flight-passenger-label">Child</div>
-                                                <div class="flight-passenger-sub">0-17 years old</div>
-                                            </div>
-                                            <div class="flight-passenger-counter">
-                                                <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
-                                                <span class="flight-passenger-val">0</span>
-                                                <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="flight-passenger-row" data-type="infants" data-min="0" data-max="9">
-                                            <div>
-                                                <div class="flight-passenger-label">Infant</div>
-                                                <div class="flight-passenger-sub">Under 2 years old</div>
-                                            </div>
-                                            <div class="flight-passenger-counter">
-                                                <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
-                                                <span class="flight-passenger-val">0</span>
-                                                <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
-                                            </div>
-                                        </div>
-                                        <input type="hidden" name="adults"   value="{{ max(1, (int) request('adults', 1)) }}">
-                                        <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}">
-                                        <input type="hidden" name="infants"  value="{{ max(0, (int) request('infants', 0)) }}">
                                     </div>
+                                    <div class="flight-passenger-row" data-type="children" data-min="0" data-max="9">
+                                        <div><div class="flight-passenger-label">Child</div><div class="flight-passenger-sub">0-17 years old</div></div>
+                                        <div class="flight-passenger-counter">
+                                            <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                            <span class="flight-passenger-val">0</span>
+                                            <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="flight-passenger-row" data-type="infants" data-min="0" data-max="9">
+                                        <div><div class="flight-passenger-label">Infant</div><div class="flight-passenger-sub">Under 2 years old</div></div>
+                                        <div class="flight-passenger-counter">
+                                            <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                            <span class="flight-passenger-val">0</span>
+                                            <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="adults" value="{{ max(1, (int) request('adults', 1)) }}">
+                                    <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}">
+                                    <input type="hidden" name="infants" value="{{ max(0, (int) request('infants', 0)) }}">
                                 </div>
                             </div>
-                            <div class="col-12 col-md-3">
-                                <label class="form-label text-muted small mb-1">Cabin</label>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-round-trip-only d-none">
+                            <label class="trav-field__label">From</label>
+                            <div class="trav-field__surface flight-airport-field">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-send input-icon"></i>
+                                    <input type="text" name="origin" class="form-control search-input airport-autocomplete" placeholder="Departure city or IATA" value="{{ request('origin') }}" autocomplete="off" data-airport-input="origin" />
+                                    <div class="airport-suggest-list d-none" data-airport-list="origin"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-round-trip-only d-none">
+                            <label class="trav-field__label">To</label>
+                            <div class="trav-field__surface flight-airport-field">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-geo-alt input-icon"></i>
+                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ request('destination') }}" autocomplete="off" data-airport-input="destination" />
+                                    <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-round-trip-only d-none">
+                            <label class="trav-field__label">Departure</label>
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-calendar3 input-icon"></i>
+                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--third flight-round-trip-only d-none" id="returnDateWrap">
+                            <label class="trav-field__label">Return</label>
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-calendar3 input-icon"></i>
+                                    <input type="date" name="return_date" class="form-control search-input" value="{{ request('return_date') }}" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--half flight-one-way-only">
+                            <label class="trav-field__label">Cabin</label>
+                            <div class="trav-field__surface">
                                 <select name="cabin_class" class="form-select search-input">
-                                    @foreach(['ECONOMY' => 'Economy', 'PREMIUM_ECONOMY' => 'Premium Economy', 'BUSINESS' => 'Business', 'FIRST' => 'First'] as $val => $label)
-                                        <option value="{{ $val }}" {{ request('cabin_class', 'ECONOMY') === $val ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
+                                    @foreach (['ECONOMY' => 'Economy', 'PREMIUM_ECONOMY' => 'Premium Economy', 'BUSINESS' => 'Business', 'FIRST' => 'First'] as $val => $label)
+                                        <option value="{{ $val }}" {{ request('cabin_class', 'ECONOMY') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--half flight-round-trip-only d-none">
+                            <label class="trav-field__label">Passengers</label>
+                            <div class="flight-passenger-picker" data-flight-pax-picker>
+                                <div class="trav-field__surface">
+                                    <div class="input-icon-wrap flight-passenger-trigger" role="button" tabindex="0" aria-expanded="false">
+                                        <i class="bi bi-people input-icon"></i>
+                                        <input type="text" class="form-control search-input flight-passenger-summary" value="" readonly />
+                                    </div>
+                                </div>
+                                <div class="flight-passenger-menu">
+                                    <div class="flight-passenger-row" data-type="adults" data-min="1" data-max="9">
+                                        <div><div class="flight-passenger-label">Adult</div><div class="flight-passenger-sub">18+ years old</div></div>
+                                        <div class="flight-passenger-counter">
+                                            <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                            <span class="flight-passenger-val">1</span>
+                                            <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="flight-passenger-row" data-type="children" data-min="0" data-max="9">
+                                        <div><div class="flight-passenger-label">Child</div><div class="flight-passenger-sub">0-17 years old</div></div>
+                                        <div class="flight-passenger-counter">
+                                            <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                            <span class="flight-passenger-val">0</span>
+                                            <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="flight-passenger-row" data-type="infants" data-min="0" data-max="9">
+                                        <div><div class="flight-passenger-label">Infant</div><div class="flight-passenger-sub">Under 2 years old</div></div>
+                                        <div class="flight-passenger-counter">
+                                            <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                            <span class="flight-passenger-val">0</span>
+                                            <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="adults" value="{{ max(1, (int) request('adults', 1)) }}">
+                                    <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}">
+                                    <input type="hidden" name="infants" value="{{ max(0, (int) request('infants', 0)) }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trav-field trav-field--half flight-round-trip-only d-none">
+                            <label class="trav-field__label">Cabin</label>
+                            <div class="trav-field__surface">
+                                <select name="cabin_class" class="form-select search-input">
+                                    @foreach (['ECONOMY' => 'Economy', 'PREMIUM_ECONOMY' => 'Premium Economy', 'BUSINESS' => 'Business', 'FIRST' => 'First'] as $val => $label)
+                                        <option value="{{ $val }}" {{ request('cabin_class', 'ECONOMY') === $val ? 'selected' : '' }}>{{ $label }}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>{{-- /data-tab-pane="flights" --}}
 
-            {{-- ── Home & Apts Pane ── --}}
-            <div data-tab-pane="home" class="{{ $activeTab !== 'home' ? 'd-none' : '' }}">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small mb-1">Location</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-geo-alt input-icon"></i>
-                            <input type="text" class="form-control search-input" name="home_location"
-                                   placeholder="City or area" {{ $activeTab !== 'home' ? 'disabled' : '' }} />
+                    @if ($isHeroWidget)
+                        <div class="trav-flight-upsell">
+                            <label class="trav-flight-upsell__label">
+                                <input class="trav-search-check" type="checkbox" disabled>
+                                <span>Add hotel to save up to 25%</span>
+                            </label>
+                            <span class="trav-flight-upsell__badge">Bundle and Save</span>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small mb-1">Date</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-calendar3 input-icon"></i>
-                            <input type="date" class="form-control search-input" name="home_date"
-                                   {{ $activeTab !== 'home' ? 'disabled' : '' }} />
-                        </div>
-                    </div>
+                    @endif
                 </div>
-            </div>
 
-            {{-- ── Events Pane ── --}}
-            <div data-tab-pane="events" class="{{ $activeTab !== 'events' ? 'd-none' : '' }}">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small mb-1">Event / City</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-geo-alt input-icon"></i>
-                            <input type="text" class="form-control search-input" name="event_location"
-                                   placeholder="Concert, city or venue" {{ $activeTab !== 'events' ? 'disabled' : '' }} />
+                <div data-tab-pane="activities" class="{{ $activeTab !== 'activities' ? 'd-none' : '' }}">
+                    <div class="trav-search-grid">
+                        <div class="trav-field trav-field--wide">
+                            <label class="trav-field__label">Location</label>
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-search input-icon"></i>
+                                    <input type="text" class="form-control search-input" name="city" placeholder="Enter city or experience" value="{{ $activityCityValue }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input type="hidden" name="country" value="{{ request('country', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input type="hidden" name="country_code" value="{{ request('country_code', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input type="hidden" name="location" value="{{ request('location', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small mb-1">Date</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-calendar3 input-icon"></i>
-                            <input type="date" class="form-control search-input" name="event_date"
-                                   {{ $activeTab !== 'events' ? 'disabled' : '' }} />
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            {{-- ── Activities Pane ── --}}
-            <div data-tab-pane="activities" class="{{ $activeTab !== 'activities' ? 'd-none' : '' }}">
-                <div class="row g-3 align-items-end">
-                    @include('website.partials._country-city-picker', [
-                        'prefix' => 'activity',
-                        'selectedCountryCode' => $selectedCountryCode,
-                        'selectedCountryName' => $selectedCountryName,
-                        'selectedCityName' => request('city', ''),
-                        'selectedCityCode' => request('location', ''),
-                        'countryColumnClass' => 'col-12 col-md-3',
-                        'cityColumnClass' => 'col-12 col-md-3',
-                        'disabled' => $activeTab !== 'activities',
-                    ])
-                    <div class="col-12 col-md-3">
-                        <label class="form-label text-muted small mb-1">Date</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-calendar3 input-icon"></i>
-                            <input type="date" class="form-control search-input" name="activity_date"
-                                   value="{{ request('activity_date', now()->format('Y-m-d')) }}"
-                                   {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                        <div class="trav-field trav-field--half">
+                            <label class="trav-field__label">Date</label>
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-calendar3 input-icon"></i>
+                                    <input type="date" class="form-control search-input" name="activity_date" value="{{ request('activity_date', now()->format('Y-m-d')) }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label text-muted small mb-1">Participants</label>
-                        <div class="input-icon-wrap">
-                            <i class="bi bi-people input-icon"></i>
-                            <input type="number" class="form-control search-input" name="participants"
-                                   min="1" max="20" value="{{ max(1, (int) request('participants', 1)) }}"
-                                   placeholder="1" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+
+                        <div class="trav-field trav-field--half">
+                            <label class="trav-field__label">Participants</label>
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap">
+                                    <i class="bi bi-people input-icon"></i>
+                                    <input type="number" class="form-control search-input" name="participants" min="1" max="20" value="{{ max(1, (int) request('participants', 1)) }}" placeholder="1" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="text-center mt-4">
-                <button type="submit" class="btn btn-search px-5 py-2" id="flightSearchSubmitBtn">
-                    <i class="bi bi-search me-2"></i>
-                    <span data-search-btn-text>
-                        @if($activeTab === 'home') Search Home &amp; Apts
-                        @elseif($activeTab === 'events') Search Events
-                        @elseif($activeTab === 'activities') Search Activities
-                        @else Search Flights
-                        @endif
-                    </span>
-                </button>
-            </div>
-        </form>
-
-    </div>{{-- /sw-flights-form-container --}}
-
-</div>{{-- /search-widget --}}
-
-@push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/custom/flight.css') }}" />
-@endpush
+                <div class="trav-search-form__actions">
+                    <button type="submit" class="btn btn-search" id="flightSearchSubmitBtn">
+                        <i class="bi bi-search me-2"></i>
+                        <span data-search-btn-text>
+                            @if ($activeTab === 'activities')
+                                Search Activities
+                            @else
+                                Search Flights
+                            @endif
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @push('scripts')
 <script>
 (function () {
     const activeTabInit = '{{ $activeTab }}';
-
-    const tabButtons      = [...document.querySelectorAll('#searchTabs .search-tab-btn[data-tab]')];
+    const tabButtons = [...document.querySelectorAll('#searchTabs .search-tab-btn[data-tab]')];
+    const searchTabsWrap = document.getElementById('searchTabsWrap');
     const hotelsContainer = document.getElementById('sw-hotels-form');
     const flightsContainer = document.getElementById('sw-flights-form-container');
-    const tabPanes        = [...document.querySelectorAll('[data-tab-pane]')];
-    const flightSubtabs   = document.getElementById('flight-subtabs');
-    const submitBtn       = document.getElementById('flightSearchSubmitBtn');
-    const submitText      = submitBtn ? submitBtn.querySelector('[data-search-btn-text]') : null;
+    const tabPanes = [...document.querySelectorAll('[data-tab-pane]')];
+    const flightSubtabs = document.getElementById('flight-subtabs');
+    const flightSubtabsWrap = document.getElementById('flightSubtabsWrap');
+    const submitBtn = document.getElementById('flightSearchSubmitBtn');
+    const submitText = submitBtn ? submitBtn.querySelector('[data-search-btn-text]') : null;
+    const hotelDestinationInput = document.getElementById('hotelDestinationInput');
+    const hotelDestinationMirror = document.getElementById('hotelDestinationMirror');
+    const hotelCheckInInput = document.getElementById('hotelCheckInInput');
+    const hotelCheckOutInput = document.getElementById('hotelCheckOutInput');
+    const hotelCheckInDay = document.getElementById('hotelCheckInDay');
+    const hotelCheckOutDay = document.getElementById('hotelCheckOutDay');
 
     const tabTextMap = {
         flights: 'Search Flights',
-        home:    'Search Home & Apts',
-        events:  'Search Events',
         activities: 'Search Activities',
-        hotels:  'Search Hotels',
+        hotels: 'Search Hotels',
     };
+
     const tabActionMap = {
         flights: "{{ Route::has('flights.index') ? route('flights.index') : '#' }}",
-        home:    "{{ Route::has('flights.index') ? route('flights.index') : '#' }}",
-        events:  "{{ Route::has('flights.index') ? route('flights.index') : '#' }}",
         activities: "{{ Route::has('activities.index') ? route('activities.index') : '#' }}",
     };
 
     let activeTopTab = activeTabInit;
+
+    const ensureFlightSubtabsVisible = () => {
+        if (flightSubtabs) {
+            flightSubtabs.classList.remove('d-none');
+            flightSubtabs.style.display = 'flex';
+        }
+        if (flightSubtabsWrap) {
+            flightSubtabsWrap.classList.remove('d-none');
+            flightSubtabsWrap.style.display = 'flex';
+        }
+        if (searchTabsWrap) {
+            searchTabsWrap.classList.add('has-subtabs');
+        }
+    };
+
+    const hideFlightSubtabs = () => {
+        if (flightSubtabs) {
+            flightSubtabs.classList.add('d-none');
+            flightSubtabs.style.display = 'none';
+        }
+        if (flightSubtabsWrap) {
+            flightSubtabsWrap.classList.add('d-none');
+            flightSubtabsWrap.style.display = 'none';
+        }
+        if (searchTabsWrap) {
+            searchTabsWrap.classList.remove('has-subtabs');
+        }
+    };
 
     const setPaneEnabled = (pane, enabled) => {
         pane.querySelectorAll('input, select, textarea, button').forEach((field) => {
@@ -433,257 +1489,95 @@
 
     const setActiveTopTab = (tab) => {
         activeTopTab = tab;
-        const isHotels = (tab === 'hotels');
+        const isHotels = tab === 'hotels';
 
-        // Show/hide the two outer containers
-        if (hotelsContainer)  hotelsContainer.classList.toggle('d-none', !isHotels);
+        if (hotelsContainer) hotelsContainer.classList.toggle('d-none', !isHotels);
         if (flightsContainer) flightsContainer.classList.toggle('d-none', isHotels);
 
-        // Highlight the correct tab button
         tabButtons.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === tab));
 
         if (!isHotels) {
-            // Switch inner panes within the flight form
             tabPanes.forEach((pane) => {
                 const isActive = pane.dataset.tabPane === tab;
                 pane.classList.toggle('d-none', !isActive);
                 setPaneEnabled(pane, isActive);
             });
 
-            if (flightSubtabs) {
-                flightSubtabs.classList.toggle('d-none', tab !== 'flights');
-            }
+            if (tab === 'flights') ensureFlightSubtabsVisible();
+            else hideFlightSubtabs();
+
             if (submitText) {
                 submitText.textContent = tabTextMap[tab] || 'Search';
             }
+
             const formEl = document.getElementById('flightSearchForm');
             if (formEl) {
                 formEl.action = tabActionMap[tab] || tabActionMap.flights;
             }
+        } else {
+            hideFlightSubtabs();
         }
     };
 
+    if (hotelDestinationInput && hotelDestinationMirror) {
+        const syncHotelDestination = () => {
+            hotelDestinationMirror.value = hotelDestinationInput.value || '';
+        };
+
+        hotelDestinationInput.addEventListener('input', syncHotelDestination);
+
+        const hotelSearchForm = document.getElementById('hotelSearchForm');
+        if (hotelSearchForm) {
+            hotelSearchForm.addEventListener('submit', syncHotelDestination);
+        }
+    }
+
+    const updateDayLabel = (input, output) => {
+        if (!input || !output) return;
+        const value = String(input.value || '').trim();
+        if (!value) {
+            output.textContent = '';
+            return;
+        }
+
+        const date = new Date(`${value}T12:00:00`);
+        if (Number.isNaN(date.getTime())) {
+            output.textContent = '';
+            return;
+        }
+
+        output.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date);
+    };
+
+    if (hotelCheckInInput && hotelCheckInDay) {
+        updateDayLabel(hotelCheckInInput, hotelCheckInDay);
+        hotelCheckInInput.addEventListener('input', () => updateDayLabel(hotelCheckInInput, hotelCheckInDay));
+        hotelCheckInInput.addEventListener('change', () => updateDayLabel(hotelCheckInInput, hotelCheckInDay));
+    }
+
+    if (hotelCheckOutInput && hotelCheckOutDay) {
+        updateDayLabel(hotelCheckOutInput, hotelCheckOutDay);
+        hotelCheckOutInput.addEventListener('input', () => updateDayLabel(hotelCheckOutInput, hotelCheckOutDay));
+        hotelCheckOutInput.addEventListener('change', () => updateDayLabel(hotelCheckOutInput, hotelCheckOutDay));
+    }
+
     tabButtons.forEach((btn) => btn.addEventListener('click', () => setActiveTopTab(btn.dataset.tab)));
 
-    // Initialise to server-rendered active tab
+    document.querySelectorAll('[data-tab-jump]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tabJump;
+            setActiveTopTab(targetTab);
+            if (targetTab === 'flights') {
+                ensureFlightSubtabsVisible();
+                requestAnimationFrame(() => {
+                    setTripType(tripInput ? (tripInput.value || 'one_way') : 'one_way');
+                });
+            }
+        });
+    });
+
     setActiveTopTab(activeTabInit);
 
-    // Country/city pickers
-    (function () {
-        const countryPickers = [...document.querySelectorAll('[data-role="country-picker"][data-location-group]')];
-        if (!countryPickers.length) return;
-
-        const esc = (value) => String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-
-        const allPickers = [...document.querySelectorAll('[data-picker][data-location-group]')];
-        const countryRequestCache = new Map();
-        const cityRequestCache = new Map();
-
-        const closePickers = () => {
-            allPickers.forEach((picker) => {
-                picker.classList.remove('is-open');
-                const trigger = picker.querySelector('.picker-trigger');
-                if (trigger) trigger.setAttribute('aria-expanded', 'false');
-            });
-        };
-
-        const openPicker = (picker) => {
-            closePickers();
-            picker.classList.add('is-open');
-            const trigger = picker.querySelector('.picker-trigger');
-            if (trigger) trigger.setAttribute('aria-expanded', 'true');
-        };
-
-        const bindPickerOpen = (picker, input) => {
-            const trigger = picker.querySelector('.picker-trigger');
-            if (!trigger || !input) return;
-
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const willOpen = !picker.classList.contains('is-open');
-                if (willOpen) openPicker(picker);
-                else closePickers();
-            });
-
-            input.addEventListener('focus', () => openPicker(picker));
-            input.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openPicker(picker);
-            });
-
-            trigger.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    trigger.click();
-                }
-            });
-        };
-
-        const fetchJson = async (url) => {
-            const response = await fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
-            });
-
-            if (!response.ok) {
-                throw new Error('Request failed');
-            }
-
-            return response.json();
-        };
-
-        const getCountries = (url) => {
-            if (!countryRequestCache.has(url)) {
-                countryRequestCache.set(url, fetchJson(url).then((payload) => Array.isArray(payload.data) ? payload.data : []));
-            }
-
-            return countryRequestCache.get(url);
-        };
-
-        const getCities = (url, countryCode) => {
-            const cacheKey = `${url}|${countryCode}`;
-            if (!cityRequestCache.has(cacheKey)) {
-                const cityUrl = `${url.replace(/\/$/, '')}/${encodeURIComponent(countryCode)}`;
-                cityRequestCache.set(cacheKey, fetchJson(cityUrl).then((payload) => Array.isArray(payload.data) ? payload.data : []));
-            }
-
-            return cityRequestCache.get(cacheKey);
-        };
-
-        countryPickers.forEach((countryPicker) => {
-            const groupKey = countryPicker.dataset.locationGroup || '';
-            const selector = (role) => `[data-role="${role}"][data-location-group="${groupKey}"]`;
-
-            const countryMenu = document.querySelector(selector('country-menu'));
-            const countryInput = document.querySelector(selector('country-input'));
-            const countryCodeInput = document.querySelector(selector('country-code'));
-            const cityPicker = document.querySelector(selector('city-picker'));
-            const cityMenu = document.querySelector(selector('city-menu'));
-            const cityInput = document.querySelector(selector('city-input'));
-            const locationInput = document.querySelector(selector('city-code'));
-
-            if (!countryPicker || !countryMenu || !countryInput || !countryCodeInput || !cityPicker || !cityMenu || !cityInput || !locationInput) {
-                return;
-            }
-
-            const countriesUrl = countryPicker.dataset.countriesUrl || '';
-            const citiesUrl = cityPicker.dataset.citiesUrl || '';
-            const preselectedCode = countryPicker.dataset.selectedCode || '';
-            const preselectedName = countryPicker.dataset.selectedName || '';
-            const initialCountryForCities = cityPicker.dataset.initialCountry || preselectedCode;
-
-            const renderCountries = (countries) => {
-                if (!countries.length) {
-                    countryMenu.innerHTML = '<div class="p-2 text-muted small">No countries available</div>';
-                    return;
-                }
-
-                countryMenu.innerHTML = countries.map((country) => `
-                    <button type="button" class="picker-option"
-                            data-value="${esc(country.country_name)}"
-                            data-code="${esc(country.country_code)}">
-                        <i class="bi bi-globe2"></i>
-                        <span>${esc(country.country_name)}</span>
-                        <span class="picker-code">${esc(country.country_code)}</span>
-                    </button>
-                `).join('');
-
-                if (preselectedCode && !countryInput.value) {
-                    const match = countries.find((country) => country.country_code === preselectedCode);
-                    if (match) {
-                        countryInput.value = match.country_name;
-                    }
-                } else if (!countryInput.value && preselectedName) {
-                    countryInput.value = preselectedName;
-                }
-            };
-
-            const renderCities = (cities) => {
-                if (!cities.length) {
-                    cityMenu.innerHTML = '<div class="p-2 text-muted small">No cities found</div>';
-                    return;
-                }
-
-                cityMenu.innerHTML = cities.map((city) => `
-                    <button type="button" class="picker-option"
-                            data-value="${esc(city.city_name)}"
-                            data-code="${esc(city.city_code)}">
-                        <i class="bi bi-geo-alt"></i>
-                        <span>${esc(city.city_name)}</span>
-                        <span class="picker-code">${esc(city.city_code)}</span>
-                    </button>
-                `).join('');
-            };
-
-            const fetchCities = (countryCode) => {
-                if (!countryCode || !citiesUrl) {
-                    cityMenu.innerHTML = '<div class="p-2 text-muted small">Select a country first</div>';
-                    return;
-                }
-
-                cityMenu.innerHTML = '<div class="p-2 text-muted small">Loading cities...</div>';
-
-                getCities(citiesUrl, countryCode)
-                    .then((cities) => renderCities(cities))
-                    .catch(() => {
-                        cityMenu.innerHTML = '<div class="p-2 text-muted small text-danger">Failed to load cities</div>';
-                    });
-            };
-
-            bindPickerOpen(countryPicker, countryInput);
-            bindPickerOpen(cityPicker, cityInput);
-
-            countryMenu.addEventListener('click', (e) => {
-                const option = e.target.closest('.picker-option');
-                if (!option) return;
-
-                countryInput.value = option.dataset.value || '';
-                countryCodeInput.value = option.dataset.code || '';
-                cityInput.value = '';
-                locationInput.value = '';
-                cityPicker.dataset.initialCountry = option.dataset.code || '';
-                closePickers();
-                fetchCities(option.dataset.code || '');
-            });
-
-            cityMenu.addEventListener('click', (e) => {
-                const option = e.target.closest('.picker-option');
-                if (!option) return;
-
-                cityInput.value = option.dataset.value || '';
-                locationInput.value = option.dataset.code || '';
-                closePickers();
-            });
-
-            if (countriesUrl) {
-                getCountries(countriesUrl)
-                    .then((countries) => renderCountries(countries))
-                    .catch(() => {
-                        countryMenu.innerHTML = '<div class="p-2 text-muted small">Unable to load countries</div>';
-                    });
-            } else {
-                countryMenu.innerHTML = '<div class="p-2 text-muted small">Unable to load countries</div>';
-            }
-
-            if (initialCountryForCities) {
-                fetchCities(initialCountryForCities);
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('[data-location-group]')) {
-                return;
-            }
-
-            closePickers();
-        });
-    })();
-
-    // Hotel guests picker (multi-room)
     (function () {
         const guestsPicker = document.getElementById('guestsPicker');
         const guestsTrigger = guestsPicker ? guestsPicker.querySelector('.guests-trigger') : null;
@@ -691,7 +1585,11 @@
         const roomsContainer = document.getElementById('roomsContainer');
         const addRoomBtn = document.getElementById('addRoomBtn');
         const guestsHiddenFields = document.getElementById('guestsHiddenFields');
-        let rooms = [{ adults: 1, children: 0, unit: 1, childAges: [] }];
+        const isHeroGuestsPicker = guestsPicker.closest('.trav-search-widget--hero') !== null;
+        const initialAdults = {{ $initialHotelAdults }};
+        const initialChildren = {{ $initialHotelChildren }};
+        const initialUnits = {{ $initialHotelUnits }};
+        let rooms = [{ adults: initialAdults, children: initialChildren, unit: initialUnits, childAges: Array(initialChildren).fill(0) }];
 
         if (!guestsPicker || !guestsTrigger || !roomsContainer || !guestsSummary) return;
 
@@ -702,6 +1600,7 @@
                 acc.units += room.unit;
                 return acc;
             }, { adults: 0, children: 0, units: 0 });
+
             guestsSummary.value = `${totals.units} Unit - ${totals.adults} Adult - ${totals.children} Children`;
         };
 
@@ -784,19 +1683,57 @@
                     `;
                 }).join('');
             }
+
+            if (guestsPicker.classList.contains('is-open')) {
+                requestAnimationFrame(positionGuestsMenu);
+            }
         };
 
         const closeGuestsPicker = () => {
             guestsPicker.classList.remove('is-open');
+            guestsPicker.classList.remove('open-up');
+            if (guestsMenu) {
+                guestsMenu.style.maxHeight = '';
+            }
             guestsTrigger.setAttribute('aria-expanded', 'false');
+        };
+
+        const positionGuestsMenu = () => {
+            if (!guestsMenu || !guestsPicker.classList.contains('is-open')) return;
+
+            guestsPicker.classList.remove('open-up');
+            guestsMenu.style.maxHeight = '';
+
+            const pickerRect = guestsPicker.getBoundingClientRect();
+            const menuRect = guestsMenu.getBoundingClientRect();
+            const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+            const spaceBelow = viewportHeight - pickerRect.bottom - 16;
+            const spaceAbove = pickerRect.top - 16;
+            const menuHeight = menuRect.height || guestsMenu.scrollHeight || 0;
+            const preferOpenUp = isHeroGuestsPicker && window.innerWidth >= 768;
+
+            if (preferOpenUp && spaceAbove > 120) {
+                guestsPicker.classList.add('open-up');
+                const available = Math.max(120, Math.min(spaceAbove, menuHeight || spaceAbove));
+                guestsMenu.style.maxHeight = `${available}px`;
+            } else if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+                guestsPicker.classList.add('open-up');
+                const available = Math.max(120, Math.min(spaceAbove, menuHeight || spaceAbove));
+                guestsMenu.style.maxHeight = `${available}px`;
+            } else if (spaceBelow > 0) {
+                const available = Math.max(120, Math.min(spaceBelow, menuHeight || spaceBelow));
+                guestsMenu.style.maxHeight = `${available}px`;
+            }
         };
 
         guestsTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
             const willOpen = !guestsPicker.classList.contains('is-open');
+
             if (willOpen) {
                 guestsPicker.classList.add('is-open');
                 guestsTrigger.setAttribute('aria-expanded', 'true');
+                requestAnimationFrame(positionGuestsMenu);
             } else {
                 closeGuestsPicker();
             }
@@ -813,6 +1750,7 @@
             e.stopPropagation();
             const roomEl = e.target.closest('.room-card');
             if (!roomEl) return;
+
             const roomIndex = Number(roomEl.dataset.roomIndex);
             if (Number.isNaN(roomIndex)) return;
 
@@ -868,6 +1806,9 @@
             guestsMenu.addEventListener('click', (e) => e.stopPropagation());
         }
 
+        window.addEventListener('resize', positionGuestsMenu);
+        window.addEventListener('scroll', positionGuestsMenu, true);
+
         document.addEventListener('click', (e) => {
             if (!guestsPicker.contains(e.target)) closeGuestsPicker();
         });
@@ -875,11 +1816,10 @@
         renderRooms();
     })();
 
-    // ── Trip type toggle (one-way / round-trip) ───────────────────────────────
-    const tripInput           = document.getElementById('tripTypeInput');
-    const oneWayBtn           = document.getElementById('oneWayBtn');
-    const roundTripBtn        = document.getElementById('roundTripBtn');
-    const oneWayOnlyFields    = document.querySelectorAll('.flight-one-way-only');
+    const tripInput = document.getElementById('tripTypeInput');
+    const oneWayBtn = document.getElementById('oneWayBtn');
+    const roundTripBtn = document.getElementById('roundTripBtn');
+    const oneWayOnlyFields = document.querySelectorAll('.flight-one-way-only');
     const roundTripOnlyFields = document.querySelectorAll('.flight-round-trip-only');
 
     function toggleFieldGroup(fields, show) {
@@ -893,40 +1833,46 @@
 
     function setTripType(type) {
         if (tripInput) tripInput.value = type;
+
         if (type === 'round_trip') {
-            oneWayBtn    && oneWayBtn.classList.remove('active');
+            oneWayBtn && oneWayBtn.classList.remove('active');
             roundTripBtn && roundTripBtn.classList.add('active');
             toggleFieldGroup(oneWayOnlyFields, false);
             toggleFieldGroup(roundTripOnlyFields, true);
         } else {
-            oneWayBtn    && oneWayBtn.classList.add('active');
+            oneWayBtn && oneWayBtn.classList.add('active');
             roundTripBtn && roundTripBtn.classList.remove('active');
             toggleFieldGroup(oneWayOnlyFields, true);
             toggleFieldGroup(roundTripOnlyFields, false);
         }
     }
 
-    if (oneWayBtn)    oneWayBtn.addEventListener('click',    () => setTripType('one_way'));
+    if (oneWayBtn) oneWayBtn.addEventListener('click', () => setTripType('one_way'));
     if (roundTripBtn) roundTripBtn.addEventListener('click', () => setTripType('round_trip'));
     setTripType(tripInput ? (tripInput.value || 'one_way') : 'one_way');
 
-    // ── Airport autocomplete ──────────────────────────────────────────────────
-    const flightForm       = document.getElementById('flightSearchForm');
-    const airportsUrl      = flightForm ? flightForm.dataset.airportsUrl : '';
-    const originInput      = document.querySelector('[data-airport-input="origin"]');
-    const destinationInput = document.querySelector('[data-airport-input="destination"]');
-    const originList       = document.querySelector('[data-airport-list="origin"]');
-    const destinationList  = document.querySelector('[data-airport-list="destination"]');
+    const flightForm = document.getElementById('flightSearchForm');
+    const airportsUrl = flightForm ? flightForm.dataset.airportsUrl : '';
+    const originInputs = [...document.querySelectorAll('[data-airport-input="origin"]')];
+    const destinationInputs = [...document.querySelectorAll('[data-airport-input="destination"]')];
+    const originLists = [...document.querySelectorAll('[data-airport-list="origin"]')];
+    const destinationLists = [...document.querySelectorAll('[data-airport-list="destination"]')];
     let activeList = null;
 
     const debounce = (fn, delay = 280) => {
         let timer = null;
-        return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), delay);
+        };
     };
 
     const escapeHtml = (value) => String(value ?? '')
-        .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
 
     const hideList = (list) => {
         if (!list) return;
@@ -935,16 +1881,27 @@
         if (activeList === list) activeList = null;
     };
 
-    const hideAllLists = () => { hideList(originList); hideList(destinationList); };
+    const hideAllLists = () => {
+        [...originLists, ...destinationLists].forEach((list) => hideList(list));
+    };
 
-    const renderAirportList = (list, items, input) => {
+    const syncAirportInputs = (type, value) => {
+        const inputs = type === 'origin' ? originInputs : destinationInputs;
+        inputs.forEach((input) => {
+            input.value = value;
+        });
+    };
+
+    const renderAirportList = (list, items, type) => {
         if (!list) return;
+
         if (!items.length) {
             list.innerHTML = '<div class="airport-suggest-empty">No airport found</div>';
             list.classList.remove('d-none');
             activeList = list;
             return;
         }
+
         list.innerHTML = items.map((item) => `
             <button type="button" class="airport-suggest-item"
                     data-code="${escapeHtml(item.code)}"
@@ -958,20 +1915,26 @@
                 <span class="airport-suggest-code">${escapeHtml(item.code)}</span>
             </button>
         `).join('');
+
         list.classList.remove('d-none');
         activeList = list;
+
         list.querySelectorAll('.airport-suggest-item').forEach((btn) => {
             btn.addEventListener('click', () => {
-                input.value = (btn.dataset.code || '').toUpperCase();
-                hideList(list);
+                syncAirportInputs(type, (btn.dataset.code || '').toUpperCase());
+                hideAllLists();
             });
         });
     };
 
-    const fetchAirportSuggestions = async (input, list) => {
+    const fetchAirportSuggestions = async (input, list, type) => {
         if (!airportsUrl || !input || !list) return;
+
         const keyword = (input.value || '').trim();
-        if (keyword.length < 2) { hideList(list); return; }
+        if (keyword.length < 2) {
+            hideList(list);
+            return;
+        }
 
         list.innerHTML = '<div class="airport-suggest-loading">Searching airports...</div>';
         list.classList.remove('d-none');
@@ -980,14 +1943,17 @@
         try {
             const url = new URL(airportsUrl, window.location.origin);
             url.searchParams.set('keyword', keyword);
+
             const response = await fetch(url.toString(), {
                 method: 'GET',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
             });
+
             if (!response.ok) throw new Error('Request failed');
+
             const payload = await response.json();
             const items = Array.isArray(payload.data) ? payload.data : [];
-            renderAirportList(list, items, input);
+            renderAirportList(list, items, type);
         } catch {
             list.innerHTML = '<div class="airport-suggest-empty">Unable to load airports</div>';
             list.classList.remove('d-none');
@@ -995,28 +1961,28 @@
         }
     };
 
-    if (originInput && originList) {
-        const originHandler = debounce(() => fetchAirportSuggestions(originInput, originList));
-        originInput.addEventListener('input', originHandler);
-        originInput.addEventListener('focus', () => {
-            if ((originInput.value || '').trim().length >= 2) originHandler();
+    const bindAirportInputs = (inputs, lists, type) => {
+        inputs.forEach((input, index) => {
+            const list = lists[index];
+            const handler = debounce(() => fetchAirportSuggestions(input, list, type));
+            input.addEventListener('input', () => {
+                syncAirportInputs(type, input.value);
+                handler();
+            });
+            input.addEventListener('focus', () => {
+                if ((input.value || '').trim().length >= 2) handler();
+            });
         });
-    }
+    };
 
-    if (destinationInput && destinationList) {
-        const destinationHandler = debounce(() => fetchAirportSuggestions(destinationInput, destinationList));
-        destinationInput.addEventListener('input', destinationHandler);
-        destinationInput.addEventListener('focus', () => {
-            if ((destinationInput.value || '').trim().length >= 2) destinationHandler();
-        });
-    }
+    bindAirportInputs(originInputs, originLists, 'origin');
+    bindAirportInputs(destinationInputs, destinationLists, 'destination');
 
     document.addEventListener('click', (e) => {
         if (e.target.closest('.flight-airport-field')) return;
         hideAllLists();
     });
 
-    // ── Submit loading state ──────────────────────────────────────────────────
     const resetSubmitState = () => {
         if (!submitBtn || !submitText) return;
         submitBtn.disabled = false;
@@ -1047,21 +2013,11 @@
                     const activityDate = String(fd.get('activity_date') || '').trim();
                     const participants = Math.max(1, parseInt(fd.get('participants') || '1', 10));
 
-                    if (country) {
-                        qs.set('country', country);
-                    }
-                    if (countryCode) {
-                        qs.set('country_code', countryCode);
-                    }
-                    if (city) {
-                        qs.set('city', city);
-                    }
-                    if (location) {
-                        qs.set('location', location);
-                    }
-                    if (activityDate) {
-                        qs.set('activity_date', activityDate);
-                    }
+                    if (country) qs.set('country', country);
+                    if (countryCode) qs.set('country_code', countryCode);
+                    if (city) qs.set('city', city);
+                    if (location) qs.set('location', location);
+                    if (activityDate) qs.set('activity_date', activityDate);
                     qs.set('participants', String(participants));
 
                     const targetUrl = "{{ Route::has('activities.index') ? route('activities.index') : '#' }}";
@@ -1072,45 +2028,42 @@
                 }
             }
 
-            // Collect active pane fields only
             const payload = {
-                trip_type:      fd.get('trip_type'),
-                origin:         fd.get('origin'),
-                destination:    fd.get('destination'),
+                trip_type: fd.get('trip_type'),
+                origin: fd.get('origin'),
+                destination: fd.get('destination'),
                 departure_date: fd.get('departure_date'),
-                return_date:    fd.get('return_date') || null,
-                adults:         parseInt(fd.get('adults'))   || 1,
-                children:       parseInt(fd.get('children')) || 0,
-                infants:        parseInt(fd.get('infants'))  || 0,
-                cabin_class:    fd.get('cabin_class'),
-                provider:       'duffel',
+                return_date: fd.get('return_date') || null,
+                adults: parseInt(fd.get('adults')) || 1,
+                children: parseInt(fd.get('children')) || 0,
+                infants: parseInt(fd.get('infants')) || 0,
+                cabin_class: fd.get('cabin_class'),
+                provider: 'duffel',
             };
 
             try {
-                const res  = await fetch('{{ route('api.flights.search') }}', {
-                    method:  'POST',
+                await fetch('{{ route('api.flights.search') }}', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept':       'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                     },
                     body: JSON.stringify(payload),
                 });
-                const data = await res.json();
-                console.log('Flight search response:', data);
 
-                // Redirect to the flights results page with search params in URL
                 const qs = new URLSearchParams({
-                    origin:         payload.origin         ?? '',
-                    destination:    payload.destination    ?? '',
+                    origin: payload.origin ?? '',
+                    destination: payload.destination ?? '',
                     departure_date: payload.departure_date ?? '',
-                    trip_type:      payload.trip_type      ?? 'one_way',
-                    adults:         payload.adults         ?? 1,
-                    children:       payload.children       ?? 0,
-                    infants:        payload.infants        ?? 0,
-                    cabin_class:    payload.cabin_class    ?? 'ECONOMY',
-                    provider:       payload.provider       ?? 'duffel',
+                    trip_type: payload.trip_type ?? 'one_way',
+                    adults: payload.adults ?? 1,
+                    children: payload.children ?? 0,
+                    infants: payload.infants ?? 0,
+                    cabin_class: payload.cabin_class ?? 'ECONOMY',
+                    provider: payload.provider ?? 'duffel',
                 });
+
                 if (payload.return_date) qs.set('return_date', payload.return_date);
                 window.location.href = '{{ route('flights.index') }}?' + qs.toString();
             } catch (err) {
@@ -1120,7 +2073,6 @@
             }
         });
     }
-
 })();
 </script>
 @endpush

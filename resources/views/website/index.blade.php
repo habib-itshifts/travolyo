@@ -14,6 +14,129 @@
 
 @push('styles')
 <style>
+.hero-section {
+    background: #f7f8fb;
+    min-height: auto;
+    overflow: visible;
+    padding: 26px 0 190px;
+    position: relative;
+    z-index: 12;
+}
+.hero-panel {
+    background: url('{{ asset('assets/images/website/background-image.png') }}') center/cover no-repeat;
+    border-radius: 28px;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.24),
+        0 22px 44px rgba(18, 38, 63, 0.08);
+    min-height: 540px;
+    overflow: visible;
+    padding: 34px 0 180px;
+    position: relative;
+    z-index: 12;
+}
+.hero-panel::before {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02) 38%, rgba(255, 255, 255, 0.10) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.42);
+    border-radius: inherit;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.10),
+        inset 0 -12px 26px rgba(255, 255, 255, 0.08);
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+.hero-panel::after {
+    background: none;
+    content: "";
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+.hero-panel .hero-mountain {
+    display: none;
+}
+.hero-panel .hero-mountain--left {
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02));
+    clip-path: polygon(0 100%, 14% 76%, 28% 66%, 42% 48%, 56% 57%, 72% 36%, 100% 100%);
+    height: 228px;
+    left: 0;
+    width: 32%;
+}
+.hero-panel .hero-mountain--right {
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02));
+    clip-path: polygon(0 100%, 22% 58%, 40% 40%, 56% 54%, 76% 30%, 100% 100%);
+    height: 214px;
+    right: 0;
+    width: 34%;
+}
+.hero-shell {
+    position: relative;
+    z-index: 1;
+}
+.hero-copy {
+    margin: 0 auto 10px;
+    max-width: 620px;
+}
+.hero-title {
+    font-size: clamp(2.05rem, 3.2vw, 2.65rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 10px;
+    text-shadow: 0 10px 28px rgba(3, 45, 72, 0.18);
+}
+.hero-trustbar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+.hero-trustbar__item {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.92);
+    display: inline-flex;
+    font-size: 0.83rem;
+    font-weight: 600;
+    gap: 8px;
+}
+.hero-trustbar__item i {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: .72rem;
+    height: 20px;
+    justify-content: center;
+    width: 20px;
+}
+.hero-quick-links {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 22px;
+}
+.hero-quick-links a {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    text-decoration: none;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+.hero-quick-links a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.34);
+    transform: translateY(-1px);
+}
+.hero-quick-links .dot { display: none; }
 .top-cities-directory-wrap { margin-top: -48px; position: relative; z-index: 2; }
 .top-cities-directory {
     background: #fff;
@@ -99,11 +222,23 @@
 }
 
 @media (max-width: 991.98px) {
+    .hero-section { padding-bottom: 140px; }
+    .hero-panel { min-height: 500px; padding-bottom: 120px; }
+    .hero-panel .hero-mountain { bottom: 64px; }
     .top-cities-directory-wrap { margin-top: 32px; }
     .top-cities-directory { padding: 24px 20px 26px; }
 }
 
 @media (max-width: 767.98px) {
+    .hero-section { padding: 20px 0 62px; overflow: hidden; }
+    .hero-panel { border-radius: 24px; min-height: auto; overflow: hidden; padding: 28px 0 30px; }
+    .hero-panel .hero-mountain { display: none; }
+    .hero-copy { max-width: 100%; margin-bottom: 8px; }
+    .hero-trustbar { gap: 10px 14px; justify-content: center; margin-bottom: 16px; }
+    .hero-trustbar__item { font-size: 0.78rem; gap: 6px; }
+    .hero-trustbar__item i { height: 22px; width: 22px; }
+    .hero-quick-links { gap: 8px; }
+    .hero-quick-links a { font-size: 0.84rem; padding: 8px 12px; }
     .top-cities-directory__tabs {
         gap: 8px;
         margin-bottom: 22px;
@@ -140,43 +275,24 @@
 @section('content')
 
 <section class="hero-section d-flex flex-column justify-content-center">
-    <div class="container text-center text-white">
+    <div class="container">
+        <div class="hero-panel">
+            <div class="text-center text-white hero-shell">
+                <div class="hero-copy">
+                    <h1 class="hero-title text-white">Your Trip Starts Here</h1>
+                    <div class="hero-trustbar">
+                        <span class="hero-trustbar__item"><i class="bi bi-check2"></i>Secure payment</span>
+                        <span class="hero-trustbar__item"><i class="bi bi-headset"></i>Support in approx. 30s</span>
+                    </div>
+                </div>
 
-        <h1 class="hero-title text-white mb-3">
-            Explore the World, <br class="d-none d-md-block"> Your Way
-        </h1>
-        <p class="hero-subtitle text-white mb-5">
-            Flights, hotels, activities &amp; more - all in one place.
-        </p>
-
-        @include('website.partials._search-widget', [
-            'defaultHotelCheckIn' => $defaultHotelCheckIn,
-            'defaultHotelCheckOut' => $defaultHotelCheckOut,
-        ])
-
-        @if($heroQuickCities->isNotEmpty())
-            <div class="hero-quick-links mt-4">
-                @foreach($heroQuickCities as $quickCity)
-                    @php
-                        $quickCityUrl = route('hotels.index') . '?' . http_build_query([
-                            'country' => data_get($quickCity, 'country', ''),
-                            'country_code' => data_get($quickCity, 'country_code', ''),
-                            'city' => data_get($quickCity, 'city', data_get($quickCity, 'label', '')),
-                            'location' => data_get($quickCity, 'location', ''),
-                            'check_in' => $defaultHotelCheckIn,
-                            'check_out' => $defaultHotelCheckOut,
-                            'adults' => 1,
-                            'children' => 0,
-                        ]);
-                    @endphp
-                    <a href="{{ $quickCityUrl }}">{{ data_get($quickCity, 'label', data_get($quickCity, 'city', '')) }}</a>
-                    @if(! $loop->last)
-                        <span class="dot"></span>
-                    @endif
-                @endforeach
+                @include('website.partials._search-widget', [
+                    'defaultHotelCheckIn' => $defaultHotelCheckIn,
+                    'defaultHotelCheckOut' => $defaultHotelCheckOut,
+                    'widgetVariant' => 'hero',
+                ])
             </div>
-        @endif
-
+        </div>
     </div>
 </section>
 

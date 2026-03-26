@@ -1,98 +1,255 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+@php
+    $currencies = \App\Models\Currency::supported();
+    $activeCurrencyCode = session('currency', \App\Models\Currency::defaultCode());
+    $activeCurrency = $currencies[$activeCurrencyCode] ?? reset($currencies);
+
+    $languages = config('language.supported', []);
+    $activeLanguageCode = app()->getLocale();
+    $activeLanguage = $languages[$activeLanguageCode] ?? reset($languages);
+
+    $listYourPlaceUrl = auth()->check()
+        ? (auth()->user()->hasRole('vendor') ? route('vendor.dashboard') : (Route::has('contact') ? route('contact') : '#'))
+        : '#';
+@endphp
+
+<style>
+.travolyo-topbar {
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom: 1px solid rgba(17, 110, 161, 0.08);
+    box-shadow: 0 8px 20px rgba(18, 38, 63, 0.05);
+    padding: 12px 0;
+}
+.travolyo-topbar .container { max-width: 1320px; }
+.travolyo-brand { align-items: center; display: inline-flex; gap: 8px; text-decoration: none; }
+.travolyo-brand img { height: 54px; width: auto; }
+.travolyo-nav { align-items: flex-end; gap: 24px; }
+.travolyo-nav__item {
+    align-items: flex-start;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 5px;
+    justify-content: flex-end;
+}
+.travolyo-nav__label-row {
+    align-items: center;
+    display: flex;
+    min-height: 16px;
+}
+.travolyo-nav__link {
+    align-items: center;
+    border-radius: 999px;
+    color: #18415f;
+    display: inline-flex;
+    font-size: 0.8rem;
+    font-weight: 700;
+    gap: 6px;
+    line-height: 1;
+    min-height: 22px;
+    padding: 0;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    white-space: nowrap;
+}
+.travolyo-nav__link:hover { color: #0f88ca; transform: translateY(-1px); }
+.travolyo-nav__link.is-active { color: #0f88ca; }
+.travolyo-nav__badge {
+    background: #18d4e6;
+    border-radius: 999px;
+    color: #ffffff;
+    display: inline-flex;
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1;
+    padding: 4px 8px;
+    text-transform: uppercase;
+}
+.travolyo-nav__promo { font-weight: 700; }
+.travolyo-nav__ghost {
+    align-items: center;
+    color: #244863;
+    display: inline-flex;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1;
+    min-height: 22px;
+    padding: 0;
+}
+.travolyo-actions { align-items: center; gap: 8px; }
+.travolyo-btn {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.82rem;
+    font-weight: 700;
+    gap: 8px;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 16px;
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+    white-space: nowrap;
+}
+.travolyo-btn:hover { transform: translateY(-1px); }
+.travolyo-btn--outline {
+    background: #ffffff;
+    border: 1px solid #c9dce8;
+    color: #18415f;
+}
+.travolyo-btn--primary {
+    background: #ffffff;
+    border: 1px solid #7dd2eb;
+    color: #0f88ca;
+}
+.travolyo-btn--plain {
+    background: transparent;
+    border: 0;
+    color: #18415f;
+    padding: 0 6px;
+}
+.travolyo-currency {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #d4e2ec;
+    border-radius: 999px;
+    display: inline-flex;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 12px;
+}
+.travolyo-currency img,
+.travolyo-lang {
+    border-radius: 50%;
+    height: 16px;
+    object-fit: cover;
+    width: 16px;
+}
+.travolyo-more {
+    align-items: center;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0;
+    width: 36px;
+}
+.travolyo-more.dropdown-toggle::after,
+.travolyo-currency.dropdown-toggle::after,
+.travolyo-btn--plain.dropdown-toggle::after { display: none; }
+.travolyo-more-menu {
+    border: 1px solid #dbe7ef;
+    border-radius: 18px;
+    box-shadow: 0 20px 38px rgba(18, 38, 63, 0.14);
+    min-width: 230px;
+    padding: 10px;
+}
+.travolyo-more-menu .dropdown-item {
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 10px 12px;
+}
+.travolyo-more-menu .dropdown-item:hover,
+.travolyo-more-menu .dropdown-item.active { background: #eef8fd; color: #0f88ca; }
+.travolyo-divider { border-top: 1px solid #ebf2f7; margin: 8px 0; }
+@media (max-width: 1199.98px) {
+    .travolyo-brand img { height: 48px; }
+    .travolyo-nav { gap: 18px; }
+    .travolyo-nav__link,
+    .travolyo-nav__ghost { font-size: 0.74rem; padding: 0 8px; }
+}
+@media (max-width: 991.98px) {
+    .travolyo-topbar { padding: 10px 0; }
+    .travolyo-nav,
+    .travolyo-actions { align-items: stretch; flex-direction: column; }
+    .travolyo-nav__item { width: 100%; }
+    .travolyo-nav__label-row { min-height: 0; }
+    .travolyo-nav__link,
+    .travolyo-nav__ghost,
+    .travolyo-nav__promo,
+    .travolyo-btn,
+    .travolyo-currency { justify-content: flex-start; width: 100%; }
+    .travolyo-brand { align-items: center; }
+    .travolyo-brand img { height: 42px; }
+}
+</style>
+
+<nav class="navbar navbar-expand-lg travolyo-topbar sticky-top">
     <div class="container">
-        @php
-            $currencies = \App\Models\Currency::supported();
-            $activeCurrencyCode = session('currency', \App\Models\Currency::defaultCode());
-            $activeCurrency = $currencies[$activeCurrencyCode] ?? reset($currencies);
-
-            $languages = config('language.supported', []);
-            $activeLanguageCode = app()->getLocale();
-            $activeLanguage = $languages[$activeLanguageCode] ?? reset($languages);
-        @endphp
-
-        {{-- Logo --}}
-        <a class="navbar-brand" href="{{ url('/') }}">
-            <img class="navbar-logo" src="{{ asset('assets/images/logo/travolyo-logo.svg') }}" alt="Travolyo">
+        <a class="travolyo-brand me-3" href="{{ url('/') }}">
+            <img src="{{ asset('assets/images/logo/travolyo-logo.svg') }}" alt="Travolyo">
         </a>
 
-        {{-- Mobile Toggler --}}
-        <button class="navbar-toggler border-0" type="button"
-            data-bs-toggle="collapse" data-bs-target="#mainNav"
-            aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        {{-- Nav Links --}}
         <div class="collapse navbar-collapse" id="mainNav">
-            <ul class="navbar-nav mx-auto gap-1">
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('hotels.*') ? 'nav-link--active' : '' }}"
-                       href="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}">
-                        Hotels
+            <div class="travolyo-nav d-flex flex-lg-row flex-column mx-lg-auto mt-3 mt-lg-0">
+                <span class="travolyo-nav__item">
+                    <span class="travolyo-nav__label-row">
+                        <span class="travolyo-nav__badge">Bundle and save!</span>
+                    </span>
+                    <a href="{{ Route::has('website') ? route('website') : url('/') }}" class="travolyo-nav__link travolyo-nav__promo">
+                        Flight + Hotel
                     </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('flights.*') ? 'nav-link--active' : '' }}"
-                       href="{{ Route::has('flights.index') ? route('flights.index') : '#' }}">
-                        Flights
+                </span>
+                <span class="travolyo-nav__item">
+                    <span class="travolyo-nav__label-row">
+                        <span class="travolyo-nav__badge">New!</span>
+                    </span>
+                    <a class="travolyo-nav__link {{ request()->routeIs('hotels.*') ? 'is-active' : '' }}" href="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}">
+                        Hotels &amp; Homes
                     </a>
-                </li>
-                <!-- <li class="nav-item">
-                    <a class="nav-link px-3" href="#">Home &amp; Apts</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3" href="#">Events</a>
-                </li> -->
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('activities.*') ? 'nav-link--active' : '' }}"
-                       href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}">
-                        Activities
-                    </a>
-                </li>
-                <li class="nav-item dropdown nav-item-about">
-                    <a class="nav-link px-3 dropdown-toggle {{ request()->routeIs('about') || request()->routeIs('blogs.*') ? 'nav-link--active' : '' }}"
-                       href="{{ Route::has('about') ? route('about') : '#' }}"
-                       id="aboutDropdown"
-                       aria-expanded="false">
-                        About Us
-                    </a>
-                    <ul class="dropdown-menu nav-about-dropdown shadow-sm border-0 rounded-0" aria-labelledby="aboutDropdown">
-                        <li><a class="dropdown-item" href="{{ Route::has('blogs.index') ? route('blogs.index') : '#' }}">Blogs</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link px-3 {{ request()->routeIs('contact') ? 'nav-link--active' : '' }}"
-                       href="{{ Route::has('contact') ? route('contact') : '#' }}">
-                        Contact Us
-                    </a>
-                </li>
-            </ul>
+                </span>
+                <span class="travolyo-nav__ghost">Transport</span>
+                <a class="travolyo-nav__link {{ request()->routeIs('activities.*') ? 'is-active' : '' }}" href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}">
+                    Activities
+                </a>
+                <span class="travolyo-nav__ghost">Coupons</span>
+            </div>
 
-            {{-- Right Actions --}}
-            <div class="d-flex align-items-center gap-3">
-                <!-- {{-- PWA Install Button --}}
-                <button id="pwa-install-btn"
-                        class="btn btn-sm d-flex align-items-center gap-1 fw-500"
-                        style="background:#17C3CE;color:#fff;border-radius:50px;padding:.35rem 1rem;font-size:.85rem;border:none;">
-                    <i class="bi bi-download"></i>
-                    <span>Install app</span>
-                </button> -->
+            <div class="travolyo-actions d-flex ms-lg-auto mt-3 mt-lg-0">
+                <div class="dropdown">
+                    <button class="travolyo-btn travolyo-btn--outline travolyo-more dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-three-dots"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end travolyo-more-menu border-0">
+                        <a class="dropdown-item {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ Route::has('about') ? route('about') : '#' }}">About us</a>
+                        <a class="dropdown-item {{ request()->routeIs('blogs.*') ? 'active' : '' }}" href="{{ Route::has('blogs.index') ? route('blogs.index') : '#' }}">Blogs</a>
+                        <a class="dropdown-item {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ Route::has('contact') ? route('contact') : '#' }}">Contact us</a>
+                        <div class="travolyo-divider"></div>
+                        @if (!empty($activeLanguage))
+                            <div class="px-2 pb-1 text-muted small text-uppercase fw-semibold">Language</div>
+                            @foreach ($languages as $code => $language)
+                                <a class="dropdown-item d-flex align-items-center gap-2 {{ $activeLanguageCode === $code ? 'active' : '' }}" href="{{ route('locale.switch', $code) }}">
+                                    <img src="https://flagcdn.com/w20/{{ $language['flag'] }}.png" alt="{{ $code }}" class="travolyo-lang">
+                                    <span>{{ $language['label'] }}</span>
+                                </a>
+                            @endforeach
+                        @endif
+                    </div>
+                </div>
+
+                @if(auth()->check())
+                    <a href="{{ $listYourPlaceUrl }}" class="travolyo-btn travolyo-btn--outline">List your place</a>
+                @else
+                    <button type="button" class="travolyo-btn travolyo-btn--outline" onclick="openAuthModal('register')">List your place</button>
+                @endif
 
                 @if (!empty($activeCurrency))
                     <div class="dropdown">
-                        <button class="btn navbar-switcher dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://flagcdn.com/w20/{{ $activeCurrency['flag'] }}.png" alt="{{ $activeCurrencyCode }}" class="navbar-switcher__flag">
-                            <span class="navbar-switcher__symbol">{{ $activeCurrency['symbol'] }}</span>
-                            <span>{{ $activeCurrency['label'] }}</span>
+                        <button class="travolyo-currency btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://flagcdn.com/w20/{{ $activeCurrency['flag'] }}.png" alt="{{ $activeCurrencyCode }}">
+                            <span>{{ $activeCurrencyCode }}</span>
+                            <i class="bi bi-chevron-down small"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end navbar-switcher-menu shadow-sm border-0 rounded-3">
+                        <ul class="dropdown-menu dropdown-menu-end travolyo-more-menu border-0">
                             @foreach ($currencies as $code => $currency)
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-2 {{ $activeCurrencyCode === $code ? 'active' : '' }}"
-                                       href="{{ route('currency.switch', $code) }}">
-                                        <img src="https://flagcdn.com/w20/{{ $currency['flag'] }}.png" alt="{{ $code }}" class="navbar-switcher__flag">
-                                        <span class="navbar-switcher__symbol">{{ $currency['symbol'] }}</span>
-                                        <span>{{ $currency['label'] }}</span>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 {{ $activeCurrencyCode === $code ? 'active' : '' }}" href="{{ route('currency.switch', $code) }}">
+                                        <img src="https://flagcdn.com/w20/{{ $currency['flag'] }}.png" alt="{{ $code }}">
+                                        <span>{{ $currency['symbol'] }}</span>
+                                        <span>{{ $code }}</span>
                                         <span class="ms-auto text-muted small">{{ $currency['name'] }}</span>
                                     </a>
                                 </li>
@@ -101,80 +258,36 @@
                     </div>
                 @endif
 
-                @if (!empty($activeLanguage))
-                    <div class="dropdown">
-                        <button class="btn navbar-switcher dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://flagcdn.com/w20/{{ $activeLanguage['flag'] }}.png" alt="{{ $activeLanguageCode }}" class="navbar-switcher__flag">
-                            <span>{{ $activeLanguage['label'] }}</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end navbar-switcher-menu shadow-sm border-0 rounded-3">
-                            @foreach ($languages as $code => $language)
-                                <li>
-                                    <a class="dropdown-item d-flex align-items-center gap-2 {{ $activeLanguageCode === $code ? 'active' : '' }}"
-                                       href="{{ route('locale.switch', $code) }}">
-                                        <img src="https://flagcdn.com/w20/{{ $language['flag'] }}.png" alt="{{ $code }}" class="navbar-switcher__flag">
-                                        <span>{{ $language['label'] }}</span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                {{-- Auth --}}
                 @auth
                     <div class="dropdown">
-                        <a href="#" class="text-dark text-decoration-none d-flex align-items-center gap-1 small fw-500 dropdown-toggle"
-                           data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="travolyo-btn travolyo-btn--plain dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i>
-                            {{ auth()->user()->name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3">
+                            <span>{{ auth()->user()->name }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end travolyo-more-menu border-0">
                             @if(auth()->user()->hasRole('customer'))
-                            <li>
-                                <a class="dropdown-item" href="{{ route('customer.dashboard') }}">
-                                    <i class="bi bi-person-lines-fill me-2"></i>My Dashboard
-                                </a>
-                            </li>
+                                <li><a class="dropdown-item" href="{{ route('customer.dashboard') }}">My dashboard</a></li>
                             @endif
                             @if(auth()->user()->hasRole('vendor'))
-                            <li>
-                                <a class="dropdown-item" href="{{ route('vendor.dashboard') }}">
-                                    <i class="bi bi-speedometer2 me-2"></i>Vendor Dashboard
-                                </a>
-                            </li>
+                                <li><a class="dropdown-item" href="{{ route('vendor.dashboard') }}">Vendor dashboard</a></li>
                             @endif
                             @if(auth()->user()->hasRole('admin'))
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
-                                    <i class="bi bi-award me-2"></i>Admin Dashboard
-                                </a>
-                            </li>
+                                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Admin dashboard</a></li>
                             @endif
-                            <li><hr class="dropdown-divider" /></li>
+                            <li><div class="travolyo-divider"></div></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
-                                    </button>
+                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
                                 </form>
                             </li>
                         </ul>
                     </div>
                 @else
-                    <button type="button" onclick="openAuthModal('signin')"
-                            class="btn btn-link text-dark text-decoration-none d-flex align-items-center gap-1 small fw-500 p-0">
-                        <i class="bi bi-person"></i> Sign in
-                    </button>
-                    <!-- <button type="button" onclick="openAuthModal('register')"
-                            class="btn btn-sm fw-500"
-                            style="background:#17C3CE;color:#fff;border-radius:50px;padding:.35rem 1rem;font-size:.85rem;border:none;">
-                        Register
-                    </button> -->
+                    <button type="button" onclick="openAuthModal('signin')" class="travolyo-btn travolyo-btn--plain">Sign in</button>
+                    <button type="button" onclick="openAuthModal('register')" class="travolyo-btn travolyo-btn--primary">Create account</button>
                 @endauth
             </div>
         </div>
-
     </div>
 </nav>
