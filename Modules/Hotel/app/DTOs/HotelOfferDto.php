@@ -36,10 +36,11 @@ class HotelOfferDto
         public readonly array             $serviceNames,    // ["Room Service", ...]
 
         // Pricing (minimum across available rooms)
-        public readonly float             $lowestPrice,
-        public readonly string            $currency,
-        public readonly string            $displayCurrency,
+        public readonly float             $baseLowestPrice,
+        public readonly string            $baseCurrency,
 
+        public readonly float             $convertedLowestPrice,
+        public readonly string            $convertedCurrency,
         // Rooms
         public readonly array             $rooms,           // HotelRoomOfferDto[]
 

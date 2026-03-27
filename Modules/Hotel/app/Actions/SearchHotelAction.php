@@ -36,7 +36,6 @@ class SearchHotelAction
                     priceMax:   $dto->priceMax,
                     amenityIds: $dto->amenityIds,
                     currency:   $dto->currency,
-                    displayCurrency:   $dto->displayCurrency,
                     sortBy:     $dto->sortBy,
                     perPage:    $dto->perPage,
                     provider:   $providerEnum,

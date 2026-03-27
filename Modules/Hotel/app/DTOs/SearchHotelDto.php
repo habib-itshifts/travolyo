@@ -19,9 +19,8 @@ class SearchHotelDto
         public readonly ?float             $priceMax   = null,
         public readonly ?array             $amenityIds = null,
         public readonly string             $currency     = 'USD',
-        public readonly string             $displayCurrency = 'USD',
         public readonly string             $sortBy     = 'price_asc', // price_asc|price_desc|rating_desc|featured
-        public readonly int                $perPage    = 60,
+        public readonly int                $perPage    = 20,
         public readonly int                $page       = 1,
         public readonly ?HotelProviderEnum $provider   = null,        // null = all providers
     ) {}
@@ -40,7 +39,6 @@ class SearchHotelDto
             priceMax:   isset($data['price_max']) ? (float) $data['price_max'] : null,
             amenityIds: $data['amenity_ids'] ?? null,
             currency:     $data['currency'] ?? 'USD',
-            displayCurrency: $data['display_currency'] ?? 'USD',
             sortBy:     $data['sort_by'] ?? 'price_asc',
             perPage:    (int) ($data['per_page'] ?? 20),
             page:       (int) ($data['page'] ?? 1),

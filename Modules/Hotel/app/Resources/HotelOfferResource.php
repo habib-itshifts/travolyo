@@ -43,7 +43,7 @@ class HotelOfferResource extends JsonResource
 
             // Pricing
             'lowest_price'      => $this->lowestPrice,
-            'currency'          => $this->displayCurrency,
+            'currency'          => $this->currency,
 
             // Rooms
             'rooms'             => collect($this->rooms)->map(fn (HotelRoomOfferDto $r) => [
@@ -56,7 +56,7 @@ class HotelOfferResource extends JsonResource
                 'base_price'        => $r->basePrice,
                 'total_price'       => $r->totalPrice,
                 'nights'            => $r->nights,
-                'currency'          => $r->displayCurrency,
+                'currency'          => $r->currency,
                 'is_available'      => $r->isAvailable,
                 'amenities'         => $r->amenityNames,
                 'size_sqm'          => $r->sizeSqm,

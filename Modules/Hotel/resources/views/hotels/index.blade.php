@@ -429,7 +429,7 @@
                     adults:           parseInt(params.adults ?? 1, 10),
                     children:         parseInt(params.children ?? 0, 10),
                     page:             page,
-                    display_currency: document.querySelector('meta[name="display-currency"]')?.content ?? 'USD',
+                    currency: document.querySelector('meta[name="currency"]')?.content ?? 'USD',
                 }),
             });
 
@@ -652,8 +652,7 @@
             check_out:  btn.dataset.checkOut,
             adults:     parseInt(btn.dataset.adults ?? 1, 10),
             children:   parseInt(btn.dataset.children ?? 0, 10),
-            currency:         'USD',
-            display_currency: document.querySelector('meta[name="display-currency"]')?.content ?? 'USD',
+            currency:         document.querySelector('meta[name="currency"]')?.content ?? 'USD',
         };
 
         try {

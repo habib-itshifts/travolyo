@@ -30,9 +30,11 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
+        
+        
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
-
+            
 
             $perPage = $dto->perPage;
             $page    = $dto->page;
@@ -42,7 +44,7 @@ class HotelController extends Controller
                 $dto->destination, $dto->checkIn, $dto->checkOut,
                 $dto->adults, $dto->children, $dto->rooms,
                 $dto->starRating, $dto->priceMin, $dto->priceMax,
-                $dto->amenityIds, $dto->currency,$dto->displayCurrency, $dto->sortBy,
+                $dto->amenityIds, $dto->currency,$dto->sortBy,
             ]));
 
 
