@@ -24,6 +24,7 @@ class LocalHotelProvider implements HotelProviderInterface
 
     public function search(SearchHotelDto $dto): array
     {
+       
         $nights = $dto->nights();
 
         $query = Hotel::query()
@@ -59,12 +60,12 @@ class LocalHotelProvider implements HotelProviderInterface
         }
 
         $hotels = $query->get();
-
+        
 
         // Pass check-in/check-out so the mapper can look up deal pricing
         return $hotels
-            ->map(fn (Hotel $h) => $this->mapper->toOfferDto(
-                $h, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut, $dto->currency
+            ->map(fn (Hotel $hotel) => $this->mapper->toOfferDto(
+                $hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
             ))
             ->all();
     }
@@ -97,7 +98,7 @@ class LocalHotelProvider implements HotelProviderInterface
 
         // Pass check-in/check-out so the mapper can apply deal pricing
         return $this->mapper->toOfferDto(
-            $room->hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut, $dto->currency
+            $room->hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
         );
     }
 

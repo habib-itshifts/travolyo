@@ -65,6 +65,7 @@ class HotelController extends Controller
             $total  = count($offers);
             $sliced = array_slice($offers, ($page - 1) * $perPage, $perPage);
 
+
             return response()->json([
                 'success'      => true,
                 'count'        => count($sliced),
@@ -128,10 +129,15 @@ class HotelController extends Controller
                     'bed_configuration' => $r->bedConfiguration,
                     'max_adults'        => $r->maxAdults,
                     'max_children'      => $r->maxChildren,
-                    'base_price'        => $r->basePrice,
-                    'total_price'       => $r->totalPrice,
+                    'base_original_price'        => $r->baseOriginalPrice,
+                    'converted_original_price'        => $r->convertedOriginalPrice,
+                    'base_current_price'        => $r->baseCurrentPrice,
+                    'converted_current_price'        => $r->convertedCurrentPrice,
+                    'base_total_price'        => $r->baseTotalPrice,
+                    'converted_total_price'        => $r->convertedTotalPrice,
                     'nights'            => $r->nights,
-                    'currency'          => $r->currency,
+                    'base_currency'          => $r->baseCurrency,
+                    'conveted_currency'          => $r->convertedCurrency,
                     'is_available'      => $r->isAvailable,
                     'amenities'         => $r->amenityNames,
                     'size_sqm'          => $r->sizeSqm,
@@ -151,6 +157,7 @@ class HotelController extends Controller
 
     public function prebook(PrebookHotelRequest $request): JsonResponse
     {
+        
         try {
             $validated = $request->validated();
 
@@ -168,6 +175,7 @@ class HotelController extends Controller
             );
 
             $offer = (new PrebookHotelAction)->handle($dto);
+            // dd( $offer);
 
             // Find the requested room from the offer
             $room = collect($offer->rooms)->firstWhere('roomId', $validated['room_id']);
@@ -184,9 +192,9 @@ class HotelController extends Controller
                 'check_out'   => $validated['check_out'],
                 'adults'      => (int) $validated['adults'],
                 'children'    => (int) ($validated['children'] ?? 0),
-                'unit_price'  => $room?->basePrice ?? $offer->lowestPrice,
-                'total_price' => $room?->totalPrice ?? $offer->lowestPrice,
-                'currency'    => $offer->currency,
+                'unit_price'  => $room?->baseCurrentPrice,
+                'total_price' => $room?->baseTotalPrice,
+                'currency'    => $offer->baseCurrency,
                 'deal_id'     => $room?->dealId,  // track which deal was applied (null = no deal)
             ];
 
