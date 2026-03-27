@@ -94,17 +94,17 @@
 .travolyo-btn--outline {
     background: #ffffff;
     border: 1px solid #c9dce8;
-    color: #18415f;
+    color: #18d4e6;
 }
 .travolyo-btn--primary {
     background: #ffffff;
     border: 1px solid #7dd2eb;
-    color: #0f88ca;
+    color: #18d4e6;
 }
 .travolyo-btn--plain {
     background: transparent;
     border: 0;
-    color: #18415f;
+    color: #0f88ca;
     padding: 0 6px;
 }
 .travolyo-currency {
@@ -249,7 +249,9 @@
                                     <a class="dropdown-item d-flex align-items-center gap-2 {{ $activeCurrencyCode === $code ? 'active' : '' }}" href="{{ route('currency.switch', $code) }}">
                                         <img src="https://flagcdn.com/w20/{{ $currency['flag'] }}.png" alt="{{ $code }}">
                                         <span>{{ $currency['symbol'] }}</span>
-                                        <span>{{ $code }}</span>
+                                        @if (strtoupper(trim((string) $currency['symbol'])) !== strtoupper(trim((string) $code)))
+                                            <span>{{ $code }}</span>
+                                        @endif
                                         <span class="ms-auto text-muted small">{{ $currency['name'] }}</span>
                                     </a>
                                 </li>

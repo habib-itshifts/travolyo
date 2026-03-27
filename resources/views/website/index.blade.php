@@ -4,6 +4,101 @@
     $directoryTabs = collect(data_get($topCitiesConfig ?? [], 'tabs', []))->values();
     $topCitiesTab = $directoryTabs->firstWhere('key', 'top_cities_to_book') ?? [];
     $topCityRegions = collect(data_get($topCitiesTab, 'regions', []))->values();
+    $buildExploreHotelUrl = function (array $entry) use ($defaultHotelCheckIn, $defaultHotelCheckOut) {
+        $isCountry = ($entry['type'] ?? 'city') === 'country';
+
+        $query = $isCountry
+            ? [
+                'destination' => $entry['value'] ?? '',
+                'country' => $entry['country'] ?? ($entry['value'] ?? ''),
+                'country_code' => $entry['country_code'] ?? '',
+                'check_in' => $defaultHotelCheckIn,
+                'check_out' => $defaultHotelCheckOut,
+                'adults' => 1,
+                'children' => 0,
+            ]
+            : [
+                'city' => $entry['value'] ?? '',
+                'country' => $entry['country'] ?? '',
+                'country_code' => $entry['country_code'] ?? '',
+                'location' => $entry['location'] ?? '',
+                'check_in' => $defaultHotelCheckIn,
+                'check_out' => $defaultHotelCheckOut,
+                'adults' => 1,
+                'children' => 0,
+            ];
+
+        return route('hotels.index') . '?' . http_build_query(array_filter($query, fn ($value) => $value !== '' && $value !== null));
+    };
+    $exploreRegions = collect([
+        [
+            'label' => 'Asia',
+            'icon' => 'bi-globe-central-south-asia',
+            'items' => [
+                ['label' => 'Bali Hotels', 'value' => 'Bali', 'country' => 'Indonesia', 'country_code' => 'ID', 'location' => 'DPS'],
+                ['label' => 'Bangkok Hotels', 'value' => 'Bangkok', 'country' => 'Thailand', 'country_code' => 'TH', 'location' => 'BKK'],
+                ['label' => 'Tokyo Hotels', 'value' => 'Tokyo', 'country' => 'Japan', 'country_code' => 'JP', 'location' => 'TYO'],
+                ['label' => 'Seoul Hotels', 'value' => 'Seoul', 'country' => 'South Korea', 'country_code' => 'KR', 'location' => 'SEL'],
+                ['label' => 'Phuket Hotels', 'value' => 'Phuket', 'country' => 'Thailand', 'country_code' => 'TH', 'location' => 'HKT'],
+                ['label' => 'Singapore', 'value' => 'Singapore', 'country' => 'Singapore', 'country_code' => 'SG', 'location' => 'SIN'],
+            ],
+        ],
+        [
+            'label' => 'Europe',
+            'icon' => 'bi-bank2',
+            'items' => [
+                ['label' => 'London Hotels', 'value' => 'London', 'country' => 'United Kingdom', 'country_code' => 'GB', 'location' => 'LON'],
+                ['label' => 'Paris Hotels', 'value' => 'Paris', 'country' => 'France', 'country_code' => 'FR', 'location' => 'PAR'],
+                ['label' => 'Rome Hotels', 'value' => 'Rome', 'country' => 'Italy', 'country_code' => 'IT', 'location' => 'ROM'],
+                ['label' => 'Berlin Hotels', 'value' => 'Berlin', 'country' => 'Germany', 'country_code' => 'DE', 'location' => 'BER'],
+                ['label' => 'Spain Hotels', 'value' => 'Spain', 'country' => 'Spain', 'country_code' => 'ES', 'type' => 'country'],
+            ],
+        ],
+        [
+            'label' => 'Middle East',
+            'icon' => 'bi-brightness-high',
+            'items' => [
+                ['label' => 'Dubai Hotels', 'value' => 'Dubai', 'country' => 'UAE', 'country_code' => 'AE', 'location' => 'DXB'],
+                ['label' => 'Saudi Hotels', 'value' => 'Saudi Arabia', 'country' => 'Saudi Arabia', 'country_code' => 'SA', 'type' => 'country'],
+                ['label' => 'Egypt Hotels', 'value' => 'Egypt', 'country' => 'Egypt', 'country_code' => 'EG', 'type' => 'country'],
+            ],
+        ],
+        [
+            'label' => 'Americas',
+            'icon' => 'bi-globe-americas',
+            'items' => [
+                ['label' => 'USA Hotels', 'value' => 'United States', 'country' => 'United States', 'country_code' => 'US', 'type' => 'country'],
+                ['label' => 'Canada Hotels', 'value' => 'Canada', 'country' => 'Canada', 'country_code' => 'CA', 'type' => 'country'],
+                ['label' => 'Brazil Hotels', 'value' => 'Brazil', 'country' => 'Brazil', 'country_code' => 'BR', 'type' => 'country'],
+                ['label' => 'Mexico Hotels', 'value' => 'Mexico', 'country' => 'Mexico', 'country_code' => 'MX', 'type' => 'country'],
+            ],
+        ],
+        [
+            'label' => 'Americas',
+            'icon' => 'bi-globe-americas',
+            'items' => [
+                ['label' => 'USA Hotels', 'value' => 'United States', 'country' => 'United States', 'country_code' => 'US', 'type' => 'country'],
+                ['label' => 'Canada Hotels', 'value' => 'Canada', 'country' => 'Canada', 'country_code' => 'CA', 'type' => 'country'],
+                ['label' => 'Brazil Hotels', 'value' => 'Brazil', 'country' => 'Brazil', 'country_code' => 'BR', 'type' => 'country'],
+            ],
+        ],
+        [
+            'label' => 'Africa',
+            'icon' => 'bi-globe2',
+            'items' => [
+                ['label' => 'Morocco Hotels', 'value' => 'Morocco', 'country' => 'Morocco', 'country_code' => 'MA', 'type' => 'country'],
+                ['label' => 'South Africa Hotels', 'value' => 'South Africa', 'country' => 'South Africa', 'country_code' => 'ZA', 'type' => 'country'],
+            ],
+        ],
+        [
+            'label' => 'Oceania',
+            'icon' => 'bi-water',
+            'items' => [
+                ['label' => 'Australia Hotels', 'value' => 'Australia', 'country' => 'Australia', 'country_code' => 'AU', 'type' => 'country'],
+                ['label' => 'New Zealand Hotels', 'value' => 'New Zealand', 'country' => 'New Zealand', 'country_code' => 'NZ', 'type' => 'country'],
+            ],
+        ],
+    ]);
     $heroQuickCities = $topCityRegions
         ->flatMap(fn (array $region) => data_get($region, 'items', []))
         ->take(6)
@@ -18,7 +113,7 @@
     background: #f7f8fb;
     min-height: auto;
     overflow: visible;
-    padding: 26px 0 190px;
+    padding: 26px 0 96px;
     position: relative;
     z-index: 12;
 }
@@ -28,9 +123,9 @@
     box-shadow:
         inset 0 0 0 1px rgba(255, 255, 255, 0.24),
         0 22px 44px rgba(18, 38, 63, 0.08);
-    min-height: 540px;
+    min-height: 455px;
     overflow: visible;
-    padding: 34px 0 180px;
+    padding: 34px 0 86px;
     position: relative;
     z-index: 12;
 }
@@ -137,96 +232,144 @@
     transform: translateY(-1px);
 }
 .hero-quick-links .dot { display: none; }
-.top-cities-directory-wrap { margin-top: -48px; position: relative; z-index: 2; }
+.top-cities-directory-wrap {
+    padding: 6px 0 34px;
+    position: relative;
+}
 .top-cities-directory {
-    background: #fff;
-    border: 1px solid #e9eef5;
-    border-radius: 28px;
-    box-shadow: 0 24px 60px rgba(18, 38, 63, .08);
-    padding: 28px 32px 34px;
+    background:
+        radial-gradient(circle at 50% 100%, rgba(164, 211, 246, 0.30), rgba(164, 211, 246, 0) 34%),
+        linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+    border: 1px solid #edf2f8;
+    border-radius: 26px;
+    box-shadow: 0 18px 44px rgba(18, 38, 63, .06);
+    margin: 0 auto;
+    max-width: 1320px;
+    padding: 26px 28px 38px;
 }
-.top-cities-directory__tabs {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    border-bottom: 1px solid #e9eef5;
-    padding-bottom: 16px;
-    margin-bottom: 28px;
-}
-.top-cities-directory__tab {
-    appearance: none;
-    border: 0;
-    border-bottom: 3px solid transparent;
-    background: transparent;
-    color: #697586;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 0 4px 14px;
-    transition: color .2s ease, border-color .2s ease;
-}
-.top-cities-directory__tab:hover,
-.top-cities-directory__tab.is-active {
-    color: #17c3ce;
-    border-color: #17c3ce;
-}
-.top-cities-directory__panel { display: none; }
-.top-cities-directory__panel.is-active { display: block; }
-.top-cities-directory__note {
-    color: #5f6c7b;
-    font-size: .95rem;
-    margin: -6px 0 20px;
-}
-.top-cities-region + .top-cities-region { margin-top: 34px; }
-.top-cities-region__title {
-    color: #12314d;
-    font-size: 1.15rem;
+.top-cities-directory__heading {
+    color: #374151;
+    font-size: clamp(1.8rem, 2.6vw, 2.15rem);
     font-weight: 800;
-    letter-spacing: .12em;
-    margin-bottom: 18px;
-    text-transform: uppercase;
+    margin: 0 0 26px;
+    text-align: center;
+}
+.top-cities-directory__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.top-cities-directory__row {
+    display: grid;
+    gap: 14px;
+    justify-content: center;
+}
+.top-cities-directory__row--wide {
+    grid-template-columns: repeat(2, minmax(0, 330px));
+}
+.top-cities-directory__row--top .top-cities-region__grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.top-cities-directory__row--top .top-cities-chip {
+    width: 100%;
+}
+.top-cities-directory__row--middle {
+    grid-template-columns: repeat(3, minmax(0, 245px));
+}
+.top-cities-directory__row--middle .top-cities-region__grid {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.top-cities-region {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #eef3f9;
+    box-sizing: border-box;
+    border-radius: 16px;
+    box-shadow: 0 10px 24px rgba(24, 55, 90, 0.08);
+    padding: 16px 16px 14px;
+    width: 100%;
+}
+.top-cities-region__title {
+    align-items: center;
+    color: #2f3f55;
+    display: inline-flex;
+    font-size: 1.1rem;
+    font-weight: 700;
+    gap: 9px;
+    margin-bottom: 14px;
+}
+.top-cities-region__title i {
+    align-items: center;
+    background: linear-gradient(135deg, #d8efff 0%, #edf8ff 100%);
+    border-radius: 999px;
+    color: #28a6cb;
+    display: inline-flex;
+    font-size: 0.8rem;
+    height: 22px;
+    justify-content: center;
+    width: 22px;
 }
 .top-cities-region__grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
+    align-items: flex-start;
 }
 .top-cities-chip {
-    background: #fff;
-    border: 1px solid #dbe4ef;
-    border-radius: 18px;
-    color: #465568;
+    background: #f3f6fb;
+    border: 1px solid #edf2f7;
+    border-radius: 8px;
+    color: #607085;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 54px;
-    min-width: 104px;
-    padding: 10px 22px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    line-height: 1;
+    min-height: 34px;
+    padding: 0 12px;
+    white-space: nowrap;
     text-decoration: none;
-    transition: transform .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease, color .15s ease;
 }
 .top-cities-chip:hover {
-    border-color: #17c3ce;
-    box-shadow: 0 10px 24px rgba(23, 195, 206, .12);
-    color: #17c3ce;
+    background: #ffffff;
+    border-color: #bfe0ef;
+    color: #2293bb;
     transform: translateY(-1px);
 }
 .top-cities-placeholder {
-    background: linear-gradient(180deg, #f8fbfd 0%, #f3f7fb 100%);
+    background: rgba(255, 255, 255, 0.88);
     border: 1px dashed #d8e3ee;
-    border-radius: 20px;
+    border-radius: 18px;
     color: #5f6c7b;
-    padding: 22px 24px;
+    padding: 18px 20px;
 }
 
 @media (max-width: 991.98px) {
-    .hero-section { padding-bottom: 140px; }
-    .hero-panel { min-height: 500px; padding-bottom: 120px; }
+    .hero-section { padding-bottom: 82px; }
+    .hero-panel { min-height: 430px; padding-bottom: 84px; }
     .hero-panel .hero-mountain { bottom: 64px; }
-    .top-cities-directory-wrap { margin-top: 32px; }
-    .top-cities-directory { padding: 24px 20px 26px; }
+    .top-cities-directory-wrap { padding-top: 0; }
+    .top-cities-directory {
+        padding: 22px 18px 24px;
+    }
+    .top-cities-directory__row--wide,
+    .top-cities-directory__row--middle {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .top-cities-directory__row--top .top-cities-region__grid {
+        display: flex;
+    }
+    .top-cities-directory__row--middle .top-cities-region__grid {
+        display: flex;
+    }
+    .top-cities-directory__row {
+        justify-content: stretch;
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -239,34 +382,34 @@
     .hero-trustbar__item i { height: 22px; width: 22px; }
     .hero-quick-links { gap: 8px; }
     .hero-quick-links a { font-size: 0.84rem; padding: 8px 12px; }
-    .top-cities-directory__tabs {
-        gap: 8px;
-        margin-bottom: 22px;
-        overflow-x: auto;
-        padding-bottom: 10px;
-        scrollbar-width: none;
+    .top-cities-directory {
+        border-radius: 22px;
+        padding: 20px 14px 18px;
     }
-    .top-cities-directory__tabs::-webkit-scrollbar { display: none; }
-    .top-cities-directory__tab {
-        border: 1px solid #dbe4ef;
-        border-radius: 999px;
-        flex: 0 0 auto;
-        padding: 10px 14px;
-        white-space: nowrap;
+    .top-cities-directory__heading {
+        font-size: 1.45rem;
+        margin-bottom: 16px;
     }
-    .top-cities-directory__tab.is-active {
-        background: rgba(23, 195, 206, .08);
+    .top-cities-directory__row--wide,
+    .top-cities-directory__row--middle {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .top-cities-directory__row--top .top-cities-region__grid {
+        display: flex;
+    }
+    .top-cities-directory__row--middle .top-cities-region__grid {
+        display: flex;
     }
     .top-cities-region__title {
         font-size: 1rem;
-        letter-spacing: .1em;
-        margin-bottom: 14px;
+        margin-bottom: 10px;
     }
-    .top-cities-region__grid { gap: 10px; }
+    .top-cities-region__grid { gap: 8px; }
     .top-cities-chip {
-        min-height: 48px;
-        min-width: calc(50% - 5px);
-        padding: 10px 16px;
+        font-size: 0.8rem;
+        min-height: 32px;
+        min-width: 0;
+        padding: 0 10px;
     }
 }
 </style>
@@ -381,280 +524,66 @@
     </div>
 </section>
 
-<section class="promo-banner text-white text-center">
-    <div class="container">
-        <p class="text-uppercase fw-700 mb-2" style="letter-spacing:1.5px;opacity:.85;font-size:.85rem;">
-            Limited Time Offer
-        </p>
-        <h2 class="mb-3">Get 20% Off Your First Booking</h2>
-        <p class="opacity-90 mb-4">
-            Sign up today and use code <strong>TRAVOLYO20</strong> at checkout to save on hotels &amp; flights.
-        </p>
-        <a href="{{ route('register') }}" class="btn btn-promo">
-            Claim Your Discount
-        </a>
-    </div>
-</section>
-
-@if($directoryTabs->isNotEmpty())
+@if($exploreRegions->isNotEmpty())
 <section class="top-cities-directory-wrap">
     <div class="container">
         <div class="top-cities-directory">
-            <div class="top-cities-directory__tabs" role="tablist" aria-label="Travel directory">
-                @foreach($directoryTabs as $tab)
-                    <button
-                        type="button"
-                        class="top-cities-directory__tab {{ $loop->first ? 'is-active' : '' }}"
-                        data-directory-tab="{{ data_get($tab, 'key') }}"
-                        aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                        <i class="bi {{ data_get($tab, 'icon', 'bi-grid') }}"></i>
-                        <span>{{ data_get($tab, 'label') }}</span>
-                    </button>
-                @endforeach
-            </div>
-
-            @foreach($directoryTabs as $tab)
-                <div class="top-cities-directory__panel {{ $loop->first ? 'is-active' : '' }}" data-directory-panel="{{ data_get($tab, 'key') }}">
-                    @if(collect(data_get($tab, 'regions', []))->isNotEmpty())
-                        @if(data_get($tab, 'note'))
-                            <p class="top-cities-directory__note mb-0">
-                                {{ data_get($tab, 'note') }}
-                            </p>
-                        @endif
-                        @foreach(data_get($tab, 'regions', []) as $region)
-                            <div class="top-cities-region">
-                                <div class="top-cities-region__title">{{ data_get($region, 'label') }}</div>
-                                <div class="top-cities-region__grid">
-                                    @foreach(data_get($region, 'items', []) as $entry)
-                                        @php
-                                            $isCountryTab = data_get($tab, 'key') === 'countries_and_territories';
-
-                                            $query = $isCountryTab
-                                                ? [
-                                                    'destination' => data_get($entry, 'destination', data_get($entry, 'country', data_get($entry, 'label', ''))),
-                                                    'country' => data_get($entry, 'country', data_get($entry, 'label', '')),
-                                                    'country_code' => data_get($entry, 'country_code', ''),
-                                                    'check_in' => $defaultHotelCheckIn,
-                                                    'check_out' => $defaultHotelCheckOut,
-                                                    'adults' => 1,
-                                                    'children' => 0,
-                                                ]
-                                                : [
-                                                    'country' => data_get($entry, 'country', ''),
-                                                    'country_code' => data_get($entry, 'country_code', ''),
-                                                    'city' => data_get($entry, 'city', data_get($entry, 'label', '')),
-                                                    'location' => data_get($entry, 'location', ''),
-                                                    'check_in' => $defaultHotelCheckIn,
-                                                    'check_out' => $defaultHotelCheckOut,
-                                                    'adults' => 1,
-                                                    'children' => 0,
-                                                ];
-
-                                            $entryUrl = route('hotels.index') . '?' . http_build_query($query);
-                                        @endphp
-                                        <a class="top-cities-chip" href="{{ $entryUrl }}">
-                                            {{ data_get($entry, 'label', data_get($entry, 'city', '')) }}
-                                        </a>
-                                    @endforeach
-                                </div>
+            <h2 class="top-cities-directory__heading">Explore Destinations</h2>
+            @php
+                $exploreTopRow = $exploreRegions->take(2);
+                $exploreMiddleRow = $exploreRegions->slice(2, 3);
+                $exploreBottomRow = $exploreRegions->slice(5, 2);
+            @endphp
+            <div class="top-cities-directory__rows">
+                <div class="top-cities-directory__row top-cities-directory__row--wide top-cities-directory__row--top">
+                    @foreach($exploreTopRow as $region)
+                        <div class="top-cities-region">
+                            <div class="top-cities-region__title">
+                                <i class="bi {{ data_get($region, 'icon', 'bi-globe2') }}"></i>
+                                <span>{{ data_get($region, 'label') }}</span>
                             </div>
-                        @endforeach
-                    @else
-                        <div class="top-cities-placeholder">
-                            {{ data_get($tab, 'description', 'This section is ready for the next content set.') }}
+                            <div class="top-cities-region__grid">
+                                @foreach(data_get($region, 'items', []) as $entry)
+                                    <a class="top-cities-chip" href="{{ $buildExploreHotelUrl($entry) }}">{{ data_get($entry, 'label') }}</a>
+                                @endforeach
+                            </div>
                         </div>
-                    @endif
+                    @endforeach
                 </div>
-            @endforeach
+                <div class="top-cities-directory__row top-cities-directory__row--middle">
+                    @foreach($exploreMiddleRow as $region)
+                        <div class="top-cities-region">
+                            <div class="top-cities-region__title">
+                                <i class="bi {{ data_get($region, 'icon', 'bi-globe2') }}"></i>
+                                <span>{{ data_get($region, 'label') }}</span>
+                            </div>
+                            <div class="top-cities-region__grid">
+                                @foreach(data_get($region, 'items', []) as $entry)
+                                    <a class="top-cities-chip" href="{{ $buildExploreHotelUrl($entry) }}">{{ data_get($entry, 'label') }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="top-cities-directory__row top-cities-directory__row--wide">
+                    @foreach($exploreBottomRow as $region)
+                        <div class="top-cities-region">
+                            <div class="top-cities-region__title">
+                                <i class="bi {{ data_get($region, 'icon', 'bi-globe2') }}"></i>
+                                <span>{{ data_get($region, 'label') }}</span>
+                            </div>
+                            <div class="top-cities-region__grid">
+                                @foreach(data_get($region, 'items', []) as $entry)
+                                    <a class="top-cities-chip" href="{{ $buildExploreHotelUrl($entry) }}">{{ data_get($entry, 'label') }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
 </section>
 @endif
 
-<section class="section-padding">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="section-title mb-0">Popular Destinations</h2>
-            <a href="#" class="view-all-link">View all <i class="bi bi-arrow-right"></i></a>
-        </div>
-        <div class="row g-3">
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&q=80" alt="Dubai">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">Dubai</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">United Arab Emirates</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=80" alt="Paris">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">Paris</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">France</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80" alt="Tokyo">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">Tokyo</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">Japan</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1522083165195-3424ed129620?w=600&q=80" alt="New York">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">New York</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">United States</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600&q=80" alt="Bangkok">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">Bangkok</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">Thailand</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1555993539-1732b0258235?w=600&q=80" alt="Bali">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">Bali</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">Indonesia</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1533929736458-ca588d08c8be?w=600&q=80" alt="London">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">London</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">United Kingdom</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <div class="col-6 col-md-4 col-lg-3">
-                <a href="#" class="city-card">
-                    <img src="https://images.unsplash.com/photo-1549180030-48bf079fb38a?w=600&q=80" alt="Santorini">
-                    <div class="city-card__overlay">
-                        <div>
-                            <div class="city-card__name">Santorini</div>
-                            <div style="color:rgba(255,255,255,.75);font-size:.75rem;">Greece</div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-        </div>
-    </div>
-</section>
-
-<section class="section-padding why-section" style="background:#f8f9fa;">
-    <div class="container">
-        <h2 class="section-title text-center mb-5">Why Book with Travolyo?</h2>
-        <div class="row g-4">
-
-            <div class="col-6 col-md-3">
-                <div class="why-card">
-                    <div class="why-card__icon" style="background:#17c3ce;">
-                        <i class="bi bi-shield-check"></i>
-                    </div>
-                    <div class="why-card__title">Secure Booking</div>
-                    <p class="why-card__desc">Your payments and personal data are always protected with industry-grade encryption.</p>
-                </div>
-            </div>
-
-            <div class="col-6 col-md-3">
-                <div class="why-card">
-                    <div class="why-card__icon" style="background:#ffc107;">
-                        <i class="bi bi-tag"></i>
-                    </div>
-                    <div class="why-card__title">Best Price Guarantee</div>
-                    <p class="why-card__desc">We compare thousands of deals so you always get the lowest price available.</p>
-                </div>
-            </div>
-
-            <div class="col-6 col-md-3">
-                <div class="why-card">
-                    <div class="why-card__icon" style="background:#28a745;">
-                        <i class="bi bi-headset"></i>
-                    </div>
-                    <div class="why-card__title">24/7 Support</div>
-                    <p class="why-card__desc">Our travel experts are available around the clock to assist you wherever you are.</p>
-                </div>
-            </div>
-
-            <div class="col-6 col-md-3">
-                <div class="why-card">
-                    <div class="why-card__icon" style="background:#6f42c1;">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                    </div>
-                    <div class="why-card__title">Free Cancellation</div>
-                    <p class="why-card__desc">Plans change. Enjoy flexible cancellation on thousands of hotels and flights.</p>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
 @endsection
-
-@push('scripts')
-<script>
-(function () {
-    const tabs = document.querySelectorAll('[data-directory-tab]');
-    const panels = document.querySelectorAll('[data-directory-panel]');
-
-    if (!tabs.length || !panels.length) {
-        return;
-    }
-
-    tabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            const key = tab.dataset.directoryTab || '';
-
-            tabs.forEach((btn) => {
-                const active = btn === tab;
-                btn.classList.toggle('is-active', active);
-                btn.setAttribute('aria-selected', active ? 'true' : 'false');
-            });
-
-            panels.forEach((panel) => {
-                panel.classList.toggle('is-active', panel.dataset.directoryPanel === key);
-            });
-        });
-    });
-})();
-</script>
-@endpush
