@@ -86,6 +86,7 @@ class TravolyoB2BBaseHotelProvider implements HotelProviderInterface
         string $checkOut,
         int    $adults,
         int    $children,
+        string $currency = 'USD',
     ): array {
         $hotelCodeCandidates = array_values(array_unique(array_filter([
             $offerId,

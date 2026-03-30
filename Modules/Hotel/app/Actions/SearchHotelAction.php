@@ -17,7 +17,7 @@ class SearchHotelAction
     {
         $providers = $dto->provider
             ? [$dto->provider]
-            : HotelProviderEnum::cases();
+            : [HotelProviderEnum::Local, HotelProviderEnum::Hyperguest];
 
         $results = [];
          $startedAt = microtime(true);
@@ -56,7 +56,7 @@ class SearchHotelAction
         return match ($provider) {
             HotelProviderEnum::Local       => new LocalHotelProvider(),
             // HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
-            // HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
+            HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }
 }

@@ -24,7 +24,6 @@ class LocalHotelProvider implements HotelProviderInterface
 
     public function search(SearchHotelDto $dto): array
     {
-       
         $nights = $dto->nights();
 
         $query = Hotel::query()
@@ -48,25 +47,23 @@ class LocalHotelProvider implements HotelProviderInterface
             $query->whereHas('amenities', fn ($q) => $q->whereIn('amenities.id', $dto->amenityIds));
         }
 
-        if ($dto->priceMin !== null || $dto->priceMax !== null) {
-            $query->whereHas('rooms', function ($q) use ($dto) {
-                if ($dto->priceMin !== null) {
-                    $q->where('base_price', '>=', $dto->priceMin);
-                }
-                if ($dto->priceMax !== null) {
-                    $q->where('base_price', '<=', $dto->priceMax);
-                }
-            });
-        }
-
         $hotels = $query->get();
-        
 
-        // Pass check-in/check-out so the mapper can look up deal pricing
         return $hotels
             ->map(fn (Hotel $hotel) => $this->mapper->toOfferDto(
                 $hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
             ))
+            ->filter(function (HotelOfferDto $offer) use ($dto) {
+                if ($dto->priceMin !== null && $offer->convertedLowestPrice < $dto->priceMin) {
+                    return false;
+                }
+
+                if ($dto->priceMax !== null && $offer->convertedLowestPrice > $dto->priceMax) {
+                    return false;
+                }
+
+                return true;
+            })
             ->all();
     }
 
@@ -77,6 +74,7 @@ class LocalHotelProvider implements HotelProviderInterface
         string $checkOut,
         int    $adults,
         int    $children,
+        string $currency = 'USD',
     ): array {
         // Local hotels include rooms directly in search() results via LocalHotelMapper.
         return [];

@@ -33,23 +33,24 @@ class LocalHotelMapper
             ->values()
             ->all();
         
-        $baseCurrency = $hotel->currency;    
-        $convertedCurrency = $currency; 
+        $baseCurrency = (string) ($hotel->currency ?: $currency);
+        $convertedCurrency = $currency;
         // Build room offer DTOs — each room checks for an applicable deal first
         $rooms = $hotel->rooms
             ->filter(fn (HotelRoom $r) => $r->is_active)
-            ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $baseCurrency,$convertedCurrency,$adults, $checkIn, $checkOut))
+            ->map(fn (HotelRoom $r) => $this->toRoomOfferDto($r, $nights, $baseCurrency, $convertedCurrency, $adults, $checkIn, $checkOut))
             ->values()
             ->all();
-       ;
 
         $baseLowestPrice = collect($rooms)
-            ->pluck('basePrice')
+            ->pluck('baseCurrentPrice')
             ->filter(fn ($price) => (float) $price > 0)
             ->min() ?? (float) ($hotel->sale_price ?: $hotel->base_price ?: 0);
 
         
-        $convertedLowestPrice = currency($baseLowestPrice,$baseCurrency,$convertedCurrency,false);
+        $convertedLowestPrice = $baseCurrency === $convertedCurrency
+            ? $baseLowestPrice
+            : (float) currency($baseLowestPrice, $baseCurrency, $convertedCurrency, false);
 
 
         return new HotelOfferDto(
@@ -70,7 +71,7 @@ class LocalHotelMapper
             amenityNames:     $hotel->amenities->pluck('name')->all(),
             serviceNames:     $hotel->services->pluck('name')->all(),
             baseLowestPrice:      (float)  $baseLowestPrice,
-            baseCurrency:         $hotel->currency,
+            baseCurrency:         $baseCurrency,
             convertedLowestPrice: (float)  $convertedLowestPrice,
             convertedCurrency:    $currency,
             rooms:            $rooms,
@@ -88,13 +89,13 @@ class LocalHotelMapper
      *   3. Last resort: hotel-level sale_price / base_price
      */
     public function toRoomOfferDto(
-    HotelRoom $room,
-    int $nights,
-    string $baseCurrency,
-    string $convertedCurrency,
-    int $adults = 1,
-    string $checkIn = '',
-    string $checkOut = '',
+        HotelRoom $room,
+        int $nights,
+        string $baseCurrency,
+        string $convertedCurrency,
+        int $adults = 1,
+        string $checkIn = '',
+        string $checkOut = '',
     ): HotelRoomOfferDto {
         $images = collect([$room->image_url])
             ->merge($room->gallery_urls ?? [])
@@ -152,10 +153,14 @@ class LocalHotelMapper
         }
 
         // Converted prices
-        $convertedCurrentPrice = currency($currentPrice, $baseCurrency, $convertedCurrency, false);
+        $convertedCurrentPrice = $baseCurrency === $convertedCurrency
+            ? $currentPrice
+            : (float) currency($currentPrice, $baseCurrency, $convertedCurrency, false);
         $convertedOriginalPrice = $originalPrice > 0
-            ? currency($originalPrice, $baseCurrency, $convertedCurrency, false)
-            : 0;
+            ? ($baseCurrency === $convertedCurrency
+                ? $originalPrice
+                : (float) currency($originalPrice, $baseCurrency, $convertedCurrency, false))
+            : 0.0;
 
         // Totals should always use CURRENT price
         $baseTotalPrice = $currentPrice * $nights;

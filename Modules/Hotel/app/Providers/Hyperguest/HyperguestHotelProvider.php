@@ -63,12 +63,13 @@ class HyperguestHotelProvider implements HotelProviderInterface
         string $checkOut,
         int    $adults,
         int    $children,
+        string $currency = 'USD',
     ): array {
         $hotel  = $this->findHotel($offerId);
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
 
         return collect($hotel['rooms'] ?? [])
-            ->map(fn (array $room) => $this->mapper->toRoomOfferDto($room, $nights, 'USD', $hotel))
+            ->map(fn (array $room) => $this->mapper->toRoomOfferDto($room, $nights, $currency, $hotel))
             ->values()
             ->all();
     }
@@ -303,11 +304,11 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     private function matchesPriceFilter(HotelOfferDto $offer, SearchHotelDto $dto): bool
     {
-        if ($dto->priceMin !== null && $offer->lowestPrice < $dto->priceMin) {
+        if ($dto->priceMin !== null && $offer->convertedLowestPrice < $dto->priceMin) {
             return false;
         }
 
-        if ($dto->priceMax !== null && $offer->lowestPrice > $dto->priceMax) {
+        if ($dto->priceMax !== null && $offer->convertedLowestPrice > $dto->priceMax) {
             return false;
         }
 

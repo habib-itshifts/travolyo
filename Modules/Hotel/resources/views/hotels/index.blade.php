@@ -613,6 +613,7 @@
                         check_out: params.check_out ?? '',
                         adults:    parseInt(params.adults   ?? 1, 10),
                         children:  parseInt(params.children ?? 0, 10),
+                        currency:  document.querySelector('meta[name="currency"]')?.content ?? 'USD',
                         provider:  hotel.provider,
                     }),
                 });

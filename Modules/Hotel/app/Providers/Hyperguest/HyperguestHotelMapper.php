@@ -13,7 +13,7 @@ class HyperguestHotelMapper
      *
      * @param  array  $hotel    One element from hotels.json "hotels" array
      * @param  int    $nights   Number of nights
-     * @param  string $currency Requested currency
+     * @param  string $currency Requested/converted currency
      */
     public function toOfferDto(array $hotel, int $nights, string $currency): HotelOfferDto
     {
@@ -22,28 +22,32 @@ class HyperguestHotelMapper
             ->values()
             ->all();
 
-        $lowestPrice = collect($rooms)->min(fn (HotelRoomOfferDto $r) => $r->basePrice) ?? 0.0;
+        $baseLowestPrice = collect($rooms)->min(fn (HotelRoomOfferDto $room) => $room->baseCurrentPrice) ?? 0.0;
+        $convertedLowestPrice = collect($rooms)->min(fn (HotelRoomOfferDto $room) => $room->convertedCurrentPrice) ?? 0.0;
+        $baseCurrency = (string) (collect($rooms)->first()?->baseCurrency ?? $currency);
 
         return new HotelOfferDto(
-            offerId:          $hotel['hotel_id'],
-            provider:         HotelProviderEnum::Hyperguest,
-            name:             $hotel['name'],
-            starRating:       (int) $hotel['star_rating'],
-            city:             $hotel['city'],
-            country:          $hotel['country'],
-            address:          $hotel['address'],
-            description:      $hotel['description'] ?? null,
-            shortDescription: $hotel['short_description'] ?? null,
-            checkInTime:      $hotel['check_in_time'] ?? null,
-            checkOutTime:     $hotel['check_out_time'] ?? null,
-            latitude:         isset($hotel['latitude'])  ? (float) $hotel['latitude']  : null,
-            longitude:        isset($hotel['longitude']) ? (float) $hotel['longitude'] : null,
-            images:           $hotel['images'] ?? [],
-            amenityNames:     $hotel['amenities'] ?? [],
-            serviceNames:     [],
-            lowestPrice:      (float) $lowestPrice,
-            currency:         $currency,
-            rooms:            $rooms,
+            offerId:              $hotel['hotel_id'],
+            provider:             HotelProviderEnum::Hyperguest,
+            name:                 $hotel['name'],
+            starRating:           (int) $hotel['star_rating'],
+            city:                 $hotel['city'],
+            country:              $hotel['country'],
+            address:              $hotel['address'],
+            description:          $hotel['description'] ?? null,
+            shortDescription:     $hotel['short_description'] ?? null,
+            checkInTime:          $hotel['check_in_time'] ?? null,
+            checkOutTime:         $hotel['check_out_time'] ?? null,
+            latitude:             isset($hotel['latitude']) ? (float) $hotel['latitude'] : null,
+            longitude:            isset($hotel['longitude']) ? (float) $hotel['longitude'] : null,
+            images:               $hotel['images'] ?? [],
+            amenityNames:         $hotel['amenities'] ?? [],
+            serviceNames:         [],
+            baseLowestPrice:      (float) $baseLowestPrice,
+            baseCurrency:         $baseCurrency,
+            convertedLowestPrice: (float) $convertedLowestPrice,
+            convertedCurrency:    $currency,
+            rooms:                $rooms,
         );
     }
 
@@ -51,49 +55,59 @@ class HyperguestHotelMapper
      * Map a raw Hyperguest room array to HotelRoomOfferDto.
      *
      * The roomId is encoded as base64 JSON containing all keys needed
-     * for prebook and booking:  hotel_id, property_id, room_code, rate_code, price.
+     * for prebook and booking: hotel_id, property_id, room_code, rate_code, price.
      *
      * @param  array  $room       One element from hotel "rooms" array
      * @param  int    $nights     Number of nights
-     * @param  string $currency   Requested currency
+     * @param  string $currency   Requested/converted currency
      * @param  array  $hotel      Parent hotel array (needed for hotel_id / property_id)
      */
     public function toRoomOfferDto(array $room, int $nights, string $currency, array $hotel = []): HotelRoomOfferDto
     {
-        $rates       = $room['rates'] ?? [];
-        $basePrice   = (float) ($rates['base_price_per_night'] ?? 0);
-        $totalPrice  = $basePrice * max($nights, 1);
+        $rates = $room['rates'] ?? [];
+        $baseCurrency = (string) ($rates['currency'] ?? $currency);
+        $basePrice = (float) ($rates['base_price_per_night'] ?? 0);
+        $baseTotalPrice = $basePrice * max($nights, 1);
+        $convertedPrice = $baseCurrency === $currency
+            ? $basePrice
+            : (float) currency($basePrice, $baseCurrency, $currency, false);
+        $convertedTotalPrice = $convertedPrice * max($nights, 1);
         $isAvailable = (bool) ($rates['is_available'] ?? false);
 
-        // Encode the booking keys so they survive the prebook → checkout round-trip
         $bookingKey = base64_encode(json_encode([
-            'hotel_id'    => $hotel['hotel_id']    ?? $room['room_id'],
+            'hotel_id'    => $hotel['hotel_id'] ?? $room['room_id'],
             'property_id' => $hotel['property_id'] ?? null,
             'room_id'     => $room['room_id'],
-            'room_code'   => $room['room_code']   ?? 'STD',
-            'rate_code'   => $room['rate_code']   ?? 'BAR',
+            'room_code'   => $room['room_code'] ?? 'STD',
+            'rate_code'   => $room['rate_code'] ?? 'BAR',
             'price'       => $basePrice,
-            'currency'    => $rates['currency']   ?? $currency,
-            'meal_plan'   => $rates['meal_plan']  ?? null,
+            'currency'    => $baseCurrency,
+            'meal_plan'   => $rates['meal_plan'] ?? null,
         ]));
 
         return new HotelRoomOfferDto(
-            roomId:           $bookingKey,
-            name:             $room['name'],
-            roomType:         $room['room_type'] ?? 'standard',
-            bedConfiguration: (array) ($room['bed_configuration'] ?? []),
-            maxAdults:        (int) ($room['max_adults'] ?? 2),
-            maxChildren:      (int) ($room['max_children'] ?? 0),
-            basePrice:        $basePrice,
-            totalPrice:       $totalPrice,
-            nights:           $nights,
-            currency:         $currency,
-            isAvailable:      $isAvailable,
-            amenityNames:     $room['amenities'] ?? [],
-            sizeSqm:          isset($room['size_sqm']) ? (float) $room['size_sqm'] : null,
-            viewType:         $room['view_type'] ?? null,
-            description:      $room['description'] ?? null,
-            images:           $room['images'] ?? [],
+            roomId:                 $bookingKey,
+            name:                   $room['name'],
+            roomType:               $room['room_type'] ?? 'standard',
+            bedConfiguration:       (array) ($room['bed_configuration'] ?? []),
+            maxAdults:              (int) ($room['max_adults'] ?? 2),
+            maxChildren:            (int) ($room['max_children'] ?? 0),
+            baseOriginalPrice:      0.0,
+            convertedOriginalPrice: 0.0,
+            baseCurrentPrice:       $basePrice,
+            convertedCurrentPrice:  $convertedPrice,
+            baseTotalPrice:         $baseTotalPrice,
+            convertedTotalPrice:    $convertedTotalPrice,
+            nights:                 $nights,
+            baseCurrency:           $baseCurrency,
+            convertedCurrency:      $currency,
+            isAvailable:            $isAvailable,
+            amenityNames:           $room['amenities'] ?? [],
+            sizeSqm:                isset($room['size_sqm']) ? (float) $room['size_sqm'] : null,
+            viewType:               $room['view_type'] ?? null,
+            description:            $room['description'] ?? null,
+            images:                 $room['images'] ?? [],
+            dealId:                 null,
         );
     }
 

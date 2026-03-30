@@ -98,6 +98,7 @@ class HotelController extends Controller
             'check_out' => 'required|date_format:Y-m-d|after:check_in',
             'adults'    => 'required|integer|min:1',
             'children'  => 'nullable|integer|min:0',
+            'currency'  => 'nullable|string|size:3',
             'provider'  => 'required|string',
         ]);
 
@@ -117,6 +118,7 @@ class HotelController extends Controller
                 checkOut: $request->input('check_out'),
                 adults:   (int) $request->input('adults', 1),
                 children: (int) $request->input('children', 0),
+                currency: (string) $request->input('currency', 'USD'),
             );
 
             return response()->json([
@@ -137,7 +139,7 @@ class HotelController extends Controller
                     'converted_total_price'        => $r->convertedTotalPrice,
                     'nights'            => $r->nights,
                     'base_currency'          => $r->baseCurrency,
-                    'conveted_currency'          => $r->convertedCurrency,
+                    'converted_currency'          => $r->convertedCurrency,
                     'is_available'      => $r->isAvailable,
                     'amenities'         => $r->amenityNames,
                     'size_sqm'          => $r->sizeSqm,

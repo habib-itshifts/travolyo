@@ -41,7 +41,7 @@ class HotelOfferResource extends JsonResource
             'amenities'         => $this->amenityNames,
             'services'          => $this->serviceNames,
 
-            // for shrt time we are usig this Pricing
+            // Backward-compatible display pricing
             'lowest_price'      => $this->convertedLowestPrice,
             'currency'          => $this->convertedCurrency,
 
@@ -68,6 +68,8 @@ class HotelOfferResource extends JsonResource
                 'base_total_price'         => $r->baseTotalPrice,
                 'converted_total_price'    => $r->convertedTotalPrice,
                 'nights'            => $r->nights,
+                'base_currency'     => $r->baseCurrency,
+                'converted_currency'=> $r->convertedCurrency,
                 'is_available'      => $r->isAvailable,
                 'amenities'         => $r->amenityNames,
                 'size_sqm'          => $r->sizeSqm,

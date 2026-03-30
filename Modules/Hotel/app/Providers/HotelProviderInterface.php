@@ -26,6 +26,7 @@ interface HotelProviderInterface
         string $checkOut,
         int    $adults,
         int    $children,
+        string $currency = 'USD',
     ): array;
 
     /** Lock a room before payment. */
