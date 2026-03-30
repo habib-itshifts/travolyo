@@ -668,7 +668,7 @@
 }
 
 /* ========== GUESTS PICKER ========== */
-.guests-picker, .flight-passenger-picker, .flight-airport-field { 
+.guests-picker, .flight-passenger-picker, .flight-airport-field, .hotel-destination-field { 
     position: relative; 
 }
 
@@ -680,7 +680,7 @@
     cursor: pointer; 
 }
 
-.guests-menu, .flight-passenger-menu, .airport-suggest-list {
+.guests-menu, .flight-passenger-menu, .airport-suggest-list, .hotel-destination-suggest-list {
     background: #ffffff;
     border: 1px solid #eef2f6;
     border-radius: 20px;
@@ -711,6 +711,7 @@
 
 .guests-picker.is-open .guests-menu,
 .flight-passenger-picker.is-open .flight-passenger-menu,
+.hotel-destination-suggest-list:not(.d-none),
 .airport-suggest-list:not(.d-none) { 
     display: block; 
 }
@@ -933,6 +934,10 @@
     max-height: 300px;
 }
 
+.hotel-destination-suggest-list {
+    max-height: 320px;
+}
+
 .airport-suggest-item {
     display: flex;
     align-items: center;
@@ -948,6 +953,41 @@
 
 .airport-suggest-item:hover { 
     background: #f4fbff; 
+}
+
+.hotel-destination-suggest-item {
+    align-items: flex-start;
+}
+
+.hotel-destination-suggest-item .airport-suggest-meta {
+    gap: 2px;
+    min-width: 0;
+}
+
+.hotel-destination-type {
+    align-items: center;
+    background: #eef8fd;
+    border-radius: 999px;
+    color: #0f88ca;
+    display: inline-flex;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    text-transform: uppercase;
+}
+
+.hotel-destination-badges {
+    align-items: center;
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: 6px;
+    margin-left: auto;
+    padding-left: 10px;
+}
+
+.hotel-destination-suggest-item .airport-suggest-code {
+    margin-left: 0;
 }
 
 .airport-suggest-code {
@@ -1142,11 +1182,11 @@
         </div>
 
         <div id="sw-hotels-form" class="{{ $isHotelLikeTab ? '' : 'd-none' }}">
-            <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET" class="trav-search-form">
+            <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET" class="trav-search-form" data-hotel-destinations-url="{{ route('api.locations.hotels.search') }}">
                 <div class="trav-search-grid">
                     <div class="trav-field trav-field--wide">
                         <label class="trav-field__label">Destination</label>
-                        <div class="trav-field__surface">
+                        <div class="trav-field__surface hotel-destination-field">
                             <div class="input-icon-wrap">
                                 <i class="bi bi-search input-icon"></i>
                                 <input id="hotelDestinationInput" type="text" name="city" class="form-control search-input" placeholder="Enter a destination or property" value="{{ $hotelDestinationValue }}" autocomplete="off" />
@@ -1154,7 +1194,9 @@
                                 <input type="hidden" name="country" value="{{ request('country', '') }}" />
                                 <input type="hidden" name="country_code" value="{{ request('country_code', '') }}" />
                                 <input type="hidden" name="location" value="{{ request('location', '') }}" />
+                                <input type="hidden" name="region" value="{{ request('region', '') }}" />
                             </div>
+                            <div class="airport-suggest-list hotel-destination-suggest-list d-none" id="hotelDestinationSuggestList"></div>
                         </div>
                     </div>
 
@@ -1231,7 +1273,7 @@
         </div>
 
         <div id="sw-flights-form-container" class="{{ $isHotelLikeTab ? 'd-none' : '' }}">
-            <form action="{{ Route::has('flights.index') ? route('flights.index') : '#' }}" method="GET" id="flightSearchForm" class="trav-search-form" data-airports-url="{{ route('api.locations.airports.search') }}">
+            <form action="{{ Route::has('flights.index') ? route('flights.index') : '#' }}" method="GET" id="flightSearchForm" class="trav-search-form" data-airports-url="{{ route('api.locations.airports.search') }}" data-hotel-destinations-url="{{ route('api.locations.hotels.search') }}">
                 <input type="hidden" name="trip_type" id="tripTypeInput" value="{{ request('trip_type', 'one_way') }}" />
 
                 <div data-tab-pane="flights" class="{{ $activeTab !== 'flights' ? 'd-none' : '' }}">
@@ -1430,14 +1472,15 @@
                     <div class="trav-search-grid">
                         <div class="trav-field trav-field--wide">
                             <label class="trav-field__label">Location</label>
-                            <div class="trav-field__surface">
+                            <div class="trav-field__surface hotel-destination-field activity-destination-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-search input-icon"></i>
-                                    <input type="text" class="form-control search-input" name="city" placeholder="Enter city or experience" value="{{ $activityCityValue }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
-                                    <input type="hidden" name="country" value="{{ request('country', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
-                                    <input type="hidden" name="country_code" value="{{ request('country_code', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
-                                    <input type="hidden" name="location" value="{{ request('location', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input id="activityDestinationInput" type="text" class="form-control search-input" name="city" placeholder="Enter city or experience" value="{{ $activityCityValue }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input id="activityCountryInput" type="hidden" name="country" value="{{ request('country', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input id="activityCountryCodeInput" type="hidden" name="country_code" value="{{ request('country_code', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input id="activityLocationInput" type="hidden" name="location" value="{{ request('location', '') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
                                 </div>
+                                <div class="airport-suggest-list hotel-destination-suggest-list d-none" id="activityDestinationSuggestList"></div>
                             </div>
                         </div>
 
@@ -1585,13 +1628,27 @@
     const flightSubtabsWrap = document.getElementById('flightSubtabsWrap');
     const submitBtn = document.getElementById('flightSearchSubmitBtn');
     const submitText = submitBtn ? submitBtn.querySelector('[data-search-btn-text]') : null;
+    const hotelSearchForm = document.getElementById('hotelSearchForm');
     const hotelDestinationInput = document.getElementById('hotelDestinationInput');
     const hotelDestinationMirror = document.getElementById('hotelDestinationMirror');
+    const hotelDestinationList = document.getElementById('hotelDestinationSuggestList');
+    const activityDestinationInput = document.getElementById('activityDestinationInput');
+    const activityDestinationList = document.getElementById('activityDestinationSuggestList');
+    const activityCountryInput = document.getElementById('activityCountryInput');
+    const activityCountryCodeInput = document.getElementById('activityCountryCodeInput');
+    const activityLocationInput = document.getElementById('activityLocationInput');
     const hotelCheckInInput = document.getElementById('hotelCheckInInput');
     const hotelCheckOutInput = document.getElementById('hotelCheckOutInput');
     const hotelCheckInDay = document.getElementById('hotelCheckInDay');
     const hotelCheckOutDay = document.getElementById('hotelCheckOutDay');
     const flightHotelTripType = document.getElementById('flightHotelTripType');
+    const hotelDestinationsUrl = (hotelSearchForm && hotelSearchForm.dataset.hotelDestinationsUrl)
+        || (document.getElementById('flightSearchForm')?.dataset.hotelDestinationsUrl)
+        || '';
+    const hotelCountryInput = hotelSearchForm ? hotelSearchForm.querySelector('input[name="country"]') : null;
+    const hotelCountryCodeInput = hotelSearchForm ? hotelSearchForm.querySelector('input[name="country_code"]') : null;
+    const hotelLocationInput = hotelSearchForm ? hotelSearchForm.querySelector('input[name="location"]') : null;
+    const hotelRegionInput = hotelSearchForm ? hotelSearchForm.querySelector('input[name="region"]') : null;
 
     const tabTextMap = {
         flights: 'Search Flights',
@@ -1685,16 +1742,27 @@
         }
     };
 
-    if (hotelDestinationInput && hotelDestinationMirror) {
-        const syncHotelDestination = () => {
-            hotelDestinationMirror.value = hotelDestinationInput.value || '';
-        };
+    const clearHotelDestinationMeta = () => {
+        if (hotelCountryInput) hotelCountryInput.value = '';
+        if (hotelCountryCodeInput) hotelCountryCodeInput.value = '';
+        if (hotelLocationInput) hotelLocationInput.value = '';
+        if (hotelRegionInput) hotelRegionInput.value = '';
+    };
 
+    const syncHotelDestination = () => {
+        if (hotelDestinationMirror && hotelDestinationInput) {
+            hotelDestinationMirror.value = hotelDestinationInput.value || '';
+        }
+    };
+
+    if (hotelDestinationInput && hotelDestinationMirror) {
         hotelDestinationInput.addEventListener('input', syncHotelDestination);
 
-        const hotelSearchForm = document.getElementById('hotelSearchForm');
         if (hotelSearchForm) {
-            hotelSearchForm.addEventListener('submit', syncHotelDestination);
+            hotelSearchForm.addEventListener('submit', () => {
+                syncHotelDestination();
+                hideHotelDestinationList();
+            });
         }
     }
 
@@ -2056,11 +2124,42 @@
         [...originLists, ...destinationLists].forEach((list) => hideList(list));
     };
 
+    const hideDestinationList = (list) => {
+        if (!list) return;
+        list.classList.add('d-none');
+        list.innerHTML = '';
+    };
+
+    const hideHotelDestinationList = () => hideDestinationList(hotelDestinationList);
+    const hideActivityDestinationList = () => hideDestinationList(activityDestinationList);
+
     const syncAirportInputs = (type, value) => {
         const inputs = type === 'origin' ? originInputs : destinationInputs;
         inputs.forEach((input) => {
             input.value = value;
         });
+    };
+
+    const setHotelDestinationMeta = (item = {}) => {
+        if (hotelDestinationMirror) {
+            hotelDestinationMirror.value = item.destination || item.city || item.country || hotelDestinationInput?.value || '';
+        }
+        if (hotelCountryInput) hotelCountryInput.value = item.country || '';
+        if (hotelCountryCodeInput) hotelCountryCodeInput.value = item.country_code || '';
+        if (hotelLocationInput) hotelLocationInput.value = item.location || '';
+        if (hotelRegionInput) hotelRegionInput.value = item.region || '';
+    };
+
+    const clearActivityDestinationMeta = () => {
+        if (activityCountryInput) activityCountryInput.value = '';
+        if (activityCountryCodeInput) activityCountryCodeInput.value = '';
+        if (activityLocationInput) activityLocationInput.value = '';
+    };
+
+    const setActivityDestinationMeta = (item = {}) => {
+        if (activityCountryInput) activityCountryInput.value = item.country || '';
+        if (activityCountryCodeInput) activityCountryCodeInput.value = item.country_code || '';
+        if (activityLocationInput) activityLocationInput.value = item.location || '';
     };
 
     const renderAirportList = (list, items, type) => {
@@ -2149,9 +2248,163 @@
     bindAirportInputs(originInputs, originLists, 'origin');
     bindAirportInputs(destinationInputs, destinationLists, 'destination');
 
+    const renderDestinationAutocompleteList = (list, items, onSelect) => {
+        if (!list) return;
+
+        if (!items.length) {
+            list.innerHTML = '<div class="airport-suggest-empty">No destination found</div>';
+            list.classList.remove('d-none');
+            return;
+        }
+
+        list.innerHTML = items.map((item) => {
+            const typeLabel = item.type === 'country' ? 'Country' : 'City';
+            const title = escapeHtml(item.display_name || item.destination || item.city || item.country || '');
+            const subtitleParts = [];
+
+            if (item.type === 'city' && item.country) subtitleParts.push(item.country);
+            if (item.region) subtitleParts.push(item.region);
+
+            const code = item.type === 'city'
+                ? (item.location || item.country_code || '')
+                : (item.country_code || '');
+
+            return `
+                <button type="button" class="airport-suggest-item hotel-destination-suggest-item"
+                        data-type="${escapeHtml(item.type || '')}"
+                        data-destination="${escapeHtml(item.destination || '')}"
+                        data-city="${escapeHtml(item.city || '')}"
+                        data-country="${escapeHtml(item.country || '')}"
+                        data-country-code="${escapeHtml(item.country_code || '')}"
+                        data-location="${escapeHtml(item.location || '')}"
+                        data-region="${escapeHtml(item.region || '')}">
+                    <span class="airport-suggest-icon"><i class="bi ${item.type === 'country' ? 'bi-globe2' : 'bi-building'}"></i></span>
+                    <span class="airport-suggest-meta">
+                        <span class="airport-suggest-name">${title}</span>
+                        <span class="airport-suggest-sub">${escapeHtml(subtitleParts.join(' · '))}</span>
+                    </span>
+                    <span class="hotel-destination-badges">
+                        <span class="hotel-destination-type">${escapeHtml(typeLabel)}</span>
+                        ${code ? `<span class="airport-suggest-code">${escapeHtml(code)}</span>` : ''}
+                    </span>
+                </button>
+            `;
+        }).join('');
+
+        list.classList.remove('d-none');
+
+        list.querySelectorAll('.hotel-destination-suggest-item').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const item = {
+                    type: btn.dataset.type || 'city',
+                    destination: btn.dataset.destination || '',
+                    city: btn.dataset.city || '',
+                    country: btn.dataset.country || '',
+                    country_code: btn.dataset.countryCode || '',
+                    location: btn.dataset.location || '',
+                    region: btn.dataset.region || '',
+                };
+                onSelect(item);
+            });
+        });
+    };
+
+    const fetchDestinationSuggestions = async (input, list) => {
+        if (!hotelDestinationsUrl || !input || !list) return;
+
+        const keyword = (input.value || '').trim();
+        if (keyword.length < 2) {
+            hideDestinationList(list);
+            return;
+        }
+
+        list.innerHTML = '<div class="airport-suggest-loading">Searching destinations...</div>';
+        list.classList.remove('d-none');
+
+        try {
+            const url = new URL(hotelDestinationsUrl, window.location.origin);
+            url.searchParams.set('keyword', keyword);
+
+            const response = await fetch(url.toString(), {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            });
+
+            if (!response.ok) throw new Error('Request failed');
+
+            const payload = await response.json();
+            return Array.isArray(payload.data) ? payload.data : [];
+        } catch {
+            list.innerHTML = '<div class="airport-suggest-empty">Unable to load destinations</div>';
+            list.classList.remove('d-none');
+            return null;
+        }
+    };
+
+    if (hotelDestinationInput) {
+        const debouncedHotelDestinationSearch = debounce(async () => {
+            const items = await fetchDestinationSuggestions(hotelDestinationInput, hotelDestinationList);
+            if (!Array.isArray(items)) return;
+
+            renderDestinationAutocompleteList(hotelDestinationList, items, (item) => {
+                const nextValue = item.type === 'country'
+                    ? (item.destination || item.country || '')
+                    : (item.city || item.destination || '');
+
+                if (hotelDestinationInput) {
+                    hotelDestinationInput.value = nextValue;
+                }
+
+                setHotelDestinationMeta(item);
+                hideHotelDestinationList();
+            });
+        });
+
+        hotelDestinationInput.addEventListener('input', () => {
+            clearHotelDestinationMeta();
+            debouncedHotelDestinationSearch();
+        });
+
+        hotelDestinationInput.addEventListener('focus', () => {
+            if ((hotelDestinationInput.value || '').trim().length >= 2) {
+                debouncedHotelDestinationSearch();
+            }
+        });
+    }
+
+    if (activityDestinationInput) {
+        const debouncedActivityDestinationSearch = debounce(async () => {
+            const items = await fetchDestinationSuggestions(activityDestinationInput, activityDestinationList);
+            if (!Array.isArray(items)) return;
+
+            renderDestinationAutocompleteList(activityDestinationList, items, (item) => {
+                const nextValue = item.type === 'country'
+                    ? (item.destination || item.country || '')
+                    : (item.city || item.destination || '');
+
+                activityDestinationInput.value = nextValue;
+                setActivityDestinationMeta(item);
+                hideActivityDestinationList();
+            });
+        });
+
+        activityDestinationInput.addEventListener('input', () => {
+            clearActivityDestinationMeta();
+            debouncedActivityDestinationSearch();
+        });
+
+        activityDestinationInput.addEventListener('focus', () => {
+            if ((activityDestinationInput.value || '').trim().length >= 2) {
+                debouncedActivityDestinationSearch();
+            }
+        });
+    }
+
     document.addEventListener('click', (e) => {
-        if (e.target.closest('.flight-airport-field')) return;
+        if (e.target.closest('.flight-airport-field, .hotel-destination-field, .activity-destination-field')) return;
         hideAllLists();
+        hideHotelDestinationList();
+        hideActivityDestinationList();
     });
 
     const resetSubmitState = () => {

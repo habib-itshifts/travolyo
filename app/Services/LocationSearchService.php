@@ -65,4 +65,106 @@ class LocationSearchService
             'label'   => trim(($airport['IATA_CODE'] ?? '') . ' - ' . ($airport['CITY'] ?? '') . ', ' . ($airport['COUNTRY'] ?? '')),
         ];
     }
+
+    /**
+     * Search hotel destinations from the local JSON source.
+     */
+    public function searchHotelDestinations(string $keyword): array
+    {
+        $keyword = mb_strtolower(trim($keyword));
+
+        if ($keyword === '') {
+            return [];
+        }
+
+        return collect($this->locationService->getHotelDestinations())
+            ->map(function (array $item) use ($keyword) {
+                $score = $this->scoreHotelDestination($item, $keyword);
+
+                if ($score === null) {
+                    return null;
+                }
+
+                return [
+                    'score' => $score,
+                    'item' => $item,
+                ];
+            })
+            ->filter()
+            ->sortBy(fn (array $row) => sprintf(
+                '%04d_%s',
+                $row['score'],
+                mb_strtolower((string) ($row['item']['display_name'] ?? $row['item']['destination'] ?? ''))
+            ))
+            ->take(12)
+            ->map(fn (array $row) => $row['item'])
+            ->values()
+            ->all();
+    }
+
+    private function scoreHotelDestination(array $item, string $keyword): ?int
+    {
+        $type = (string) ($item['type'] ?? 'city');
+        $destination = mb_strtolower(trim((string) ($item['destination'] ?? '')));
+        $city = mb_strtolower(trim((string) ($item['city'] ?? '')));
+        $country = mb_strtolower(trim((string) ($item['country'] ?? '')));
+        $region = mb_strtolower(trim((string) ($item['region'] ?? '')));
+        $countryCode = mb_strtolower(trim((string) ($item['country_code'] ?? '')));
+        $location = mb_strtolower(trim((string) ($item['location'] ?? '')));
+        $displayName = mb_strtolower(trim((string) ($item['display_name'] ?? '')));
+
+        if ($type === 'city' && ($city === $keyword || $destination === $keyword)) {
+            return 0;
+        }
+
+        if ($type === 'country' && ($country === $keyword || $destination === $keyword)) {
+            return 5;
+        }
+
+        if ($location !== '' && $location === $keyword) {
+            return 8;
+        }
+
+        if ($type === 'city' && $city !== '' && str_starts_with($city, $keyword)) {
+            return 10;
+        }
+
+        if ($type === 'country' && $country !== '' && str_starts_with($country, $keyword)) {
+            return 15;
+        }
+
+        if ($destination !== '' && str_starts_with($destination, $keyword)) {
+            return 20;
+        }
+
+        if ($country !== '' && str_starts_with($country, $keyword)) {
+            return 25;
+        }
+
+        if ($displayName !== '' && str_contains($displayName, $keyword)) {
+            return 30;
+        }
+
+        if ($city !== '' && str_contains($city, $keyword)) {
+            return 35;
+        }
+
+        if ($country !== '' && str_contains($country, $keyword)) {
+            return 40;
+        }
+
+        if ($region !== '' && str_contains($region, $keyword)) {
+            return 50;
+        }
+
+        if ($countryCode !== '' && str_contains($countryCode, $keyword)) {
+            return 55;
+        }
+
+        if ($location !== '' && str_contains($location, $keyword)) {
+            return 60;
+        }
+
+        return null;
+    }
 }
