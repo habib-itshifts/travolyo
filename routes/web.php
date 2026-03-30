@@ -1,11 +1,12 @@
 <?php
 
-use App\Models\Currency;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestController;
+use App\Models\Currency;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,6 +14,51 @@ use Illuminate\Support\Facades\Route;
 | Public Routes
 |--------------------------------------------------------------------------
 */
+
+
+
+Route::get('/hyperguest-test-b2b', function () {
+
+    $url = 'https://search-api.hyperguest.io/2.0/'; // ⚠️ replace with real domain
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
+        'Accept-Encoding' => 'gzip, deflate',
+        'Accept' => 'application/json',
+    ])->get($url, [
+        'nights'   => 2,
+        'guests'   => 2,
+        'hotelIds' => 34326,
+        'checkIn'  => now()->addDays(5)->format('Y-m-d'),
+    ]);
+
+    return response()->json([
+        'status' => $response->status(),
+        'body' => $response->body(),
+        'json' => $response->json()
+    ]);
+});
+
+
+
+Route::get('/hyperguest-test-b2c', function () {
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer 415dc3e3dbb34fb9823a3c81a84356df',
+        'Accept' => 'application/json',
+        'Accept-Encoding' => 'gzip, deflate',
+    ])->get('https://search-api.hyperguest.io/2.0/', [
+        'nights'   => 2,
+        'guests'   => 2,
+        'hotelIds' => 34326,
+        'checkIn'  => now()->addDays(5)->format('Y-m-d'),
+    ]);
+
+    return response()->json([
+        'status' => $response->status(),
+        'body'   => $response->body(),
+    ]);
+});
 
 Route::resource('test', TestController::class);
 Route::get('/', function () {

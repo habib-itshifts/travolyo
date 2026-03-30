@@ -2,6 +2,7 @@
 
 namespace Modules\Hotel\Http\Controllers\Api;
 
+use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
@@ -10,6 +11,7 @@ use Modules\Hotel\Actions\CheckoutHotelAction;
 use Modules\Hotel\Actions\PrebookHotelAction;
 use Modules\Hotel\Actions\SearchHotelAction;
 use Modules\Hotel\DTOs\CheckoutHotelDto;
+use Modules\Hotel\DTOs\HotelRoomOfferDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
 use Modules\Hotel\DTOs\SearchHotelDto;
 use Modules\Hotel\Enums\HotelProviderEnum;
@@ -17,9 +19,10 @@ use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Http\Requests\CheckoutHotelRequest;
 use Modules\Hotel\Http\Requests\PrebookHotelRequest;
 use Modules\Hotel\Http\Requests\SearchHotelRequest;
-use Modules\Hotel\Providers\Local\LocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2BBaseHotelProvider;
 use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
+use Modules\Hotel\Providers\HotelProviderInterface;
+use Modules\Hotel\Providers\Local\LocalHotelProvider;
+use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
 use Illuminate\Http\Request;
@@ -44,7 +47,8 @@ class HotelController extends Controller
                 $dto->destination, $dto->checkIn, $dto->checkOut,
                 $dto->adults, $dto->children, $dto->rooms,
                 $dto->starRating, $dto->priceMin, $dto->priceMax,
-                $dto->amenityIds, $dto->currency,$dto->sortBy,
+                $dto->amenityIds, $dto->currency, $dto->sortBy,
+                $dto->provider?->value,
             ]));
 
 
@@ -107,7 +111,7 @@ class HotelController extends Controller
 
             $provider = match ($providerEnum) {
                 HotelProviderEnum::Local       => new LocalHotelProvider(),
-                HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
+                HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
                 HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
             };
 
@@ -177,27 +181,31 @@ class HotelController extends Controller
             );
 
             $offer = (new PrebookHotelAction)->handle($dto);
-            // dd( $offer);
-
-            // Find the requested room from the offer
             $room = collect($offer->rooms)->firstWhere('roomId', $validated['room_id']);
+            if (! $room) {
+                $room = collect($offer->rooms)->first();
+            }
+
+            if (! $room instanceof HotelRoomOfferDto) {
+                throw HotelException::roomUnavailable();
+            }
 
             $checkoutData = [
                 'offer_id'    => $validated['offer_id'],
-                'room_id'     => $validated['room_id'],
+                'room_id'     => $room->roomId,
                 'provider'    => $validated['provider'],
-                'hotel_name'  => $validated['hotel_name'],
-                'room_name'   => $validated['room_name'],
-                'city'        => $validated['city'],
-                'country'     => $validated['country'],
+                'hotel_name'  => $offer->name ?: $validated['hotel_name'],
+                'room_name'   => $room->name ?: $validated['room_name'],
+                'city'        => $offer->city ?: $validated['city'],
+                'country'     => $offer->country ?: $validated['country'],
                 'check_in'    => $validated['check_in'],
                 'check_out'   => $validated['check_out'],
                 'adults'      => (int) $validated['adults'],
                 'children'    => (int) ($validated['children'] ?? 0),
-                'unit_price'  => $room?->baseCurrentPrice,
-                'total_price' => $room?->baseTotalPrice,
-                'currency'    => $offer->baseCurrency,
-                'deal_id'     => $room?->dealId,  // track which deal was applied (null = no deal)
+                'unit_price'  => $room->baseCurrentPrice,
+                'total_price' => $room->baseTotalPrice,
+                'currency'    => $room->baseCurrency ?: $offer->baseCurrency,
+                'deal_id'     => $room->dealId,
             ];
 
             $token = Str::uuid()->toString();
@@ -215,6 +223,11 @@ class HotelController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], $e->getCode() ?: 502);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 502);
         }
     }
 
@@ -258,9 +271,7 @@ class HotelController extends Controller
     public function order(string $orderId): JsonResponse
     {
         try {
-            // Determine provider from booking meta or default to local
-            $provider = new LocalHotelProvider();
-            $order    = $provider->getOrder($orderId);
+            $order = $this->resolveOrderProvider($orderId)->getOrder($orderId);
 
             return response()->json([
                 'success' => true,
@@ -278,8 +289,7 @@ class HotelController extends Controller
     public function cancel(string $orderId): JsonResponse
     {
         try {
-            $provider = new LocalHotelProvider();
-            $provider->cancelOrder($orderId);
+            $this->resolveOrderProvider($orderId)->cancelOrder($orderId);
 
             return response()->json([
                 'success' => true,
@@ -292,5 +302,19 @@ class HotelController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function resolveOrderProvider(string $orderId): HotelProviderInterface
+    {
+        $source = Booking::query()
+            ->where('code', $orderId)
+            ->where('object_model', 'hotel')
+            ->value('source');
+
+        return match ($source) {
+            HotelProviderEnum::TravolyoB2B->value => new TravolyoB2BHotelProvider(),
+            HotelProviderEnum::Hyperguest->value  => new HyperguestHotelProvider(),
+            default                               => new LocalHotelProvider(),
+        };
     }
 }
