@@ -9,8 +9,8 @@
         "cityId": 1773,
         "countryCode": "AE",
         "regionName": null,
-        "longitude": 55.33259963989258,
-        "latitude": 25.255599975585938,
+        "longitude": 55.3325996398926,
+        "latitude": 25.2555999755859,
         "propertyType": 11,
         "propertyTypeName": "Hotel"
       },
@@ -28,7 +28,7 @@
             "children": []
           },
           "roomTypeCode": "ROOM-01",
-          "numberOfAvailableRooms": 188,
+          "numberOfAvailableRooms": 155,
           "roomName": "Rove Room",
           "roomId": 29860,
           "settings": {
@@ -104,33 +104,33 @@
                 "charge": "agent",
                 "chargeType": "net",
                 "chargeAmount": {
-                  "price": 142.22,
+                  "price": 153.25,
                   "currency": "AED",
-                  "searchCurrency": 142.22,
+                  "searchCurrency": 153.25,
                   "billing": {
-                    "price": 142.22,
+                    "price": 153.25,
                     "currency": "AED"
                   },
                   "origin": {
-                    "price": 142.22,
+                    "price": 153.25,
                     "currency": "AED"
                   },
                   "search": {
-                    "price": 142.22,
+                    "price": 153.25,
                     "currency": "AED"
                   }
                 }
               },
               "prices": {
                 "net": {
-                  "price": 142.22,
-                  "searchCurrency": 142.22,
+                  "price": 153.25,
+                  "searchCurrency": 153.25,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 9.3,
-                      "searchCurrency": 9.3,
+                      "amount": 10.03,
+                      "searchCurrency": 10.03,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -142,8 +142,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 12.93,
-                      "searchCurrency": 12.93,
+                      "amount": 13.93,
+                      "searchCurrency": 13.93,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -155,8 +155,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 6.77,
-                      "searchCurrency": 6.77,
+                      "amount": 7.3,
+                      "searchCurrency": 7.3,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -168,8 +168,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 0.71,
-                      "searchCurrency": 0.71,
+                      "amount": 0.76,
+                      "searchCurrency": 0.76,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -182,14 +182,14 @@
                   ]
                 },
                 "sell": {
-                  "price": 170.66,
-                  "searchCurrency": 170.66,
+                  "price": 183.9,
+                  "searchCurrency": 183.9,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 9.22,
-                      "searchCurrency": 9.22,
+                      "amount": 9.94,
+                      "searchCurrency": 9.94,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -201,8 +201,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 12.81,
-                      "searchCurrency": 12.81,
+                      "amount": 13.81,
+                      "searchCurrency": 13.81,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -214,8 +214,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 6.71,
-                      "searchCurrency": 6.71,
+                      "amount": 7.23,
+                      "searchCurrency": 7.23,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -227,8 +227,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 0.7,
-                      "searchCurrency": 0.7,
+                      "amount": 0.76,
+                      "searchCurrency": 0.76,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -246,8 +246,8 @@
                   "currency": "AED"
                 },
                 "bar": {
-                  "price": 158.02,
-                  "searchCurrency": 158.02,
+                  "price": 170.28,
+                  "searchCurrency": 170.28,
                   "currency": "AED"
                 },
                 "fees": [
@@ -290,14 +290,14 @@
                   "date": "2026-04-01",
                   "prices": {
                     "net": {
-                      "price": 142.22,
-                      "searchCurrency": 142.22,
+                      "price": 153.25,
+                      "searchCurrency": 153.25,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 9.3,
-                          "searchCurrency": 9.3,
+                          "amount": 10.03,
+                          "searchCurrency": 10.03,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -309,8 +309,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 12.93,
-                          "searchCurrency": 12.93,
+                          "amount": 13.93,
+                          "searchCurrency": 13.93,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -322,8 +322,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 6.77,
-                          "searchCurrency": 6.77,
+                          "amount": 7.3,
+                          "searchCurrency": 7.3,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -335,8 +335,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 0.71,
-                          "searchCurrency": 0.71,
+                          "amount": 0.76,
+                          "searchCurrency": 0.76,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -349,14 +349,14 @@
                       ]
                     },
                     "sell": {
-                      "price": 170.66,
-                      "searchCurrency": 170.66,
+                      "price": 183.9,
+                      "searchCurrency": 183.9,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 9.22,
-                          "searchCurrency": 9.22,
+                          "amount": 9.94,
+                          "searchCurrency": 9.94,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -368,8 +368,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 12.81,
-                          "searchCurrency": 12.81,
+                          "amount": 13.81,
+                          "searchCurrency": 13.81,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -381,8 +381,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 6.71,
-                          "searchCurrency": 6.71,
+                          "amount": 7.23,
+                          "searchCurrency": 7.23,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -394,8 +394,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 0.7,
-                          "searchCurrency": 0.7,
+                          "amount": 0.76,
+                          "searchCurrency": 0.76,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -413,8 +413,8 @@
                       "currency": "AED"
                     },
                     "bar": {
-                      "price": 158.02,
-                      "searchCurrency": 158.02,
+                      "price": 170.28,
+                      "searchCurrency": 170.28,
                       "currency": "AED"
                     },
                     "fees": [
@@ -489,33 +489,33 @@
                 "charge": "agent",
                 "chargeType": "net",
                 "chargeAmount": {
-                  "price": 126.42,
+                  "price": 136.22,
                   "currency": "AED",
-                  "searchCurrency": 126.42,
+                  "searchCurrency": 136.22,
                   "billing": {
-                    "price": 126.42,
+                    "price": 136.22,
                     "currency": "AED"
                   },
                   "origin": {
-                    "price": 126.42,
+                    "price": 136.22,
                     "currency": "AED"
                   },
                   "search": {
-                    "price": 126.42,
+                    "price": 136.22,
                     "currency": "AED"
                   }
                 }
               },
               "prices": {
                 "net": {
-                  "price": 126.42,
-                  "searchCurrency": 126.42,
+                  "price": 136.22,
+                  "searchCurrency": 136.22,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 8.27,
-                      "searchCurrency": 8.27,
+                      "amount": 8.91,
+                      "searchCurrency": 8.91,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -527,8 +527,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 11.49,
-                      "searchCurrency": 11.49,
+                      "amount": 12.38,
+                      "searchCurrency": 12.38,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -540,8 +540,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 6.02,
-                      "searchCurrency": 6.02,
+                      "amount": 6.49,
+                      "searchCurrency": 6.49,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -553,8 +553,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 0.63,
-                      "searchCurrency": 0.63,
+                      "amount": 0.68,
+                      "searchCurrency": 0.68,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -567,14 +567,14 @@
                   ]
                 },
                 "sell": {
-                  "price": 151.7,
-                  "searchCurrency": 151.7,
+                  "price": 163.46,
+                  "searchCurrency": 163.46,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 8.2,
-                      "searchCurrency": 8.2,
+                      "amount": 8.83,
+                      "searchCurrency": 8.83,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -586,8 +586,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 11.39,
-                      "searchCurrency": 11.39,
+                      "amount": 12.27,
+                      "searchCurrency": 12.27,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -599,8 +599,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 5.97,
-                      "searchCurrency": 5.97,
+                      "amount": 6.43,
+                      "searchCurrency": 6.43,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -612,8 +612,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 0.62,
-                      "searchCurrency": 0.62,
+                      "amount": 0.67,
+                      "searchCurrency": 0.67,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -631,8 +631,8 @@
                   "currency": "AED"
                 },
                 "bar": {
-                  "price": 158.03,
-                  "searchCurrency": 158.03,
+                  "price": 170.27,
+                  "searchCurrency": 170.27,
                   "currency": "AED"
                 },
                 "fees": [
@@ -675,14 +675,14 @@
                   "date": "2026-04-01",
                   "prices": {
                     "net": {
-                      "price": 126.42,
-                      "searchCurrency": 126.42,
+                      "price": 136.22,
+                      "searchCurrency": 136.22,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 8.27,
-                          "searchCurrency": 8.27,
+                          "amount": 8.91,
+                          "searchCurrency": 8.91,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -694,8 +694,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 11.49,
-                          "searchCurrency": 11.49,
+                          "amount": 12.38,
+                          "searchCurrency": 12.38,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -707,8 +707,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 6.02,
-                          "searchCurrency": 6.02,
+                          "amount": 6.49,
+                          "searchCurrency": 6.49,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -720,8 +720,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 0.63,
-                          "searchCurrency": 0.63,
+                          "amount": 0.68,
+                          "searchCurrency": 0.68,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -734,14 +734,14 @@
                       ]
                     },
                     "sell": {
-                      "price": 151.7,
-                      "searchCurrency": 151.7,
+                      "price": 163.46,
+                      "searchCurrency": 163.46,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 8.2,
-                          "searchCurrency": 8.2,
+                          "amount": 8.83,
+                          "searchCurrency": 8.83,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -753,8 +753,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 11.39,
-                          "searchCurrency": 11.39,
+                          "amount": 12.27,
+                          "searchCurrency": 12.27,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -766,8 +766,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 5.97,
-                          "searchCurrency": 5.97,
+                          "amount": 6.43,
+                          "searchCurrency": 6.43,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -779,8 +779,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 0.62,
-                          "searchCurrency": 0.62,
+                          "amount": 0.67,
+                          "searchCurrency": 0.67,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -798,8 +798,8 @@
                       "currency": "AED"
                     },
                     "bar": {
-                      "price": 158.03,
-                      "searchCurrency": 158.03,
+                      "price": 170.27,
+                      "searchCurrency": 170.27,
                       "currency": "AED"
                     },
                     "fees": [
@@ -874,33 +874,33 @@
                 "charge": "agent",
                 "chargeType": "net",
                 "chargeAmount": {
-                  "price": 262.17,
+                  "price": 273.2,
                   "currency": "AED",
-                  "searchCurrency": 262.17,
+                  "searchCurrency": 273.2,
                   "billing": {
-                    "price": 262.17,
+                    "price": 273.2,
                     "currency": "AED"
                   },
                   "origin": {
-                    "price": 262.17,
+                    "price": 273.2,
                     "currency": "AED"
                   },
                   "search": {
-                    "price": 262.17,
+                    "price": 273.2,
                     "currency": "AED"
                   }
                 }
               },
               "prices": {
                 "net": {
-                  "price": 262.17,
-                  "searchCurrency": 262.17,
+                  "price": 273.2,
+                  "searchCurrency": 273.2,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 17.15,
-                      "searchCurrency": 17.15,
+                      "amount": 17.87,
+                      "searchCurrency": 17.87,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -912,8 +912,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 23.83,
-                      "searchCurrency": 23.83,
+                      "amount": 24.84,
+                      "searchCurrency": 24.84,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -925,8 +925,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 12.48,
-                      "searchCurrency": 12.48,
+                      "amount": 13.01,
+                      "searchCurrency": 13.01,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -938,8 +938,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 1.3,
-                      "searchCurrency": 1.3,
+                      "amount": 1.36,
+                      "searchCurrency": 1.36,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -952,14 +952,14 @@
                   ]
                 },
                 "sell": {
-                  "price": 314.6,
-                  "searchCurrency": 314.6,
+                  "price": 327.84,
+                  "searchCurrency": 327.84,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 17,
-                      "searchCurrency": 17,
+                      "amount": 17.71,
+                      "searchCurrency": 17.71,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -971,8 +971,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 23.62,
-                      "searchCurrency": 23.62,
+                      "amount": 24.61,
+                      "searchCurrency": 24.61,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -984,8 +984,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 12.37,
-                      "searchCurrency": 12.37,
+                      "amount": 12.89,
+                      "searchCurrency": 12.89,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -997,8 +997,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 1.29,
-                      "searchCurrency": 1.29,
+                      "amount": 1.35,
+                      "searchCurrency": 1.35,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1016,8 +1016,8 @@
                   "currency": "AED"
                 },
                 "bar": {
-                  "price": 291.3,
-                  "searchCurrency": 291.3,
+                  "price": 303.56,
+                  "searchCurrency": 303.56,
                   "currency": "AED"
                 },
                 "fees": [
@@ -1060,14 +1060,14 @@
                   "date": "2026-04-01",
                   "prices": {
                     "net": {
-                      "price": 262.17,
-                      "searchCurrency": 262.17,
+                      "price": 273.2,
+                      "searchCurrency": 273.2,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 17.15,
-                          "searchCurrency": 17.15,
+                          "amount": 17.87,
+                          "searchCurrency": 17.87,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1079,8 +1079,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 23.83,
-                          "searchCurrency": 23.83,
+                          "amount": 24.84,
+                          "searchCurrency": 24.84,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1092,8 +1092,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 12.48,
-                          "searchCurrency": 12.48,
+                          "amount": 13.01,
+                          "searchCurrency": 13.01,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1105,8 +1105,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 1.3,
-                          "searchCurrency": 1.3,
+                          "amount": 1.36,
+                          "searchCurrency": 1.36,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1119,14 +1119,14 @@
                       ]
                     },
                     "sell": {
-                      "price": 314.6,
-                      "searchCurrency": 314.6,
+                      "price": 327.84,
+                      "searchCurrency": 327.84,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 17,
-                          "searchCurrency": 17,
+                          "amount": 17.71,
+                          "searchCurrency": 17.71,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1138,8 +1138,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 23.62,
-                          "searchCurrency": 23.62,
+                          "amount": 24.61,
+                          "searchCurrency": 24.61,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1151,8 +1151,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 12.37,
-                          "searchCurrency": 12.37,
+                          "amount": 12.89,
+                          "searchCurrency": 12.89,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1164,8 +1164,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 1.29,
-                          "searchCurrency": 1.29,
+                          "amount": 1.35,
+                          "searchCurrency": 1.35,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1183,8 +1183,8 @@
                       "currency": "AED"
                     },
                     "bar": {
-                      "price": 291.3,
-                      "searchCurrency": 291.3,
+                      "price": 303.56,
+                      "searchCurrency": 303.56,
                       "currency": "AED"
                     },
                     "fees": [
@@ -1259,33 +1259,33 @@
                 "charge": "agent",
                 "chargeType": "net",
                 "chargeAmount": {
-                  "price": 233.04,
+                  "price": 242.84,
                   "currency": "AED",
-                  "searchCurrency": 233.04,
+                  "searchCurrency": 242.84,
                   "billing": {
-                    "price": 233.04,
+                    "price": 242.84,
                     "currency": "AED"
                   },
                   "origin": {
-                    "price": 233.04,
+                    "price": 242.84,
                     "currency": "AED"
                   },
                   "search": {
-                    "price": 233.04,
+                    "price": 242.84,
                     "currency": "AED"
                   }
                 }
               },
               "prices": {
                 "net": {
-                  "price": 233.04,
-                  "searchCurrency": 233.04,
+                  "price": 242.84,
+                  "searchCurrency": 242.84,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 15.25,
-                      "searchCurrency": 15.25,
+                      "amount": 15.89,
+                      "searchCurrency": 15.89,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1297,8 +1297,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 21.19,
-                      "searchCurrency": 21.19,
+                      "amount": 22.08,
+                      "searchCurrency": 22.08,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1310,8 +1310,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 11.1,
-                      "searchCurrency": 11.1,
+                      "amount": 11.56,
+                      "searchCurrency": 11.56,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1323,8 +1323,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 1.16,
-                      "searchCurrency": 1.16,
+                      "amount": 1.21,
+                      "searchCurrency": 1.21,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1337,14 +1337,14 @@
                   ]
                 },
                 "sell": {
-                  "price": 279.65,
-                  "searchCurrency": 279.65,
+                  "price": 291.41,
+                  "searchCurrency": 291.41,
                   "currency": "AED",
                   "taxes": [
                     {
                       "description": "Municipality Fee of 7% per night (Included in price)",
-                      "amount": 15.11,
-                      "searchCurrency": 15.11,
+                      "amount": 15.74,
+                      "searchCurrency": 15.74,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1356,8 +1356,8 @@
                     },
                     {
                       "description": "Service Charge of 10% per night (Included in price)",
-                      "amount": 21,
-                      "searchCurrency": 21,
+                      "amount": 21.88,
+                      "searchCurrency": 21.88,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1369,8 +1369,8 @@
                     },
                     {
                       "description": "VAT of 5% per night (Included in price)",
-                      "amount": 11,
-                      "searchCurrency": 11,
+                      "amount": 11.46,
+                      "searchCurrency": 11.46,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1382,8 +1382,8 @@
                     },
                     {
                       "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                      "amount": 1.15,
-                      "searchCurrency": 1.15,
+                      "amount": 1.2,
+                      "searchCurrency": 1.2,
                       "currency": "AED",
                       "relation": "included",
                       "scope": "per_stay",
@@ -1401,8 +1401,8 @@
                   "currency": "AED"
                 },
                 "bar": {
-                  "price": 291.3,
-                  "searchCurrency": 291.3,
+                  "price": 303.55,
+                  "searchCurrency": 303.55,
                   "currency": "AED"
                 },
                 "fees": [
@@ -1445,14 +1445,14 @@
                   "date": "2026-04-01",
                   "prices": {
                     "net": {
-                      "price": 233.04,
-                      "searchCurrency": 233.04,
+                      "price": 242.84,
+                      "searchCurrency": 242.84,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 15.25,
-                          "searchCurrency": 15.25,
+                          "amount": 15.89,
+                          "searchCurrency": 15.89,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1464,8 +1464,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 21.19,
-                          "searchCurrency": 21.19,
+                          "amount": 22.08,
+                          "searchCurrency": 22.08,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1477,8 +1477,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 11.1,
-                          "searchCurrency": 11.1,
+                          "amount": 11.56,
+                          "searchCurrency": 11.56,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1490,8 +1490,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 1.16,
-                          "searchCurrency": 1.16,
+                          "amount": 1.21,
+                          "searchCurrency": 1.21,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1504,14 +1504,14 @@
                       ]
                     },
                     "sell": {
-                      "price": 279.65,
-                      "searchCurrency": 279.65,
+                      "price": 291.41,
+                      "searchCurrency": 291.41,
                       "currency": "AED",
                       "taxes": [
                         {
                           "description": "Municipality Fee of 7% per night (Included in price)",
-                          "amount": 15.11,
-                          "searchCurrency": 15.11,
+                          "amount": 15.74,
+                          "searchCurrency": 15.74,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1523,8 +1523,8 @@
                         },
                         {
                           "description": "Service Charge of 10% per night (Included in price)",
-                          "amount": 21,
-                          "searchCurrency": 21,
+                          "amount": 21.88,
+                          "searchCurrency": 21.88,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1536,8 +1536,8 @@
                         },
                         {
                           "description": "VAT of 5% per night (Included in price)",
-                          "amount": 11,
-                          "searchCurrency": 11,
+                          "amount": 11.46,
+                          "searchCurrency": 11.46,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1549,8 +1549,8 @@
                         },
                         {
                           "description": "VAT on Service Charge of 0.5% per night (Included in price)",
-                          "amount": 1.15,
-                          "searchCurrency": 1.15,
+                          "amount": 1.2,
+                          "searchCurrency": 1.2,
                           "currency": "AED",
                           "relation": "included",
                           "scope": "per_stay",
@@ -1568,8 +1568,8 @@
                       "currency": "AED"
                     },
                     "bar": {
-                      "price": 291.3,
-                      "searchCurrency": 291.3,
+                      "price": 303.55,
+                      "searchCurrency": 303.55,
                       "currency": "AED"
                     },
                     "fees": [
@@ -1598,5 +1598,5 @@
       ]
     }
   ],
-  "timeStamp": "2026-03-31T07:22:29.582Z"
+  "timeStamp": "2026-03-31T10:32:50.329Z"
 }

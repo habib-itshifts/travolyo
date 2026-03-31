@@ -53,11 +53,13 @@ class HyperguestHotelProvider implements HotelProviderInterface
     public function search(SearchHotelDto $dto): array
     {
         $hotels = $this->loadHotels($dto);
+
+        dd($hotels);
         $nights = $dto->nights();
+
 
         return collect($hotels)
             ->map(fn (array $hotel) => $this->mapper->toOfferDto($hotel, $nights, $dto->currency))
-            ->filter(fn (HotelOfferDto $offer) => !empty($offer->rooms))
             ->filter(fn (HotelOfferDto $offer) => $this->matchesPriceFilter($offer, $dto))
             ->values()
             ->all();
@@ -69,21 +71,21 @@ class HyperguestHotelProvider implements HotelProviderInterface
      * lookup for the /api/hotels/rooms endpoint.
      */
     public function getRooms(
-            string $offerId,
-            string $cityCode,
-            string $checkIn,
-            string $checkOut,
-            int    $adults,
-            int    $children,
-            string $currency = 'USD',
-        ): array {
-            $hotel  = $this->findHotel($offerId);
-            $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
+        string $offerId,
+        string $cityCode,
+        string $checkIn,
+        string $checkOut,
+        int    $adults,
+        int    $children,
+        string $currency = 'USD',
+    ): array {
+        $hotel  = $this->findHotel($offerId);
+        $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
 
-            return collect($hotel['rooms'] ?? [])
-                ->map(fn (array $room) => $this->mapper->toRoomOfferDto($room, $nights, $currency, $hotel))
-                ->values()
-                ->all();
+        return collect($hotel['rooms'] ?? [])
+            ->map(fn (array $room) => $this->mapper->toRoomOfferDto($room, $nights, $currency, $hotel))
+            ->values()
+            ->all();
     }
 
     /**
@@ -310,6 +312,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
              $data = collect($response->json());
 
+             dd($data);
 
             // Merge batch results into one flat collection
             $hotelWithRooms = $hotelWithRooms->merge($data);
@@ -320,5 +323,56 @@ class HyperguestHotelProvider implements HotelProviderInterface
         
     } 
 
-  
+    private function loadBookingResponse(): array
+    {
+        if (! file_exists($this->bookingResponsePath)) {
+            throw new \RuntimeException("Hyperguest booking fixture not found at [{$this->bookingResponsePath}].");
+        }
+
+        $decoded = json_decode(file_get_contents($this->bookingResponsePath), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException('Hyperguest booking_response.json is invalid: ' . json_last_error_msg());
+        }
+
+        return $decoded;
+    }
+
+    private function findHotel(string $hotelId): array
+    {
+        return [];
+        // $hotel = collect($this->loadHotels())->firstWhere('hotel_id', $hotelId);
+
+        if (! $hotel) {
+            throw HotelException::notFound(0);
+        }
+
+        return $hotel;
+    }
+
+    private function matchesSearch(array $hotel, SearchHotelDto $dto): bool
+    {
+        if (! str_contains(mb_strtolower($hotel['city'] ?? ''), mb_strtolower($dto->destination))) {
+            return false;
+        }
+
+        if ($dto->starRating && (int) ($hotel['star_rating'] ?? 0) !== $dto->starRating) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function matchesPriceFilter(HotelOfferDto $offer, SearchHotelDto $dto): bool
+    {
+        if ($dto->priceMin !== null && $offer->convertedLowestPrice < $dto->priceMin) {
+            return false;
+        }
+
+        if ($dto->priceMax !== null && $offer->convertedLowestPrice > $dto->priceMax) {
+            return false;
+        }
+
+        return true;
+    }
 }
