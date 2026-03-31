@@ -1645,6 +1645,11 @@
     const hotelCheckInDay = document.getElementById('hotelCheckInDay');
     const hotelCheckOutDay = document.getElementById('hotelCheckOutDay');
     const flightHotelTripType = document.getElementById('flightHotelTripType');
+    const tripInput = document.getElementById('tripTypeInput');
+    const oneWayBtn = document.getElementById('oneWayBtn');
+    const roundTripBtn = document.getElementById('roundTripBtn');
+    const oneWayOnlyFields = document.querySelectorAll('.flight-one-way-only');
+    const roundTripOnlyFields = document.querySelectorAll('.flight-round-trip-only');
     const hotelDestinationsUrl = (hotelSearchForm && hotelSearchForm.dataset.hotelDestinationsUrl)
         || (document.getElementById('flightSearchForm')?.dataset.hotelDestinationsUrl)
         || '';
@@ -1822,7 +1827,7 @@
         const roomsContainer = document.getElementById('roomsContainer');
         const addRoomBtn = document.getElementById('addRoomBtn');
         const guestsHiddenFields = document.getElementById('guestsHiddenFields');
-        const isHeroGuestsPicker = guestsPicker.closest('.trav-search-widget--hero') !== null;
+        const isHeroGuestsPicker = guestsPicker ? guestsPicker.closest('.trav-search-widget--hero') !== null : false;
         const initialAdults = {{ $initialHotelAdults }};
         const initialChildren = {{ $initialHotelChildren }};
         const initialUnits = {{ $initialHotelUnits }};
@@ -2053,12 +2058,6 @@
         renderRooms();
     })();
 
-    const tripInput = document.getElementById('tripTypeInput');
-    const oneWayBtn = document.getElementById('oneWayBtn');
-    const roundTripBtn = document.getElementById('roundTripBtn');
-    const oneWayOnlyFields = document.querySelectorAll('.flight-one-way-only');
-    const roundTripOnlyFields = document.querySelectorAll('.flight-round-trip-only');
-
     function toggleFieldGroup(fields, show) {
         fields.forEach((wrap) => {
             wrap.classList.toggle('d-none', !show);
@@ -2099,6 +2098,7 @@
     const destinationInputs = [...document.querySelectorAll('[data-airport-input="destination"]')];
     const originLists = [...document.querySelectorAll('[data-airport-list="origin"]')];
     const destinationLists = [...document.querySelectorAll('[data-airport-list="destination"]')];
+    const airportRequestState = new WeakMap();
     let activeList = null;
 
     const debounce = (fn, delay = 280) => {
@@ -2204,10 +2204,26 @@
         if (!airportsUrl || !input || !list) return;
 
         const keyword = (input.value || '').trim();
+        const previousState = airportRequestState.get(input);
+
+        if (previousState?.controller) {
+            previousState.controller.abort();
+        }
+
         if (keyword.length < 2) {
             hideList(list);
+            airportRequestState.set(input, {
+                keyword,
+                requestId: (previousState?.requestId || 0) + 1,
+                controller: null,
+            });
             return;
         }
+
+        const requestId = (previousState?.requestId || 0) + 1;
+        const controller = new AbortController();
+
+        airportRequestState.set(input, { keyword, requestId, controller });
 
         list.innerHTML = '<div class="airport-suggest-loading">Searching airports...</div>';
         list.classList.remove('d-none');
@@ -2220,36 +2236,63 @@
             const response = await fetch(url.toString(), {
                 method: 'GET',
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                signal: controller.signal,
             });
 
             if (!response.ok) throw new Error('Request failed');
 
             const payload = await response.json();
             const items = Array.isArray(payload.data) ? payload.data : [];
+            const currentState = airportRequestState.get(input);
+
+            if (!currentState || currentState.requestId !== requestId || currentState.keyword !== keyword) {
+                return;
+            }
+
             renderAirportList(list, items, type);
-        } catch {
+        } catch (error) {
+            if (error?.name === 'AbortError') {
+                return;
+            }
+
             list.innerHTML = '<div class="airport-suggest-empty">Unable to load airports</div>';
             list.classList.remove('d-none');
             activeList = list;
         }
     };
 
-    const bindAirportInputs = (inputs, lists, type) => {
-        inputs.forEach((input, index) => {
-            const list = lists[index];
-            const handler = debounce(() => fetchAirportSuggestions(input, list, type));
+    const resolveAirportList = (input, type) => (
+        input?.closest('.flight-airport-field')?.querySelector(`[data-airport-list="${type}"]`) || null
+    );
+
+    const bindAirportInputs = (inputs, type) => {
+        inputs.forEach((input) => {
+            const handler = debounce(() => {
+                const list = resolveAirportList(input, type);
+                fetchAirportSuggestions(input, list, type);
+            });
+
             input.addEventListener('input', () => {
                 syncAirportInputs(type, input.value);
                 handler();
             });
+
             input.addEventListener('focus', () => {
+                if ((input.value || '').trim().length >= 2) handler();
+            });
+
+            input.addEventListener('click', () => {
+                if ((input.value || '').trim().length >= 2) handler();
+            });
+
+            input.addEventListener('keyup', () => {
                 if ((input.value || '').trim().length >= 2) handler();
             });
         });
     };
 
-    bindAirportInputs(originInputs, originLists, 'origin');
-    bindAirportInputs(destinationInputs, destinationLists, 'destination');
+    bindAirportInputs(originInputs, 'origin');
+    bindAirportInputs(destinationInputs, 'destination');
 
     const renderDestinationAutocompleteList = (list, items, onSelect) => {
         if (!list) return;
