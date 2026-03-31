@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/hyperguest-test-b2b', function () {
 
-    $url = 'https://search-api.hyperguest.io/2.0/'; // ⚠️ replace with real domain
+    $url = 'https://hg-static.hyperguest.com/hotels.json'; // ⚠️ replace with real domain
 
     $response = Http::withHeaders([
         'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
@@ -36,6 +36,33 @@ Route::get('/hyperguest-test-b2b', function () {
         'status' => $response->status(),
         'body' => $response->body(),
         'json' => $response->json()
+    ]);
+});
+
+Route::get('/hyperguest-test-b2b-hotel', function () {
+
+    $url = 'https://hg-static.hyperguest.com/hotels.json'; // ⚠️ replace with real domain
+
+    $response = Http::withHeaders([
+        'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
+        'Accept-Encoding' => 'gzip, deflate',
+        'Accept' => 'application/json',
+    ])->get($url);
+
+    $hotelsList = collect($response->json());
+
+    $destination = strtolower('Dubai');
+
+    $destinationHotels = $hotelsList->filter(function ($h) use ($destination) {
+            $city = strtolower($h['city'] ?? '');
+            $country = strtolower($h['country'] ?? '');
+
+            return $city=== $destination || $country === $destination;
+        });
+
+    return response()->json([
+        'data' => $destinationHotels
+
     ]);
 });
 

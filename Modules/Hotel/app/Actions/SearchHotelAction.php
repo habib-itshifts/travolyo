@@ -43,7 +43,8 @@ class SearchHotelAction
 
                 $offers = $this->resolveProvider($providerEnum)->search($providerDto);
                 array_push($results, ...$offers);
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 // skip failed providers so the other results still return
             }
         }
@@ -54,8 +55,8 @@ class SearchHotelAction
     private function resolveProvider(HotelProviderEnum $provider): HotelProviderInterface
     {
         return match ($provider) {
-            HotelProviderEnum::Local       => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
+            // HotelProviderEnum::Local       => new LocalHotelProvider(),
+            // HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
             HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }

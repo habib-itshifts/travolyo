@@ -4,7 +4,9 @@ namespace Modules\Hotel\Http\Controllers\Api;
 
 use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\Hotel\Actions\CheckoutHotelAction;
@@ -19,13 +21,12 @@ use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Http\Requests\CheckoutHotelRequest;
 use Modules\Hotel\Http\Requests\PrebookHotelRequest;
 use Modules\Hotel\Http\Requests\SearchHotelRequest;
-use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 use Modules\Hotel\Providers\HotelProviderInterface;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 use Modules\Hotel\Providers\Local\LocalHotelProvider;
 use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
-use Illuminate\Http\Request;
 
 class HotelController extends Controller
 {
@@ -33,6 +34,7 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
+        
         
         
         try {
@@ -68,6 +70,7 @@ class HotelController extends Controller
 
             $total  = count($offers);
             $sliced = array_slice($offers, ($page - 1) * $perPage, $perPage);
+
 
 
             return response()->json([
@@ -216,6 +219,7 @@ class HotelController extends Controller
                 'total_price'  => $checkoutData['total_price'],
                 'currency'     => $checkoutData['currency'],
                 'checkout_url' => url('/hotels/checkout?token=' . $token),
+                'checkout_token' => $token,
             ]);
 
         } catch (HotelException $e) {
@@ -245,7 +249,8 @@ class HotelController extends Controller
                 paymentGateway:  $validated['payment_gateway'],
                 specialRequests: $validated['special_requests'] ?? null,
                 extraServices:   $validated['extra_services'] ?? [],
-                customerId:      auth()->id(),
+                //  customerId:      auth()->id(),
+                customerId:      Auth::id(),
             );
 
             $result = (new CheckoutHotelAction)->handle($dto);

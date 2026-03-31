@@ -3,6 +3,8 @@
 namespace Modules\Hotel\Providers\Hyperguest;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
@@ -27,11 +29,21 @@ class HyperguestHotelProvider implements HotelProviderInterface
     private string $hotelsPath;
     private string $bookingResponsePath;
 
+    protected array $headers;
+
+
+
     public function __construct()
     {
         $this->mapper              = new HyperguestHotelMapper();
         $this->hotelsPath          = public_path('data/hyperguest/hotels.json');
         $this->bookingResponsePath = public_path('data/hyperguest/booking_response.json');
+
+        $this->headers = [
+            'Accept-Encoding' => 'gzip, deflate',
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f'
+        ];
     }
 
     // -------------------------------------------------------------------------
@@ -40,11 +52,11 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     public function search(SearchHotelDto $dto): array
     {
-        $hotels = $this->loadHotels();
+        $hotels = $this->loadHotels($dto);
         $nights = $dto->nights();
 
+
         return collect($hotels)
-            ->filter(fn (array $hotel) => $this->matchesSearch($hotel, $dto))
             ->map(fn (array $hotel) => $this->mapper->toOfferDto($hotel, $nights, $dto->currency))
             ->filter(fn (HotelOfferDto $offer) => $this->matchesPriceFilter($offer, $dto))
             ->values()
@@ -248,20 +260,27 @@ class HyperguestHotelProvider implements HotelProviderInterface
     // Private helpers
     // -------------------------------------------------------------------------
 
-    private function loadHotels(): array
+    private function loadHotels($dto): array
     {
-        if (! file_exists($this->hotelsPath)) {
-            throw new \RuntimeException("Hyperguest hotels fixture not found at [{$this->hotelsPath}].");
-        }
+        $response = Http::withHeaders($this->headers)
+            ->acceptJson()
+            ->timeout(30)
+            ->get('https://hg-static.hyperguest.com/hotels.json')
+            ->throw();
 
-        $decoded = json_decode(file_get_contents($this->hotelsPath), true);
+        $hotelsList = collect($response->json());
+        $destination = strtolower(trim($dto->destination));
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Hyperguest hotels.json is invalid: ' . json_last_error_msg());
-        }
+        
+        $destinationHotels = $hotelsList->filter(function ($h) use ($destination) {
+            $city = strtolower($h['city'] ?? '');
+            $country = strtolower($h['country'] ?? '');
 
-        return $decoded['hotels'] ?? [];
-    }
+            return $city=== $destination || $country === $destination;
+        });
+        
+        return $destinationHotels->values()->all();
+    } 
 
     private function loadBookingResponse(): array
     {

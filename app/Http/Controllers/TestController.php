@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class TestController extends Controller
 {
@@ -11,26 +12,7 @@ class TestController extends Controller
      */
     public function index()
     {
-        dd( currency()->getUserCurrency());
-        return response()->json([
-    'formatted' => currency(100, 'USD', 'GBP'),           // "£79.00"
-    'raw'       => currency()->convert(100, 'USD', 'GBP'), // 79.0
-]);
-
-        
-        return response()->json([
-            // current active currency
-            'current_currency'  => currency()->getCurrency(),
-
-            // convert a price — 100 USD to current currency
-            'converted_price'   => currency(100),
-
-            // raw currency config/details
-            'currency_details'  => currency()->getCurrency(),
-
-            // what currency driver is using
-            'driver'            => config('currency.driver'),
-        ]);
+        return response()->json($this->loadHotelDetails());
     }
 
     /**
@@ -79,5 +61,50 @@ class TestController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function loadHotels()
+    {
+        $url = 'https://hg-static.hyperguest.com/hotels.json'; // ⚠️ replace with real domain
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
+            'Accept-Encoding' => 'gzip, deflate',
+            'Accept' => 'application/json',
+        ])->get($url);
+
+        $hotelsList = collect($response->json());
+
+        $destination = strtolower('Dubai');
+
+        $destinationHotels = $hotelsList->filter(function ($h) use ($destination) {
+                $city = strtolower($h['city'] ?? '');
+                $country = strtolower($h['country'] ?? '');
+
+                return $city=== $destination || $country === $destination;
+            });
+
+        return response()->json([
+            'data' => $destinationHotels
+
+        ]);
+    }
+
+
+    public function loadHotelDetails()
+    {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
+            'Accept-Encoding' => 'gzip, deflate',
+            'Accept' => 'application/json',
+        ])->get("https://search-api.hyperguest.io/2.0/",[
+            'checkIn' => '2026-04-01',
+            'nights' => 1,
+            'guests' => 2,
+            'hotelIds' => '19734',
+            'customerNationality' => 'US',
+        ]);
+
+        return $response->json();
     }
 }
