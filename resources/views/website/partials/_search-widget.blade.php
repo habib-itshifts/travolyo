@@ -82,7 +82,10 @@
     z-index: 5;
     background: rgba(214, 240, 248, 0.38);
     border: 1px solid rgba(255, 255, 255, 0.52);
-    border-radius: 28px;
+    /* border-radius: 28px; */
+    border-bottom: none;
+    border-top-left-radius: 30px;
+    border-top-right-radius: 30px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     box-shadow: 0 10px 24px rgba(27, 73, 99, 0.08);
