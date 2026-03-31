@@ -100,30 +100,54 @@ class LocalHotelProvider implements HotelProviderInterface
         );
     }
 
-    public function getOrder(string $orderId): HotelOrderDto
+   public function getOrder(string $orderId): HotelOrderDto
     {
-        $bookingRoom = BookingRoom::with(['booking', 'room.hotel'])
+        $bookingRoom = BookingRoom::with(['booking.metaItems', 'room.hotel', 'room.roomType'])
             ->whereHas('booking', fn ($q) => $q->where('code', $orderId))
             ->firstOrFail();
+        $booking = $bookingRoom->booking;
+        $room = $bookingRoom->room;
+        $hotelDetails = $booking->getJsonMeta('hotel_details');
+
+        $hotelName = (string) (
+            $room?->hotel?->name
+            ?? ($hotelDetails['hotel_name'] ?? 'Hotel')
+        );
+
+        $roomName = (string) (
+            $room?->display_name
+            ?? ($hotelDetails['room_name'] ?? 'Room')
+        );
+
+        $checkIn = $bookingRoom->check_in?->toDateString()
+            ?? ($hotelDetails['check_in'] ?? $booking->start_date?->toDateString() ?? now()->toDateString());
+
+        $checkOut = $bookingRoom->check_out?->toDateString()
+            ?? ($hotelDetails['check_out'] ?? $booking->end_date?->toDateString() ?? now()->toDateString());
+
+        $nights = (int) ($bookingRoom->nights ?? 0);
+        if ($nights <= 0) {
+            $nights = max(1, now()->parse($checkIn)->diffInDays($checkOut));
+        }
 
         return new HotelOrderDto(
-            orderId:        $bookingRoom->booking->code,
+            orderId:        $booking->code,
             provider:       HotelProviderEnum::Local,
-            hotelName:      $bookingRoom->room->hotel->name,
-            roomName:       $bookingRoom->room->name,
-            checkIn:        $bookingRoom->check_in->toDateString(),
-            checkOut:       $bookingRoom->check_out->toDateString(),
-            nights:         $bookingRoom->nights,
-            adults:         $bookingRoom->adults,
-            children:       $bookingRoom->children,
+            hotelName:      $hotelName,
+            roomName:       $roomName,
+            checkIn:        $checkIn,
+            checkOut:       $checkOut,
+            nights:         $nights,
+            adults:         (int) ($bookingRoom->adults ?? 0),
+            children:       (int) ($bookingRoom->children ?? 0),
             totalPrice:     (float) $bookingRoom->total_price,
-            currency:       $bookingRoom->booking->currency,
-            status:         $bookingRoom->status,
-            guestFirstName: $bookingRoom->booking->first_name,
-            guestLastName:  $bookingRoom->booking->last_name,
-            guestEmail:     $bookingRoom->booking->email,
-            guestPhone:     $bookingRoom->booking->phone,
-            specialRequests:$bookingRoom->special_requests,
+            currency:       (string) ($booking->currency ?? ($hotelDetails['currency'] ?? 'USD')),
+            status:         (string) ($bookingRoom->status ?? 'pending'),
+            guestFirstName: (string) ($booking->first_name ?? ''),
+            guestLastName:  (string) ($booking->last_name ?? ''),
+            guestEmail:     (string) ($booking->email ?? ''),
+            guestPhone:     (string) ($booking->phone ?? ''),
+            specialRequests:$bookingRoom->special_requests ?? $booking->customer_notes,
         );
     }
 
