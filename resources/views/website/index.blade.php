@@ -1410,6 +1410,14 @@
         </div>
     </div>
 </section>
+@php
+    $destinationCountries = collect($uaeDestinationCards ?? [])
+        ->pluck('country')
+        ->filter()
+        ->map(fn ($country) => trim((string) $country))
+        ->unique()
+        ->implode(', ');
+@endphp
 
 <section class="uae-destination-section">
     <div class="container">
@@ -1418,7 +1426,7 @@
                 <span class="uae-destination-pin">
                     <img src="{{ asset('assets/images/website/top-destination/location.png') }}" alt="Location">
                 </span>
-                <h2 class="uae-destination-title">Top Destinations in the UAE</h2>
+                <h2 class="uae-destination-title">Top Destinations in the {{ $destinationCountries }}</h2>
             </div>
 
             <div class="uae-destination-slider">

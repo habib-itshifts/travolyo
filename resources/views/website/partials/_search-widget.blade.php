@@ -1562,11 +1562,12 @@
 
                         <div class="trav-field trav-field--half">
                             <label class="trav-field__label">Staying At</label>
-                            <div class="trav-field__surface">
+                            <div class="trav-field__surface hotel-destination-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-building input-icon"></i>
-                                    <input type="text" name="bundle_hotel_city" class="form-control search-input" placeholder="Enter a destination or property" value="{{ request('bundle_hotel_city', request('city', $hotelDestinationValue)) }}" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
+                                    <input id="flightHotelDestinationInput" type="text" name="bundle_hotel_city" class="form-control search-input" placeholder="Enter a destination or property" value="{{ request('bundle_hotel_city', request('city', $hotelDestinationValue)) }}" autocomplete="off" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
                                 </div>
+                                <div class="airport-suggest-list hotel-destination-suggest-list d-none" id="flightHotelDestinationSuggestList"></div>
                             </div>
                         </div>
 
@@ -1635,6 +1636,8 @@
     const hotelDestinationInput = document.getElementById('hotelDestinationInput');
     const hotelDestinationMirror = document.getElementById('hotelDestinationMirror');
     const hotelDestinationList = document.getElementById('hotelDestinationSuggestList');
+    const flightHotelDestinationInput = document.getElementById('flightHotelDestinationInput');
+    const flightHotelDestinationList = document.getElementById('flightHotelDestinationSuggestList');
     const activityDestinationInput = document.getElementById('activityDestinationInput');
     const activityDestinationList = document.getElementById('activityDestinationSuggestList');
     const activityCountryInput = document.getElementById('activityCountryInput');
@@ -2134,6 +2137,7 @@
     };
 
     const hideHotelDestinationList = () => hideDestinationList(hotelDestinationList);
+    const hideFlightHotelDestinationList = () => hideDestinationList(flightHotelDestinationList);
     const hideActivityDestinationList = () => hideDestinationList(activityDestinationList);
 
     const syncAirportInputs = (type, value) => {
@@ -2418,6 +2422,31 @@
         });
     }
 
+    if (flightHotelDestinationInput) {
+        const debouncedFlightHotelDestinationSearch = debounce(async () => {
+            const items = await fetchDestinationSuggestions(flightHotelDestinationInput, flightHotelDestinationList);
+            if (!Array.isArray(items)) return;
+
+            renderDestinationAutocompleteList(flightHotelDestinationList, items, (item) => {
+                flightHotelDestinationInput.value = item.type === 'country'
+                    ? (item.destination || item.country || '')
+                    : (item.city || item.destination || '');
+
+                hideFlightHotelDestinationList();
+            });
+        });
+
+        flightHotelDestinationInput.addEventListener('input', () => {
+            debouncedFlightHotelDestinationSearch();
+        });
+
+        flightHotelDestinationInput.addEventListener('focus', () => {
+            if ((flightHotelDestinationInput.value || '').trim().length >= 2) {
+                debouncedFlightHotelDestinationSearch();
+            }
+        });
+    }
+
     if (activityDestinationInput) {
         const debouncedActivityDestinationSearch = debounce(async () => {
             const items = await fetchDestinationSuggestions(activityDestinationInput, activityDestinationList);
@@ -2450,8 +2479,15 @@
         if (e.target.closest('.flight-airport-field, .hotel-destination-field, .activity-destination-field')) return;
         hideAllLists();
         hideHotelDestinationList();
+        hideFlightHotelDestinationList();
         hideActivityDestinationList();
     });
+
+    if (flightForm) {
+        flightForm.addEventListener('submit', () => {
+            hideFlightHotelDestinationList();
+        });
+    }
 
     const resetSubmitState = () => {
         if (!submitBtn || !submitText) return;

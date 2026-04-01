@@ -77,20 +77,24 @@
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">City</label>
-                                <input type="text" class="form-control" id="destination-city" maxlength="120" required>
+                                <label class="form-label">Country</label>
+                                <select class="form-select" id="destination-country" required disabled>
+                                    <option value="">Loading countries...</option>
+                                </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Country</label>
-                                <input type="text" class="form-control" id="destination-country" maxlength="120" required>
+                                <label class="form-label">City</label>
+                                <select class="form-select" id="destination-city" required disabled>
+                                    <option value="">Select country first</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Country Code</label>
-                                <input type="text" class="form-control" id="destination-country-code" maxlength="10" placeholder="AE">
+                                <input type="text" class="form-control destination-auto-locked" id="destination-country-code" maxlength="10" placeholder="AE" readonly aria-readonly="true" tabindex="-1">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Location</label>
-                                <input type="text" class="form-control" id="destination-location" maxlength="20" placeholder="DXB">
+                                <input type="text" class="form-control destination-auto-locked" id="destination-location" maxlength="20" placeholder="DXB" readonly aria-readonly="true" tabindex="-1">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Sort Order</label>
@@ -148,6 +152,7 @@
             const storeUrl = @json(route('admin.destinations.store'));
             const updateUrlTemplate = @json(route('admin.destinations.update', ['destination' => '__ID__']));
             const deleteUrlTemplate = @json(route('admin.destinations.destroy', ['destination' => '__ID__']));
+            const destinationLocationsUrl = @json(asset('data/world country and city locations.json'));
 
             const tableBody = document.getElementById('destinations-table-body');
             const feedback = document.getElementById('destination-feedback');
@@ -162,6 +167,10 @@
             const previewEmpty = document.getElementById('destination-image-preview-empty');
             const imagePathInput = document.getElementById('destination-image-path');
             const imagePathDisplay = document.getElementById('destination-image-path-display');
+            const countryInput = document.getElementById('destination-country');
+            const cityInput = document.getElementById('destination-city');
+            const countryCodeInput = document.getElementById('destination-country-code');
+            const locationInput = document.getElementById('destination-location');
             let destinationMediaPickerOpen = false;
 
             const state = {
@@ -169,10 +178,154 @@
                 stats: { ...stats },
                 editingId: null,
                 search: '',
+                locationItems: [],
+                countries: [],
+                locationsLoaded: false,
+                locationsPromise: null,
             };
 
             function csrfToken() {
                 return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            }
+
+            function setSelectOptions(select, placeholder, options, selectedValue = '') {
+                if (!select) return;
+
+                const nextValue = String(selectedValue || '').trim();
+                const seen = new Set();
+                select.innerHTML = '';
+                select.appendChild(new Option(placeholder, ''));
+
+                options.forEach((option) => {
+                    const value = String(option?.value || '').trim();
+                    if (!value || seen.has(value)) return;
+
+                    seen.add(value);
+                    select.appendChild(new Option(option.label || value, value, false, value === nextValue));
+                });
+
+                if (nextValue && !seen.has(nextValue)) {
+                    select.appendChild(new Option(nextValue, nextValue, false, true));
+                }
+
+                select.value = nextValue;
+            }
+
+            function setLocationMeta(item = null) {
+                countryCodeInput.readOnly = true;
+                locationInput.readOnly = true;
+                countryCodeInput.tabIndex = -1;
+                locationInput.tabIndex = -1;
+                countryCodeInput.value = item?.country_code || '';
+                locationInput.value = item?.location || '';
+            }
+
+            function cityRecords(country) {
+                return state.locationItems.filter((item) => item.country === country);
+            }
+
+            function matchingCityRecord(country, city, location = '') {
+                const items = cityRecords(country);
+
+                return items.find((item) => item.city === city && (!location || item.location === location))
+                    || items.find((item) => item.city === city)
+                    || null;
+            }
+
+            function renderCountryOptions(selectedCountry = '') {
+                setSelectOptions(
+                    countryInput,
+                    state.locationsLoaded ? 'Select country' : 'Loading countries...',
+                    state.countries.map((country) => ({ value: country, label: country })),
+                    selectedCountry
+                );
+
+                countryInput.disabled = !state.locationsLoaded || !state.countries.length;
+            }
+
+            function renderCityOptions(country = '', selectedCity = '', selectedLocation = '') {
+                const items = cityRecords(country);
+                const uniqueItems = Array.from(
+                    new Map(items.map((item) => [String(item.city || '').trim().toLowerCase(), item])).values()
+                ).sort((a, b) => String(a.city || '').localeCompare(String(b.city || '')));
+
+                setSelectOptions(
+                    cityInput,
+                    country ? 'Select city' : (state.locationsLoaded ? 'Select country first' : 'Loading cities...'),
+                    uniqueItems.map((item) => ({ value: item.city, label: item.city })),
+                    selectedCity
+                );
+
+                cityInput.disabled = !country || !uniqueItems.length;
+
+                const matched = matchingCityRecord(country, selectedCity, selectedLocation);
+                if (matched) {
+                    setLocationMeta(matched);
+                } else if (!selectedCity) {
+                    setLocationMeta();
+                }
+            }
+
+            function syncDestinationLocationFields(country = '', city = '', location = '', countryCode = '') {
+                renderCountryOptions(country);
+                renderCityOptions(country, city, location);
+
+                const matched = matchingCityRecord(country, city, location);
+                if (matched) {
+                    setLocationMeta(matched);
+                    return;
+                }
+
+                countryCodeInput.value = countryCode || '';
+                locationInput.value = location || '';
+            }
+
+            async function ensureLocationDataset() {
+                if (state.locationsLoaded) return;
+                if (state.locationsPromise) {
+                    await state.locationsPromise;
+                    return;
+                }
+
+                state.locationsPromise = fetch(destinationLocationsUrl, {
+                    headers: { 'Accept': 'application/json' },
+                })
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            throw new Error('Unable to load destination locations');
+                        }
+
+                        const payload = await response.json();
+                        const items = Array.isArray(payload?.destinations) ? payload.destinations : [];
+
+                        state.locationItems = items
+                            .filter((item) => item?.type === 'city' && item?.country && item?.city)
+                            .map((item) => ({
+                                country: String(item.country || '').trim(),
+                                city: String(item.city || item.destination || '').trim(),
+                                country_code: String(item.country_code || '').trim().toUpperCase(),
+                                location: String(item.location || '').trim().toUpperCase(),
+                            }));
+
+                        state.countries = Array.from(new Set(
+                            state.locationItems
+                                .map((item) => item.country)
+                                .filter(Boolean)
+                        )).sort((a, b) => a.localeCompare(b));
+
+                        state.locationsLoaded = true;
+                        renderCountryOptions(countryInput.value || '');
+                        renderCityOptions(countryInput.value || '', cityInput.value || '', locationInput.value || '');
+                    })
+                    .catch(() => {
+                        state.locationItems = [];
+                        state.countries = [];
+                        state.locationsLoaded = true;
+                        renderCountryOptions(countryInput.value || '');
+                        renderCityOptions('', '', '');
+                    });
+
+                await state.locationsPromise;
             }
 
             function normalizeImage(path) {
@@ -267,22 +420,27 @@
                 state.editingId = null;
                 form.reset();
                 document.getElementById('destination-id').value = '';
+                countryInput.value = '';
+                cityInput.value = '';
+                countryCodeInput.value = '';
+                locationInput.value = '';
                 document.getElementById('destination-sort-order').value = '0';
                 document.getElementById('destination-is-active').checked = true;
                 formErrors.classList.add('d-none');
                 formErrors.innerHTML = '';
                 modalTitle.textContent = 'Add Destination';
                 submitButton.textContent = 'Create';
+                syncDestinationLocationFields('', '', '', '');
                 updatePreview('', '');
             }
 
             function fillForm(item) {
                 state.editingId = item.id;
                 document.getElementById('destination-id').value = item.id;
-                document.getElementById('destination-city').value = item.city || '';
-                document.getElementById('destination-country').value = item.country || '';
-                document.getElementById('destination-country-code').value = item.country_code || '';
-                document.getElementById('destination-location').value = item.location || '';
+                countryInput.value = item.country || '';
+                cityInput.value = item.city || '';
+                countryCodeInput.value = item.country_code || '';
+                locationInput.value = item.location || '';
                 document.getElementById('destination-image-path').value = item.image_path || '';
                 document.getElementById('destination-image-alt').value = item.image_alt || '';
                 document.getElementById('destination-accommodations-label').value = item.accommodations_label || '';
@@ -292,15 +450,16 @@
                 formErrors.innerHTML = '';
                 modalTitle.textContent = 'Edit Destination';
                 submitButton.textContent = 'Update';
+                syncDestinationLocationFields(item.country || '', item.city || '', item.location || '', item.country_code || '');
                 updatePreview(item.image_path || item.image_url || '', item.image_alt || item.city || '');
             }
 
             function formPayload() {
                 return {
-                    city: document.getElementById('destination-city').value.trim(),
-                    country: document.getElementById('destination-country').value.trim(),
-                    country_code: document.getElementById('destination-country-code').value.trim(),
-                    location: document.getElementById('destination-location').value.trim(),
+                    city: cityInput.value.trim(),
+                    country: countryInput.value.trim(),
+                    country_code: countryCodeInput.value.trim(),
+                    location: locationInput.value.trim(),
                     image_path: document.getElementById('destination-image-path').value.trim(),
                     image_alt: document.getElementById('destination-image-alt').value.trim(),
                     accommodations_label: document.getElementById('destination-accommodations-label').value.trim(),
@@ -359,7 +518,21 @@
                 renderTable();
             });
 
-            document.getElementById('add-destination-btn').addEventListener('click', () => {
+            countryInput.addEventListener('change', (event) => {
+                syncDestinationLocationFields(event.target.value || '', '', '', '');
+            });
+
+            cityInput.addEventListener('change', (event) => {
+                const matched = matchingCityRecord(countryInput.value, event.target.value);
+                if (matched) {
+                    setLocationMeta(matched);
+                } else {
+                    setLocationMeta();
+                }
+            });
+
+            document.getElementById('add-destination-btn').addEventListener('click', async () => {
+                await ensureLocationDataset();
                 resetForm();
                 modal.show();
             });
@@ -396,6 +569,7 @@
                 if (!item) return;
 
                 if (button.dataset.action === 'edit') {
+                    await ensureLocationDataset();
                     fillForm(item);
                     modal.show();
                     return;
@@ -459,6 +633,7 @@
                 destinationMediaPickerOpen = false;
             });
 
+            ensureLocationDataset();
             renderStats();
             renderTable();
             resetForm();
@@ -527,6 +702,16 @@
             background: #fff;
             border-radius: 10px;
             font-size: 13px;
+        }
+        .destination-auto-locked {
+            background: #f3f6fb;
+            color: #4b5563;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .destination-auto-locked:focus {
+            border-color: #d0d9e5;
+            box-shadow: none;
         }
     </style>
     @endpush
