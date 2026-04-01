@@ -382,6 +382,7 @@
         #ffffff;
     border-radius: 34px;
     box-shadow: 0 26px 60px rgba(15, 54, 88, 0.09);
+    min-height: 600px;
     padding: 26px 36px 30px;
     position: relative;
 }
@@ -463,7 +464,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    min-height: 0;
+    min-height: 380px;
     overflow: hidden;
     text-decoration: none;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -476,7 +477,7 @@
 }
 
 .uae-destination-card__image {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 4 / 5;
     border-radius: 18px 18px 14px 14px;
     flex: 0 0 auto;
     overflow: hidden;
