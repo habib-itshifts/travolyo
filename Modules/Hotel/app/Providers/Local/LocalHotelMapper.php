@@ -107,39 +107,39 @@ class LocalHotelMapper
         $roomType = $room->roomType;
         $amenityNames = $roomType?->amenities?->pluck('name')->all() ?? [];
 
+
         // Step 1: Find applicable deal
         $deal = $this->findApplicableDeal($room, $checkIn, $checkOut);
-
-        $dealId = null;
-        $originalPrice = 0.0; // "was"
-        $currentPrice = 0.0;  // "now"
-
+        
         // Step 2: Get standard room price first
         $standardPrice = $adults <= 1
-            ? (float) ($roomType?->price_sgl_bb ?: $roomType?->price_dbl_bb ?: 0)
-            : (float) ($roomType?->price_dbl_bb ?: $roomType?->price_sgl_bb ?: 0);
+            ? (float) $roomType->price_sgl_bb
+            : (float) $roomType->price_dbl_bb;
+
 
         // Step 3: If deal exists, get deal price
+        $dealId = null;
+        $originalPrice = $standardPrice; // ← always set original to standard
+        $currentPrice = $standardPrice;  // ← default current to standard too
+
         if ($deal) {
             $dealPrice = $adults <= 1
-                ? (float) ($deal->price_sgl_bb ?: $deal->price_dbl_bb ?: 0)
-                : (float) ($deal->price_dbl_bb ?: $deal->price_sgl_bb ?: 0);
+                ? (float) $deal->price_sgl_bb
+                : (float) $deal->price_dbl_bb;
 
-            if ($dealPrice > 0) {
-                $currentPrice = $dealPrice;
-                $originalPrice = $standardPrice;
                 $dealId = $deal->id;
-
-                // If there is no actual discount, hide original price
-                if ($originalPrice <= 0 || $originalPrice == $currentPrice) {
-                    $originalPrice = 0.0;
-                }
-            }
+                $currentPrice = $dealPrice;
         }
 
-        // Step 4: No valid deal price -> use standard price
+
+        // If no real discount, clear original so isDiscounted() returns false
+        if ($currentPrice >= $originalPrice) {
+            $originalPrice = 0.0;
+        }
+
+        // Step 4: Last resort hotel-level pricing
         if ($currentPrice <= 0) {
-            $currentPrice = $standardPrice;
+            $currentPrice = (float) ($room->hotel?->sale_price ?: $room->hotel?->base_price ?: 0);
             $originalPrice = 0.0;
             $dealId = null;
         }
@@ -153,14 +153,8 @@ class LocalHotelMapper
         }
 
         // Converted prices
-        $convertedCurrentPrice = $baseCurrency === $convertedCurrency
-            ? $currentPrice
-            : (float) currency($currentPrice, $baseCurrency, $convertedCurrency, false);
-        $convertedOriginalPrice = $originalPrice > 0
-            ? ($baseCurrency === $convertedCurrency
-                ? $originalPrice
-                : (float) currency($originalPrice, $baseCurrency, $convertedCurrency, false))
-            : 0.0;
+        $convertedCurrentPrice = currency($currentPrice, $baseCurrency, $convertedCurrency, false);
+        $convertedOriginalPrice =currency($originalPrice, $baseCurrency, $convertedCurrency, false);
 
         // Totals should always use CURRENT price
         $baseTotalPrice = $currentPrice * $nights;
@@ -234,34 +228,36 @@ class LocalHotelMapper
             ->where('travel_date_end', '>=', $checkOut)
             ->get();
 
-        // Filter out deals that fail runtime checks (blackout, booking window, release period)
-        $applicable = $deals->filter(function (HotelDeal $deal) use ($checkIn, $today, $checkInDate) {
-            // Blackout check — if check-in falls on a blacked-out date, skip this deal
-            if ($deal->isBlackedOut($checkIn)) {
-                return false;
-            }
+        // // Filter out deals that fail runtime checks (blackout, booking window, release period)
+        // $applicable = $deals->filter(function (HotelDeal $deal) use ($checkIn, $today, $checkInDate) {
+        //     // Blackout check — if check-in falls on a blacked-out date, skip this deal
+        //     if ($deal->isBlackedOut($checkIn)) {
+        //         return false;
+        //     }
 
-            // Booking window — if set, today must be on or before the window deadline
-            if ($deal->booking_window && $today->gt($deal->booking_window)) {
-                return false;
-            }
+        //     // Booking window — if set, today must be on or before the window deadline
+        //     if ($deal->booking_window && $today->gt($deal->booking_window)) {
+        //         return false;
+        //     }
 
-            // Release period — must book at least N days before check-in
-            if ($deal->release_period && $deal->release_period > 0) {
-                $daysUntilCheckIn = $today->diffInDays($checkInDate, false);
-                if ($daysUntilCheckIn < $deal->release_period) {
-                    return false;
-                }
-            }
+        //     // Release period — must book at least N days before check-in
+        //     if ($deal->release_period && $deal->release_period > 0) {
+        //         $daysUntilCheckIn = $today->diffInDays($checkInDate, false);
+        //         if ($daysUntilCheckIn < $deal->release_period) {
+        //             return false;
+        //         }
+        //     }
 
-            return true;
-        });
+        //     return true;
+        // });
+
+        return $deals->first();
 
         if ($applicable->isEmpty()) {
             return null;
         }
 
         // If multiple deals match, pick the one with the lowest double price (best value)
-        return $applicable->sortBy(fn (HotelDeal $d) => (float) ($d->price_dbl_bb ?: $d->price_sgl_bb ?: PHP_FLOAT_MAX))->first();
+        // return $applicable->sortBy(fn (HotelDeal $d) => (float) ($d->price_dbl_bb ?: $d->price_sgl_bb ?: PHP_FLOAT_MAX))->first();
     }
 }

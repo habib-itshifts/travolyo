@@ -79,6 +79,8 @@ class HotelOfferResource extends JsonResource
                 'description'       => $r->description,
                 'images'            => $r->images,
                 'deal_id'           => $r->dealId,           // non-null = price came from a deal
+                'is_discounted'     => $r->isDiscounted(),
+
             ])->values(),
 
             'badge'             => $this->badge,

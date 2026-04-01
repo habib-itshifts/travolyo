@@ -48,6 +48,7 @@ class LocalHotelProvider implements HotelProviderInterface
         }
 
         $hotels = $query->get();
+        
 
         return $hotels
             ->map(fn (Hotel $hotel) => $this->mapper->toOfferDto(
@@ -90,7 +91,7 @@ class LocalHotelProvider implements HotelProviderInterface
             throw HotelException::roomNotFound((int) $dto->roomId);
         }
 
-        $nights = (int) now()->parse($dto->checkIn)->diffInDays($dto->checkOut);
+        $nights = (int) $dto->nights();
 
         $room->loadMissing(['hotel.amenities', 'hotel.services', 'hotel.rooms.roomType']);
 
