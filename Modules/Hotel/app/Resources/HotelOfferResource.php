@@ -52,6 +52,7 @@ class HotelOfferResource extends JsonResource
             // Convered Pricing
             'converted_lowest_price'      => $this->convertedLowestPrice,
             'converted_currency'          => $this->convertedCurrency,
+            'is_discounted'               => $this->isDiscounted(),
 
             // Rooms
             'rooms'             => collect($this->rooms)->map(fn (HotelRoomOfferDto $r) => [
@@ -65,6 +66,7 @@ class HotelOfferResource extends JsonResource
                 'converted_original_price' => $r->convertedOriginalPrice,
                 'base_current_price'       => $r->baseCurrentPrice,
                 'converted_current_price'  => $r->convertedCurrentPrice,
+                'is_discounted'            => $r->convertedOriginalPrice > $r->convertedCurrentPrice,
                 'base_total_price'         => $r->baseTotalPrice,
                 'converted_total_price'    => $r->convertedTotalPrice,
                 'nights'            => $r->nights,
