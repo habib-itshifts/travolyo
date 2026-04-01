@@ -102,13 +102,14 @@ class HyperguestHotelMapper
 
         $bookingPayload = [
             'hotel_id'      => $hotel['propertyId'] ?? null,
+            'property_id'   => $hotel['propertyId'] ?? null,
             'room_id'       => $room['roomId'] ?? null,
-            'room_type_code'=> $room['roomTypeCode'] ?? null,
+            'room_code'     => $room['roomTypeCode'] ?? null,
             'rate_plan_id'  => $ratePlan['ratePlanId'] ?? null,
-            'rate_plan_code'=> $ratePlan['ratePlanCode'] ?? null,
+            'rate_code'     => $ratePlan['ratePlanCode'] ?? null,
             'price'         => $basePrice,
             'currency'      => $baseCurrency,
-            'board'         => $ratePlan['board'] ?? null,
+            'meal_plan'     => $ratePlan['board'] ?? null,
             'is_immediate'  => $ratePlan['isImmediate'] ?? false,
         ];
 
@@ -174,7 +175,6 @@ class HyperguestHotelMapper
         return $decoded;
     }
 }
-
 
 
 

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\Hotel\Actions\CheckoutHotelAction;
 use Modules\Hotel\Actions\PrebookHotelAction;
@@ -34,17 +35,13 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
-        
-        
-        
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
-            
 
             $perPage = $dto->perPage;
             $page    = $dto->page;
+            $searchCache = Cache::store('file');
 
-            // Build a cache key from the search params (excluding page/perPage)
             $cacheKey = 'hotel_search_' . md5(json_encode([
                 $dto->destination, $dto->checkIn, $dto->checkOut,
                 $dto->adults, $dto->children, $dto->rooms,
@@ -53,18 +50,15 @@ class HotelController extends Controller
                 $dto->provider?->value,
             ]));
 
-
-            // On page 1 always do a fresh search; cache results for subsequent pages
             if ($page === 1) {
                 $offers = (new SearchHotelAction)->handle($dto);
-                Cache::put($cacheKey, $offers, now()->addMinutes(15));
+                $this->storeSearchCache($searchCache, $cacheKey, $offers);
             } else {
-                $offers = Cache::get($cacheKey, []);
+                $offers = $searchCache->get($cacheKey, []);
 
-                // If cache expired, re-fetch
                 if (empty($offers)) {
                     $offers = (new SearchHotelAction)->handle($dto);
-                    Cache::put($cacheKey, $offers, now()->addMinutes(15));
+                    $this->storeSearchCache($searchCache, $cacheKey, $offers);
                 }
             }
 
@@ -321,5 +315,18 @@ class HotelController extends Controller
             HotelProviderEnum::Hyperguest->value  => new HyperguestHotelProvider(),
             default                               => new LocalHotelProvider(),
         };
+    }
+
+    private function storeSearchCache($store, string $cacheKey, array $offers): void
+    {
+        try {
+            $store->put($cacheKey, $offers, now()->addMinutes(15));
+        } catch (\Throwable $e) {
+            Log::warning('Hotel search cache write skipped.', [
+                'cache_key' => $cacheKey,
+                'offers_count' => count($offers),
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }
