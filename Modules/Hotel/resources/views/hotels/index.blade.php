@@ -349,8 +349,12 @@
                             </div>` : ''}
                         </div>
                         <div class="text-end ms-3">
-                            ${r.converted_original_price ? `<div style="font-size:.75rem;color:#b91c1c;text-decoration:line-through;">${r.converted_currency ?? h.converted_currency} ${parseFloat(r.converted_original_price).toLocaleString()}</div>` : ''}
-                            <div class="room-card__price">${r.converted_currency ?? h.converted_currency} ${parseFloat(r.converted_current_price ?? r.converted_total_price ?? 0).toLocaleString()}${r.deal_id ? ' <span class="badge bg-success" style="font-size:.65rem;vertical-align:middle;">Deal</span>' : ''}</div>
+                            ${
+                                parseFloat(r.converted_original_price) != parseFloat(r.converted_current_price) 
+                                ? `<div style="font-size:.75rem;color:#b91c1c;text-decoration:line-through;">${r.converted_currency} ${r.converted_original_price}</div>` 
+                                : ''
+                            }
+                            <div class="room-card__price">${r.converted_currency} ${parseFloat(r.converted_current_price)} ${r.deal_id ? ' <span class="badge bg-success" style="font-size:.65rem;vertical-align:middle;">Deal</span>' : ''}</div>
                             <div style="font-size:.75rem;color:#6c757d;">${r.nights ? r.nights + ' nights total: ' + parseFloat(r.converted_total_price ?? 0).toLocaleString() : 'per night'}</div>
                             <button class="btn btn-primary btn-select-room mt-2 js-select-room"
                                 data-offer-id="${h.id}"

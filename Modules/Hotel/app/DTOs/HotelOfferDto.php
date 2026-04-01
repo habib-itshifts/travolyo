@@ -54,4 +54,9 @@ class HotelOfferDto
         // B2B API source tag (e.g. 'local', 'netstorming_api', 'tasspro_api')
         public readonly ?string           $apiSource = null,
     ) {}
+
+    public function isDiscounted(): bool
+    {
+        return round($this->convertedLowestPrice, 2) < round($this->baseLowestPrice, 2);
+    }
 }

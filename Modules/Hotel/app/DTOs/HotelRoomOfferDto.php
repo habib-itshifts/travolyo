@@ -28,4 +28,9 @@ class HotelRoomOfferDto
         public readonly array   $images    = [],
         public readonly ?int    $dealId    = null,  // HotelDeal ID if pricing came from a deal
     ) {}
+
+    public function isDiscounted(): bool
+    {
+        return round($this->convertedCurrentPrice, 2) < round($this->convertedOriginalPrice, 2);
+    }
 }

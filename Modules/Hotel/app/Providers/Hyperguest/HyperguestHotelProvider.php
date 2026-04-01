@@ -225,7 +225,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
             $dto->adults,
             $dto->children,
             $dto->currency,
-            $dto->nationality ?? 'AE',
+            $dto->nationality,
         ));
 
         if ($dto->starRating !== null) {
@@ -237,6 +237,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
         return $results->values()->all();
     }
 
+
+    //Step::01 - return hotel ids of that specific destination
     private function findHotelIdsByDestination(string $destination): array
     {
         $destination = strtolower(trim($destination));
@@ -272,7 +274,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
         return is_array($payload) ? $payload : [];
     }
-
+    // Step:: 02 - find hotel details using
     private function searchHotelsByIds(
         array $hotelIds,
         string $checkIn,

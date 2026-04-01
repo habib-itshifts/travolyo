@@ -23,6 +23,7 @@ class HyperguestHotelMapper
             ->flatMap(fn (array $room) => $this->toRoomOfferDtos($room, $nights, $currency, $hotel))
             ->values()
             ->all();
+            
 
         $baseLowestPrice = collect($rooms)->min(fn (HotelRoomOfferDto $room) => $room->baseCurrentPrice) ?? 0.0;
         $convertedLowestPrice = collect($rooms)->min(fn (HotelRoomOfferDto $room) => $room->convertedCurrentPrice) ?? 0.0;
@@ -76,27 +77,21 @@ class HyperguestHotelMapper
         string $currency,
         array $hotel = []
     ): ?HotelRoomOfferDto {
-        $sellPrice = data_get($ratePlan, 'prices.sell.price');
-        $netPrice = data_get($ratePlan, 'prices.net.price');
+        $basePrice = data_get($ratePlan, 'prices.sell.price');
+        $baseBarPrice = data_get($ratePlan, 'prices.bar.price');
 
-        $basePrice = (float) ($sellPrice ?? $netPrice ?? 0);
-        $baseCurrency = (string) (
-            data_get($ratePlan, 'prices.sell.currency')
-            ?? data_get($ratePlan, 'prices.net.currency')
-            ?? $currency
-        );
+        $baseCurrency = data_get($ratePlan, 'prices.sell.currency');
 
         if ($basePrice <= 0) {
             return null;
         }
 
-        $baseTotalPrice = $basePrice * max($nights, 1);
+        $baseTotalPrice = $basePrice * $nights;
 
-        $convertedPrice = $baseCurrency === $currency
-            ? $basePrice
-            : (float) currency($basePrice, $baseCurrency, $currency, false);
+        // $convertedPrice = currency($basePrice, $baseCurrency, $currency, false);
+        $convertedPrice = $baseTotalPrice;
 
-        $convertedTotalPrice = $convertedPrice * max($nights, 1);
+        $convertedTotalPrice = $convertedPrice * $nights;
 
         $isAvailable = ((int) ($room['numberOfAvailableRooms'] ?? 0)) > 0;
 
@@ -133,15 +128,16 @@ class HyperguestHotelMapper
 
         return new HotelRoomOfferDto(
             roomId:                 $bookingKey,
-            name:                   (string) (($room['roomName'] ?? 'Room') . ' - ' . ($ratePlan['ratePlanName'] ?? 'Rate')),
+            // name:                   (string) (($room['roomName'] ?? 'Room') . ' - ' . ($ratePlan['ratePlanName'] ?? 'Rate')),
+            name:                   (string) (($room['roomName'] ?? 'Room')),
             roomType:               (string) ($room['roomTypeCode'] ?? 'standard'),
             bedConfiguration:       $bedConfiguration,
             maxAdults:              (int) ($room['settings']['maxAdultsNumber'] ?? 2),
             maxChildren:            (int) ($room['settings']['maxChildrenNumber'] ?? 0),
-            baseOriginalPrice:      (float) (data_get($ratePlan, 'prices.bar.price') ?? 0),
-            convertedOriginalPrice: $baseCurrency === $currency
-                ? (float) (data_get($ratePlan, 'prices.bar.price') ?? 0)
-                : (float) currency((float) (data_get($ratePlan, 'prices.bar.price') ?? 0), $baseCurrency, $currency, false),
+            // baseOriginalPrice:      (float) $baseBarPrice,
+            // convertedOriginalPrice: currency($baseBarPrice, $baseCurrency, $currency, false),
+            baseOriginalPrice:      $basePrice,
+            convertedOriginalPrice: $convertedPrice,
             baseCurrentPrice:       $basePrice,
             convertedCurrentPrice:  $convertedPrice,
             baseTotalPrice:         $baseTotalPrice,
