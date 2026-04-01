@@ -3,6 +3,7 @@
 namespace Modules\Hotel\Providers\Hyperguest;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
@@ -14,8 +15,16 @@ use Modules\Hotel\Providers\HotelProviderInterface;
 
 class HyperguestHotelProvider implements HotelProviderInterface
 {
+    private const STATIC_HOTELS_CACHE_KEY = 'hyperguest_static_hotels_v1';
+    private const STATIC_HOTELS_CACHE_MINUTES = 30;
+    private const STATIC_HOTELS_TIMEOUT_SECONDS = 8;
+    private const SEARCH_API_TIMEOUT_SECONDS = 8;
+    private const SEARCH_BUDGET_SECONDS = 12;
+    private const SEARCH_CHUNK_SIZE = 10;
+
     private HyperguestHotelMapper $mapper;
     private string $bookingResponsePath;
+    private string $hotelsFixturePath;
 
     protected array $headers;
 
@@ -23,6 +32,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
     {
         $this->mapper = new HyperguestHotelMapper();
         $this->bookingResponsePath = public_path('data/hyperguest/booking_response.json');
+        $this->hotelsFixturePath = public_path('data/hyperguest/hotels.json');
         $this->headers = [
             'Accept-Encoding' => 'gzip, deflate',
             'Accept' => 'application/json',
@@ -227,6 +237,27 @@ class HyperguestHotelProvider implements HotelProviderInterface
             $dto->currency,
             $dto->nationality,
         ));
+        $allowedIds = collect($hotelIds)->map(fn ($id) => (string) $id)->all();
+        $staticMatches = collect($this->loadStaticHotels())
+            ->filter(fn (array $hotel) => in_array((string) ($hotel['propertyId'] ?? ''), $allowedIds, true));
+
+        if ($results->isEmpty()) {
+            $results = $staticMatches->values();
+        } else {
+            $returnedIds = $results
+                ->map(fn (array $hotel) => (string) ($hotel['propertyId'] ?? ''))
+                ->filter()
+                ->unique()
+                ->all();
+
+            $missingStaticHotels = $staticMatches
+                ->filter(fn (array $hotel) => ! in_array((string) ($hotel['propertyId'] ?? ''), $returnedIds, true));
+
+            $results = $results
+                ->concat($missingStaticHotels)
+                ->unique(fn (array $hotel) => (string) ($hotel['propertyId'] ?? ''))
+                ->values();
+        }
 
         if ($dto->starRating !== null) {
             $results = $results->filter(
@@ -246,33 +277,65 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
         return $hotels
             ->filter(function (array $hotel) use ($destination) {
-                $city = strtolower((string) ($hotel['city'] ?? $hotel['cityName'] ?? ''));
-                $country = strtolower((string) ($hotel['country'] ?? $hotel['countryCode'] ?? ''));
+                $property = (array) ($hotel['propertyInfo'] ?? []);
+                $city = strtolower(trim((string) ($property['cityName'] ?? $hotel['city'] ?? $hotel['cityName'] ?? '')));
+                $countryCode = strtolower(trim((string) ($property['countryCode'] ?? $hotel['countryCode'] ?? '')));
+                $country = strtolower(trim((string) ($hotel['country'] ?? '')));
+                $region = strtolower(trim((string) ($property['regionName'] ?? '')));
 
-                return $city === $destination || $country === $destination;
+                return $city === $destination
+                    || $country === $destination
+                    || $countryCode === $destination
+                    || $region === $destination;
             })
-            ->pluck('hotel_id')
+            ->map(fn (array $hotel) => (string) ($hotel['propertyId'] ?? $hotel['hotel_id'] ?? ''))
             ->filter()
-            ->map(fn ($id) => (string) $id)
+            ->unique()
             ->values()
             ->all();
     }
 
     private function loadStaticHotels(): array
     {
-        $response = Http::withHeaders($this->headers)
-            ->acceptJson()
-            ->timeout(30)
-            ->get('https://hg-static.hyperguest.com/hotels.json')
-            ->throw();
+        if (is_file($this->hotelsFixturePath)) {
+            $decoded = json_decode((string) file_get_contents($this->hotelsFixturePath), true);
+            $normalized = $this->extractHotelsCollection($decoded);
 
-        $payload = $response->json();
+            if ($normalized !== []) {
+                return $normalized;
+            }
+        }
+
+        return Cache::remember(
+            self::STATIC_HOTELS_CACHE_KEY,
+            now()->addMinutes(self::STATIC_HOTELS_CACHE_MINUTES),
+            function (): array {
+                $response = Http::withHeaders($this->headers)
+                    ->acceptJson()
+                    ->timeout(self::STATIC_HOTELS_TIMEOUT_SECONDS)
+                    ->get('https://hg-static.hyperguest.com/hotels.json')
+                    ->throw();
+
+                return $this->extractHotelsCollection($response->json());
+            }
+        );
+    }
+
+    private function extractHotelsCollection(mixed $payload): array
+    {
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        if (isset($payload['results']) && is_array($payload['results'])) {
+            return $payload['results'];
+        }
 
         if (isset($payload['hotels']) && is_array($payload['hotels'])) {
             return $payload['hotels'];
         }
 
-        return is_array($payload) ? $payload : [];
+        return array_is_list($payload) ? $payload : [];
     }
     // Step:: 02 - find hotel details using
     private function searchHotelsByIds(
@@ -284,24 +347,35 @@ class HyperguestHotelProvider implements HotelProviderInterface
         string $currency,
         string $nationality
     ): array {
-        $chunks = collect($hotelIds)->chunk(10);
+        $chunks = collect($hotelIds)->chunk(self::SEARCH_CHUNK_SIZE);
         $results = collect();
+        $startedAt = microtime(true);
 
         foreach ($chunks as $chunk) {
-            $response = Http::withHeaders($this->headers)
-                ->acceptJson()
-                ->timeout(30)
-                ->get('https://search-api.hyperguest.io/2.0/', [
-                    'checkIn' => $checkIn,
-                    'nights' => max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1),
-                    'guests' => max($adults + $children, 1),
-                    'hotelIds' => $chunk->implode(','),
-                    'customerNationality' => $nationality,
-                    'currency' => $currency,
-                ])
-                ->throw();
+            $remaining = self::SEARCH_BUDGET_SECONDS - (microtime(true) - $startedAt);
+            if ($remaining <= 1) {
+                break;
+            }
 
-            $results = $results->merge($this->unwrapResults($response->json()));
+            try {
+                $response = Http::withHeaders($this->headers)
+                    ->acceptJson()
+                    ->timeout(max(3, min(self::SEARCH_API_TIMEOUT_SECONDS, (int) ceil($remaining))))
+                    ->get('https://search-api.hyperguest.io/2.0/', [
+                        'checkIn' => $checkIn,
+                        'nights' => max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1),
+                        'guests' => max($adults + $children, 1),
+                        'hotelIds' => $chunk->implode(','),
+                        'customerNationality' => $nationality,
+                        'currency' => $currency,
+                    ])
+                    ->throw();
+
+                $results = $results->merge($this->unwrapResults($response->json()));
+            } catch (\Throwable $e) {
+                report($e);
+                continue;
+            }
         }
 
         return $results

@@ -229,6 +229,7 @@
     const params      = @json($params);
     const hotelSearchKeyword = @json($hotelSearchKeyword);
     const isLoggedIn  = {{ auth()->check() ? 'true' : 'false' }};
+    const selectedCurrency = (document.querySelector('meta[name="currency"]')?.content ?? 'USD').toUpperCase();
     const searchUrl   = '{{ route('api.hotels.search') }}';
     const prebookUrl  = '{{ route('api.hotels.prebook') }}';
     const loading   = document.getElementById('hotel-loading');
@@ -255,6 +256,7 @@
         const map = {
             'local':                        { label: 'Local',     bg: '#e0f2fe', color: '#0369a1' },
             'travolyo_b2b':                 { label: 'B2B',       bg: '#f3e8ff', color: '#7c3aed' },
+            'hyperguest':                   { label: 'Hyperguest', bg: '#ecfeff', color: '#0f766e' },
         };
         const m = map[p] ?? { label: p, bg: '#f3f4f6', color: '#6b7280' };
         return `<span class="hotel-card__badge" style="background:${m.bg};color:${m.color}">${m.label}</span>`;
@@ -433,6 +435,7 @@
                     check_out:  params.check_out,
                     adults:     parseInt(params.adults ?? 1, 10),
                     children:   parseInt(params.children ?? 0, 10),
+                    currency:   selectedCurrency,
                     page:       page,
                 }),
             });
@@ -520,7 +523,7 @@
         priceRange.max   = maxP;
         priceRange.value = wasAtMax ? maxP : priceRange.value;
 
-        const fmt = v => `$${Math.round(v).toLocaleString()}`;
+        const fmt = v => `${selectedCurrency} ${Math.round(v).toLocaleString()}`;
         if (priceRangeMin) priceRangeMin.textContent = fmt(minP);
         if (priceRangeVal) priceRangeVal.textContent = fmt(maxP);
 
@@ -617,7 +620,7 @@
                         check_out: params.check_out ?? '',
                         adults:    parseInt(params.adults   ?? 1, 10),
                         children:  parseInt(params.children ?? 0, 10),
-                        currency:  document.querySelector('meta[name="currency"]')?.content ?? 'USD',
+                        currency:  selectedCurrency,
                         provider:  hotel.provider,
                     }),
                 });
@@ -657,7 +660,7 @@
             check_out:  btn.dataset.checkOut,
             adults:     parseInt(btn.dataset.adults ?? 1, 10),
             children:   parseInt(btn.dataset.children ?? 0, 10),
-            currency:         document.querySelector('meta[name="currency"]')?.content ?? 'USD',
+            currency:         selectedCurrency,
         };
 
         try {

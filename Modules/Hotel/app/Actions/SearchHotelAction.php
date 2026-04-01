@@ -11,7 +11,9 @@ use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 
 class SearchHotelAction
 {
-    private const OVERALL_TIME_BUDGET_SECONDS = 40;
+    private const OVERALL_TIME_BUDGET_SECONDS = 35;
+    private const MIN_PROVIDER_BUDGET_SECONDS = 3;
+
     /** @return \Modules\Hotel\DTOs\HotelOfferDto[] */
     public function handle(SearchHotelDto $dto): array
     {
@@ -20,9 +22,16 @@ class SearchHotelAction
             : [HotelProviderEnum::Local, HotelProviderEnum::TravolyoB2B, HotelProviderEnum::Hyperguest];
 
         $results = [];
-         $startedAt = microtime(true);
+        $startedAt = microtime(true);
 
         foreach ($providers as $providerEnum) {
+            $elapsed = microtime(true) - $startedAt;
+            $remaining = self::OVERALL_TIME_BUDGET_SECONDS - $elapsed;
+
+            if ($remaining <= self::MIN_PROVIDER_BUDGET_SECONDS) {
+                break;
+            }
+
             try {
                 $providerDto = new SearchHotelDto(
                     destination:       $dto->destination,
@@ -55,9 +64,9 @@ class SearchHotelAction
     private function resolveProvider(HotelProviderEnum $provider): HotelProviderInterface
     {
         return match ($provider) {
-            // HotelProviderEnum::Local       => new LocalHotelProvider(),
+            HotelProviderEnum::Local       => new LocalHotelProvider(),
             HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
-            // HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
+            HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }
 }
