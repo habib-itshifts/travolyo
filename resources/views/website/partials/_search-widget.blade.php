@@ -1208,7 +1208,7 @@
                         <div class="trav-field__surface trav-field__surface--date">
                             <div class="input-icon-wrap">
                                 <i class="bi bi-calendar3 input-icon"></i>
-                                <input type="date" name="check_in" id="hotelCheckInInput" class="form-control search-input" value="{{ request('check_in', $defaultHotelCheckIn) }}" />
+                                <input type="date" name="check_in" id="hotelCheckInInput" class="form-control search-input" value="{{ request('check_in', $defaultHotelCheckIn) }}" min="{{ now()->format('Y-m-d') }}" />
                             </div>
                             <div class="trav-field__helper" id="hotelCheckInDay">{{ \Carbon\Carbon::parse(request('check_in', $defaultHotelCheckIn))->format('l') }}</div>
                         </div>
@@ -1219,7 +1219,7 @@
                         <div class="trav-field__surface trav-field__surface--date">
                             <div class="input-icon-wrap">
                                 <i class="bi bi-calendar3 input-icon"></i>
-                                <input type="date" name="check_out" id="hotelCheckOutInput" class="form-control search-input" value="{{ request('check_out', $defaultHotelCheckOut) }}" />
+                                <input type="date" name="check_out" id="hotelCheckOutInput" class="form-control search-input" value="{{ request('check_out', $defaultHotelCheckOut) }}" min="{{ now()->format('Y-m-d') }}" />
                             </div>
                             <div class="trav-field__helper" id="hotelCheckOutDay">{{ \Carbon\Carbon::parse(request('check_out', $defaultHotelCheckOut))->format('l') }}</div>
                         </div>
@@ -1308,7 +1308,7 @@
                             <div class="trav-field__surface">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-calendar3 input-icon"></i>
-                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" />
+                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" min="{{ now()->format('Y-m-d') }}" />
                                 </div>
                             </div>
                         </div>
@@ -1381,7 +1381,7 @@
                             <div class="trav-field__surface">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-calendar3 input-icon"></i>
-                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" />
+                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', now()->addDay()->format('Y-m-d')) }}" min="{{ now()->format('Y-m-d') }}" />
                                 </div>
                             </div>
                         </div>
@@ -1391,7 +1391,7 @@
                             <div class="trav-field__surface">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-calendar3 input-icon"></i>
-                                    <input type="date" name="return_date" class="form-control search-input" value="{{ request('return_date') }}" />
+                                    <input type="date" name="return_date" class="form-control search-input" value="{{ request('return_date') }}" min="{{ now()->format('Y-m-d') }}" />
                                 </div>
                             </div>
                         </div>
@@ -1492,7 +1492,7 @@
                             <div class="trav-field__surface">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-calendar3 input-icon"></i>
-                                    <input type="date" class="form-control search-input" name="activity_date" value="{{ request('activity_date', now()->format('Y-m-d')) }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
+                                    <input type="date" class="form-control search-input" name="activity_date" value="{{ request('activity_date', now()->format('Y-m-d')) }}" min="{{ now()->format('Y-m-d') }}" {{ $activeTab !== 'activities' ? 'disabled' : '' }} />
                                 </div>
                             </div>
                         </div>
@@ -1576,7 +1576,7 @@
                             <div class="trav-field__surface">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-calendar3 input-icon"></i>
-                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', request('check_in', $defaultHotelCheckIn)) }}" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
+                                    <input type="date" name="departure_date" class="form-control search-input" value="{{ request('departure_date', request('check_in', $defaultHotelCheckIn)) }}" min="{{ now()->format('Y-m-d') }}" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
                                 </div>
                             </div>
                         </div>
@@ -1586,7 +1586,7 @@
                             <div class="trav-field__surface">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-calendar3 input-icon"></i>
-                                    <input type="date" name="return_date" class="form-control search-input" value="{{ request('return_date', request('check_out', $defaultHotelCheckOut)) }}" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
+                                    <input type="date" name="return_date" class="form-control search-input" value="{{ request('return_date', request('check_out', $defaultHotelCheckOut)) }}" min="{{ now()->format('Y-m-d') }}" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
                                 </div>
                             </div>
                         </div>
