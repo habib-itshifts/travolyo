@@ -36,5 +36,6 @@ Route::prefix('locations')->group(function () {
     Route::get('/cities/{country_code}', [LocationController::class, 'cities'])->name('api.locations.cities');
     Route::get('/airports',         [LocationController::class, 'airports'])->name('api.locations.airports');
     Route::get('/airports/search',  [LocationController::class, 'searchAirports'])->name('api.locations.airports.search');
+    Route::get('/hotels/search',    [LocationController::class, 'searchHotelDestinations'])->name('api.locations.hotels.search');
     Route::get('/find/{code}',      [LocationController::class, 'locationByCode'])->name('api.locations.find');
 });
