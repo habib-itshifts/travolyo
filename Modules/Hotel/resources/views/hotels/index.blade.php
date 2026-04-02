@@ -236,6 +236,7 @@
     const errorEl   = document.getElementById('hotel-error');
     const header    = document.getElementById('results-header');
     const countEl   = document.getElementById('results-count');
+    const selectedCurrency = document.querySelector('meta[name="currency"]')?.content ?? 'USD';
 
     let allHotels   = [];
     let currentPage = 1;
@@ -433,6 +434,7 @@
                     check_out:  params.check_out,
                     adults:     parseInt(params.adults ?? 1, 10),
                     children:   parseInt(params.children ?? 0, 10),
+                    currency:   selectedCurrency,
                     page:       page,
                 }),
             });
@@ -617,7 +619,7 @@
                         check_out: params.check_out ?? '',
                         adults:    parseInt(params.adults   ?? 1, 10),
                         children:  parseInt(params.children ?? 0, 10),
-                        currency:  document.querySelector('meta[name="currency"]')?.content ?? 'USD',
+                        currency:  selectedCurrency,
                         provider:  hotel.provider,
                     }),
                 });
@@ -657,7 +659,7 @@
             check_out:  btn.dataset.checkOut,
             adults:     parseInt(btn.dataset.adults ?? 1, 10),
             children:   parseInt(btn.dataset.children ?? 0, 10),
-            currency:         document.querySelector('meta[name="currency"]')?.content ?? 'USD',
+            currency:   selectedCurrency,
         };
 
         try {
