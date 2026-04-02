@@ -9,11 +9,12 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Modules\Hotel\DTOs\CheckoutHotelDto;
 use Modules\Hotel\Enums\BookingRoomStatusEnum;
-use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
 use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Models\BookingRoom;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\HotelRoom;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
+use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 
 class CheckoutHotelAction
 {
@@ -54,6 +55,8 @@ class CheckoutHotelAction
 
         // ── Hyperguest: call their booking API before creating the local record ──
         $hyperguestBooking = null;
+        $travolyoB2BBooking = null;
+
         if ($provider === 'hyperguest') {
             $hyperguestBooking = (new HyperguestHotelProvider())->book(
                 checkoutData: array_merge($hotel, ['special_requests' => $dto->specialRequests]),
@@ -72,11 +75,35 @@ class CheckoutHotelAction
                 ],
             );
 
-            // Use the confirmed sell price from Hyperguest if available
             $confirmedPrice = $hyperguestBooking['content']['prices']['sell']['price'] ?? null;
             if ($confirmedPrice) {
                 $hotel['total_price'] = (float) $confirmedPrice;
             }
+
+            $hotel['supplier_status'] = $hyperguestBooking['content']['status'] ?? ($hotel['supplier_status'] ?? '');
+            $hotel['supplier_reference'] = $hyperguestBooking['reference']['agency'] ?? ($hotel['supplier_reference'] ?? '');
+            $hotel['supplier_booking_code'] = $hyperguestBooking['bookingId'] ?? ($hotel['supplier_booking_code'] ?? '');
+        }
+
+        if ($provider === 'travolyo_b2b') {
+            $travolyoB2BBooking = (new TravolyoB2BHotelProvider())->book(
+                checkoutData: array_merge($hotel, ['special_requests' => $dto->specialRequests]),
+                guest: [
+                    'first_name'  => $dto->firstName,
+                    'last_name'   => $dto->lastName,
+                    'email'       => $dto->email,
+                    'phone'       => $dto->phone,
+                    'nationality' => 'AE',
+                ],
+            );
+
+            if (! empty($travolyoB2BBooking['confirmed_total_price'])) {
+                $hotel['total_price'] = (float) $travolyoB2BBooking['confirmed_total_price'];
+            }
+
+            $hotel['supplier_status'] = $travolyoB2BBooking['supplier_status'] ?? ($hotel['supplier_status'] ?? '');
+            $hotel['supplier_reference'] = $travolyoB2BBooking['supplier_reference'] ?? ($hotel['supplier_reference'] ?? '');
+            $hotel['supplier_booking_code'] = $travolyoB2BBooking['supplier_booking_code'] ?? ($hotel['supplier_booking_code'] ?? '');
         }
 
         $booking = Booking::create([
@@ -125,6 +152,14 @@ class CheckoutHotelAction
                 $hyperguestBooking['rooms'][0]['remarks'] ?? []
             );
         }
+
+        if ($travolyoB2BBooking !== null) {
+            $booking->addMeta('travolyo_b2b_booking', $travolyoB2BBooking);
+            $booking->addMeta('travolyo_b2b_supplier_reference', $travolyoB2BBooking['supplier_reference'] ?? null);
+            $booking->addMeta('travolyo_b2b_supplier_booking_code', $travolyoB2BBooking['supplier_booking_code'] ?? null);
+            $booking->addMeta('travolyo_b2b_status', $travolyoB2BBooking['supplier_status'] ?? 'unknown');
+        }
+
         $booking->addMeta('payment_gateway', $dto->paymentGateway);
 
         if ($dto->specialRequests) {

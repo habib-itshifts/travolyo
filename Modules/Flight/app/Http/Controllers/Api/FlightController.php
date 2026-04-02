@@ -144,6 +144,7 @@ class FlightController extends Controller
                 'price'        => $offer->totalAmount,
                 'currency'     => $offer->currency,
                 'checkout_url' => url('/flights/checkout?token=' . $token),
+                'checkout_token' => $token,
             ]);
 
         } catch (FlightException $e) {

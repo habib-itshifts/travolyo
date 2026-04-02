@@ -47,24 +47,24 @@ class LocalHotelProvider implements HotelProviderInterface
             $query->whereHas('amenities', fn ($q) => $q->whereIn('amenities.id', $dto->amenityIds));
         }
 
-        if ($dto->priceMin !== null || $dto->priceMax !== null) {
-            $query->whereHas('rooms', function ($q) use ($dto) {
-                if ($dto->priceMin !== null) {
-                    $q->where('base_price', '>=', $dto->priceMin);
-                }
-                if ($dto->priceMax !== null) {
-                    $q->where('base_price', '<=', $dto->priceMax);
-                }
-            });
-        }
-
         $hotels = $query->get();
+        
 
-        // Pass check-in/check-out so the mapper can look up deal pricing
         return $hotels
-            ->map(fn (Hotel $h) => $this->mapper->toOfferDto(
-                $h, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
+            ->map(fn (Hotel $hotel) => $this->mapper->toOfferDto(
+                $hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
             ))
+            ->filter(function (HotelOfferDto $offer) use ($dto) {
+                if ($dto->priceMin !== null && $offer->convertedLowestPrice < $dto->priceMin) {
+                    return false;
+                }
+
+                if ($dto->priceMax !== null && $offer->convertedLowestPrice > $dto->priceMax) {
+                    return false;
+                }
+
+                return true;
+            })
             ->all();
     }
 
@@ -75,6 +75,7 @@ class LocalHotelProvider implements HotelProviderInterface
         string $checkOut,
         int    $adults,
         int    $children,
+        string $currency = 'USD',
     ): array {
         // Local hotels include rooms directly in search() results via LocalHotelMapper.
         return [];
@@ -90,7 +91,7 @@ class LocalHotelProvider implements HotelProviderInterface
             throw HotelException::roomNotFound((int) $dto->roomId);
         }
 
-        $nights = (int) now()->parse($dto->checkIn)->diffInDays($dto->checkOut);
+        $nights = (int) $dto->nights();
 
         $room->loadMissing(['hotel.amenities', 'hotel.services', 'hotel.rooms.roomType']);
 

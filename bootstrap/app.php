@@ -12,17 +12,25 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+
+        // WEB — runs on web requests (session available)
+        $middleware->web(append: [
+            \Torann\Currency\Middleware\CurrencyMiddleware::class,
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
+        // API — Sanctum for SPA + Mobile authentication
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);
-        $middleware->web(append: [
-            \App\Http\Middleware\SetLocale::class,
-        ]);
+
+        // Aliases — usable in any module route file
         $middleware->alias([
             'admin'    => \App\Http\Middleware\AdminMiddleware::class,
             'vendor'   => \App\Http\Middleware\VendorMiddleware::class,
             'customer' => \App\Http\Middleware\CustomerMiddleware::class,
         ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

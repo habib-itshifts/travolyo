@@ -18,9 +18,10 @@ class SearchHotelDto
         public readonly ?float             $priceMin   = null,
         public readonly ?float             $priceMax   = null,
         public readonly ?array             $amenityIds = null,
-        public readonly string             $currency   = 'USD',
+        public readonly string             $currency     = 'USD',
+        public readonly ?string            $nationality   = 'AE',       
         public readonly string             $sortBy     = 'price_asc', // price_asc|price_desc|rating_desc|featured
-        public readonly int                $perPage    = 60,
+        public readonly int                $perPage    = 20,
         public readonly int                $page       = 1,
         public readonly ?HotelProviderEnum $provider   = null,        // null = all providers
     ) {}
@@ -38,16 +39,22 @@ class SearchHotelDto
             priceMin:   isset($data['price_min']) ? (float) $data['price_min'] : null,
             priceMax:   isset($data['price_max']) ? (float) $data['price_max'] : null,
             amenityIds: $data['amenity_ids'] ?? null,
-            currency:   $data['currency'] ?? 'USD',
+            currency:     $data['currency'] ?? 'USD',
+            nationality: 'AE',
             sortBy:     $data['sort_by'] ?? 'price_asc',
             perPage:    (int) ($data['per_page'] ?? 20),
             page:       (int) ($data['page'] ?? 1),
-            provider:   isset($data['provider']) ? HotelProviderEnum::from($data['provider']) : null,
+            provider:   isset($data['provider']) ? HotelProviderEnum::from($data['provider']) : null
         );
     }
 
     public function nights(): int
     {
         return (int) Carbon::parse($this->checkIn)->diffInDays($this->checkOut);
+    }
+
+    public function guests(): int
+    {
+        return (int) ($this->adults + $this->children); 
     }
 }

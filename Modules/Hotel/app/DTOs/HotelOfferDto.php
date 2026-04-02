@@ -36,9 +36,11 @@ class HotelOfferDto
         public readonly array             $serviceNames,    // ["Room Service", ...]
 
         // Pricing (minimum across available rooms)
-        public readonly float             $lowestPrice,
-        public readonly string            $currency,
+        public readonly float             $baseLowestPrice,
+        public readonly string            $baseCurrency,
 
+        public readonly float             $convertedLowestPrice,
+        public readonly string            $convertedCurrency,
         // Rooms
         public readonly array             $rooms,           // HotelRoomOfferDto[]
 
@@ -52,4 +54,9 @@ class HotelOfferDto
         // B2B API source tag (e.g. 'local', 'netstorming_api', 'tasspro_api')
         public readonly ?string           $apiSource = null,
     ) {}
+
+    public function isDiscounted(): bool
+    {
+        return round($this->convertedLowestPrice, 2) < round($this->baseLowestPrice, 2);
+    }
 }

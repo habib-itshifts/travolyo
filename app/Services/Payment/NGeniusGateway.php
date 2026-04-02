@@ -29,8 +29,11 @@ class NGeniusGateway implements PaymentGatewayInterface
     public function initiate(Booking $booking): array
     {
         $token    = $this->requestAccessToken();
-        $currency = $this->resolveCurrency($booking);
-        $amount   = (int) round($booking->pay_now * 100); // minor units
+        $currency = $booking->currency;
+        $pay_now   = (int) round($booking->pay_now * 100); // minor units
+
+        //ngenius only accept AED 
+        $amount = currency($pay_now, $currency, 'AED', false);
         $redirectUrl = $this->buildCallbackUrl(route('payments.ngenius.return', [], false), [
             'c' => $booking->code,
         ]);
@@ -42,7 +45,7 @@ class NGeniusGateway implements PaymentGatewayInterface
         $payload = [
             'action' => 'SALE',
             'amount' => [
-                'currencyCode' => $currency,
+                'currencyCode' => 'AED',
                 'value'        => $amount,
             ],
             'merchantOrderReference' => $booking->code,
@@ -83,13 +86,14 @@ class NGeniusGateway implements PaymentGatewayInterface
         }
 
         $booking->updateMeta('ngenius_order_ref', $orderRef);
+                //ngenius only accept AED 
 
         Payment::create([
             'booking_id'      => $booking->id,
             'payment_gateway' => 'ngenius',
             'status'          => 'draft',
             'amount'          => $booking->pay_now,
-            'currency'        => $currency,
+            'currency'        => 'AED',
             'transaction_id'  => $orderRef,
         ]);
 

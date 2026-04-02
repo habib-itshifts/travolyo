@@ -2,14 +2,19 @@
 
 namespace Modules\Hotel\Http\Controllers\Api;
 
+use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Modules\Hotel\Actions\CheckoutHotelAction;
 use Modules\Hotel\Actions\PrebookHotelAction;
 use Modules\Hotel\Actions\SearchHotelAction;
 use Modules\Hotel\DTOs\CheckoutHotelDto;
+use Modules\Hotel\DTOs\HotelRoomOfferDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
 use Modules\Hotel\DTOs\SearchHotelDto;
 use Modules\Hotel\Enums\HotelProviderEnum;
@@ -17,12 +22,12 @@ use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Http\Requests\CheckoutHotelRequest;
 use Modules\Hotel\Http\Requests\PrebookHotelRequest;
 use Modules\Hotel\Http\Requests\SearchHotelRequest;
-use Modules\Hotel\Providers\Local\LocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2BBaseHotelProvider;
+use Modules\Hotel\Providers\HotelProviderInterface;
 use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
+use Modules\Hotel\Providers\Local\LocalHotelProvider;
+use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
-use Illuminate\Http\Request;
 
 class HotelController extends Controller
 {
@@ -35,31 +40,32 @@ class HotelController extends Controller
 
             $perPage = $dto->perPage;
             $page    = $dto->page;
+            $searchCache = Cache::store('file');
 
-            // Build a cache key from the search params (excluding page/perPage)
             $cacheKey = 'hotel_search_' . md5(json_encode([
                 $dto->destination, $dto->checkIn, $dto->checkOut,
                 $dto->adults, $dto->children, $dto->rooms,
                 $dto->starRating, $dto->priceMin, $dto->priceMax,
                 $dto->amenityIds, $dto->currency, $dto->sortBy,
+                $dto->provider?->value,
             ]));
 
-            // On page 1 always do a fresh search; cache results for subsequent pages
             if ($page === 1) {
                 $offers = (new SearchHotelAction)->handle($dto);
-                Cache::put($cacheKey, $offers, now()->addMinutes(15));
+                $this->storeSearchCache($searchCache, $cacheKey, $offers);
             } else {
-                $offers = Cache::get($cacheKey, []);
+                $offers = $searchCache->get($cacheKey, []);
 
-                // If cache expired, re-fetch
                 if (empty($offers)) {
                     $offers = (new SearchHotelAction)->handle($dto);
-                    Cache::put($cacheKey, $offers, now()->addMinutes(15));
+                    $this->storeSearchCache($searchCache, $cacheKey, $offers);
                 }
             }
 
             $total  = count($offers);
             $sliced = array_slice($offers, ($page - 1) * $perPage, $perPage);
+
+
 
             return response()->json([
                 'success'      => true,
@@ -93,6 +99,7 @@ class HotelController extends Controller
             'check_out' => 'required|date_format:Y-m-d|after:check_in',
             'adults'    => 'required|integer|min:1',
             'children'  => 'nullable|integer|min:0',
+            'currency'  => 'nullable|string|size:3',
             'provider'  => 'required|string',
         ]);
 
@@ -101,7 +108,7 @@ class HotelController extends Controller
 
             $provider = match ($providerEnum) {
                 HotelProviderEnum::Local       => new LocalHotelProvider(),
-                HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
+                HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
                 HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
             };
 
@@ -112,6 +119,7 @@ class HotelController extends Controller
                 checkOut: $request->input('check_out'),
                 adults:   (int) $request->input('adults', 1),
                 children: (int) $request->input('children', 0),
+                currency: (string) $request->input('currency', 'USD'),
             );
 
             return response()->json([
@@ -124,10 +132,15 @@ class HotelController extends Controller
                     'bed_configuration' => $r->bedConfiguration,
                     'max_adults'        => $r->maxAdults,
                     'max_children'      => $r->maxChildren,
-                    'base_price'        => $r->basePrice,
-                    'total_price'       => $r->totalPrice,
+                    'base_original_price'        => $r->baseOriginalPrice,
+                    'converted_original_price'        => $r->convertedOriginalPrice,
+                    'base_current_price'        => $r->baseCurrentPrice,
+                    'converted_current_price'        => $r->convertedCurrentPrice,
+                    'base_total_price'        => $r->baseTotalPrice,
+                    'converted_total_price'        => $r->convertedTotalPrice,
                     'nights'            => $r->nights,
-                    'currency'          => $r->currency,
+                    'base_currency'          => $r->baseCurrency,
+                    'converted_currency'          => $r->convertedCurrency,
                     'is_available'      => $r->isAvailable,
                     'amenities'         => $r->amenityNames,
                     'size_sqm'          => $r->sizeSqm,
@@ -147,6 +160,7 @@ class HotelController extends Controller
 
     public function prebook(PrebookHotelRequest $request): JsonResponse
     {
+        
         try {
             $validated = $request->validated();
 
@@ -164,26 +178,31 @@ class HotelController extends Controller
             );
 
             $offer = (new PrebookHotelAction)->handle($dto);
-
-            // Find the requested room from the offer
             $room = collect($offer->rooms)->firstWhere('roomId', $validated['room_id']);
+            if (! $room) {
+                $room = collect($offer->rooms)->first();
+            }
+
+            if (! $room instanceof HotelRoomOfferDto) {
+                throw HotelException::roomUnavailable();
+            }
 
             $checkoutData = [
                 'offer_id'    => $validated['offer_id'],
-                'room_id'     => $validated['room_id'],
+                'room_id'     => $room->roomId,
                 'provider'    => $validated['provider'],
-                'hotel_name'  => $validated['hotel_name'],
-                'room_name'   => $validated['room_name'],
-                'city'        => $validated['city'],
-                'country'     => $validated['country'],
+                'hotel_name'  => $offer->name ?: $validated['hotel_name'],
+                'room_name'   => $room->name ?: $validated['room_name'],
+                'city'        => $offer->city ?: $validated['city'],
+                'country'     => $offer->country ?: $validated['country'],
                 'check_in'    => $validated['check_in'],
                 'check_out'   => $validated['check_out'],
                 'adults'      => (int) $validated['adults'],
                 'children'    => (int) ($validated['children'] ?? 0),
-                'unit_price'  => $room?->basePrice ?? $offer->lowestPrice,
-                'total_price' => $room?->totalPrice ?? $offer->lowestPrice,
-                'currency'    => $offer->currency,
-                'deal_id'     => $room?->dealId,  // track which deal was applied (null = no deal)
+                'unit_price'  => $room->baseCurrentPrice,
+                'total_price' => $room->baseTotalPrice,
+                'currency'    => $room->baseCurrency ?: $offer->baseCurrency,
+                'deal_id'     => $room->dealId,
             ];
 
             $token = Str::uuid()->toString();
@@ -194,6 +213,7 @@ class HotelController extends Controller
                 'total_price'  => $checkoutData['total_price'],
                 'currency'     => $checkoutData['currency'],
                 'checkout_url' => url('/hotels/checkout?token=' . $token),
+                'checkout_token' => $token,
             ]);
 
         } catch (HotelException $e) {
@@ -201,6 +221,11 @@ class HotelController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], $e->getCode() ?: 502);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 502);
         }
     }
 
@@ -218,7 +243,8 @@ class HotelController extends Controller
                 paymentGateway:  $validated['payment_gateway'],
                 specialRequests: $validated['special_requests'] ?? null,
                 extraServices:   $validated['extra_services'] ?? [],
-                customerId:      auth()->id(),
+                //  customerId:      auth()->id(),
+                customerId:      Auth::id(),
             );
 
             $result = (new CheckoutHotelAction)->handle($dto);
@@ -244,9 +270,7 @@ class HotelController extends Controller
     public function order(string $orderId): JsonResponse
     {
         try {
-            // Determine provider from booking meta or default to local
-            $provider = new LocalHotelProvider();
-            $order    = $provider->getOrder($orderId);
+            $order = $this->resolveOrderProvider($orderId)->getOrder($orderId);
 
             return response()->json([
                 'success' => true,
@@ -264,8 +288,7 @@ class HotelController extends Controller
     public function cancel(string $orderId): JsonResponse
     {
         try {
-            $provider = new LocalHotelProvider();
-            $provider->cancelOrder($orderId);
+            $this->resolveOrderProvider($orderId)->cancelOrder($orderId);
 
             return response()->json([
                 'success' => true,
@@ -277,6 +300,33 @@ class HotelController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
+        }
+    }
+
+    private function resolveOrderProvider(string $orderId): HotelProviderInterface
+    {
+        $source = Booking::query()
+            ->where('code', $orderId)
+            ->where('object_model', 'hotel')
+            ->value('source');
+
+        return match ($source) {
+            HotelProviderEnum::TravolyoB2B->value => new TravolyoB2BHotelProvider(),
+            HotelProviderEnum::Hyperguest->value  => new HyperguestHotelProvider(),
+            default                               => new LocalHotelProvider(),
+        };
+    }
+
+    private function storeSearchCache($store, string $cacheKey, array $offers): void
+    {
+        try {
+            $store->put($cacheKey, $offers, now()->addMinutes(15));
+        } catch (\Throwable $e) {
+            Log::warning('Hotel search cache write skipped.', [
+                'cache_key' => $cacheKey,
+                'offers_count' => count($offers),
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }

@@ -14,6 +14,12 @@ class PrebookHotelDto
         public readonly string           $checkOut,
         public readonly int              $adults,
         public readonly int              $children = 0,
-        public readonly string           $currency  = 'USD',
+        public readonly string           $currency        = 'USD',
+        public readonly string           $displayCurrency = 'USD',
     ) {}
+
+    public function nights(): int
+    {
+        return (int) now()->parse($this->checkIn)->diffInDays($this->checkOut);
+    }
 }

@@ -349,9 +349,13 @@
                             </div>` : ''}
                         </div>
                         <div class="text-end ms-3">
-                            ${r.original_price ? `<div style="font-size:.75rem;color:#b91c1c;text-decoration:line-through;">${r.currency ?? h.currency} ${parseFloat(r.original_price).toLocaleString()}</div>` : ''}
-                            <div class="room-card__price">${r.currency ?? h.currency} ${parseFloat(r.base_price ?? r.total_price ?? 0).toLocaleString()}${r.deal_id ? ' <span class="badge bg-success" style="font-size:.65rem;vertical-align:middle;">Deal</span>' : ''}</div>
-                            <div style="font-size:.75rem;color:#6c757d;">${r.nights ? r.nights + ' nights total: ' + parseFloat(r.total_price ?? 0).toLocaleString() : 'per night'}</div>
+                            ${
+                                r.is_discounted
+                                ? `<div style="font-size:.75rem;color:#b91c1c;text-decoration:line-through;">${r.converted_currency} ${r.converted_original_price}</div>`
+                                : ''
+                            }
+                            <div class="room-card__price">${r.converted_currency} ${parseFloat(r.converted_current_price)}${r.is_discounted ? ' <span class="badge bg-danger" style="font-size:.65rem;vertical-align:middle;">Discount</span>' : ''}${r.deal_id ? ' <span class="badge bg-success" style="font-size:.65rem;vertical-align:middle;">Deal</span>' : ''}</div>
+                            <div style="font-size:.75rem;color:#6c757d;">${r.nights ? r.nights + ' nights total: ' + parseFloat(r.converted_total_price ?? 0).toLocaleString() : 'per night'}</div>
                             <button class="btn btn-primary btn-select-room mt-2 js-select-room"
                                 data-offer-id="${h.id}"
                                 data-room-id="${r.id}"
@@ -423,13 +427,13 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                 },
                 body: JSON.stringify({
-                    city:       hotelSearchKeyword,
-                    destination: params.destination || hotelSearchKeyword,
-                    check_in:   params.check_in,
-                    check_out:  params.check_out,
-                    adults:     parseInt(params.adults ?? 1, 10),
-                    children:   parseInt(params.children ?? 0, 10),
-                    page:       page,
+                    city:             params.city,
+                    check_in:         params.check_in,
+                    check_out:        params.check_out,
+                    adults:           parseInt(params.adults ?? 1, 10),
+                    children:         parseInt(params.children ?? 0, 10),
+                    page:             page,
+                    currency: document.querySelector('meta[name="currency"]')?.content ?? 'USD',
                 }),
             });
 
@@ -613,6 +617,7 @@
                         check_out: params.check_out ?? '',
                         adults:    parseInt(params.adults   ?? 1, 10),
                         children:  parseInt(params.children ?? 0, 10),
+                        currency:  document.querySelector('meta[name="currency"]')?.content ?? 'USD',
                         provider:  hotel.provider,
                     }),
                 });
@@ -652,7 +657,7 @@
             check_out:  btn.dataset.checkOut,
             adults:     parseInt(btn.dataset.adults ?? 1, 10),
             children:   parseInt(btn.dataset.children ?? 0, 10),
-            currency:   'USD',
+            currency:         document.querySelector('meta[name="currency"]')?.content ?? 'USD',
         };
 
         try {

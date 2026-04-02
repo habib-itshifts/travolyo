@@ -5,9 +5,9 @@ namespace Modules\Hotel\Actions;
 use Modules\Hotel\DTOs\SearchHotelDto;
 use Modules\Hotel\Enums\HotelProviderEnum;
 use Modules\Hotel\Providers\HotelProviderInterface;
-use Modules\Hotel\Providers\Local\LocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2BBaseHotelProvider;
 use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
+use Modules\Hotel\Providers\Local\LocalHotelProvider;
+use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 
 class SearchHotelAction
 {
@@ -17,7 +17,7 @@ class SearchHotelAction
     {
         $providers = $dto->provider
             ? [$dto->provider]
-            : HotelProviderEnum::cases();
+            : [HotelProviderEnum::Local, HotelProviderEnum::TravolyoB2B, HotelProviderEnum::Hyperguest];
 
         $results = [];
          $startedAt = microtime(true);
@@ -43,7 +43,8 @@ class SearchHotelAction
 
                 $offers = $this->resolveProvider($providerEnum)->search($providerDto);
                 array_push($results, ...$offers);
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                report($e);
                 // skip failed providers so the other results still return
             }
         }
@@ -55,7 +56,7 @@ class SearchHotelAction
     {
         return match ($provider) {
             HotelProviderEnum::Local       => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2B => new TravolyoB2BBaseHotelProvider(),
+            HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
             HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }

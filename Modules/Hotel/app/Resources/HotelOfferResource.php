@@ -41,9 +41,18 @@ class HotelOfferResource extends JsonResource
             'amenities'         => $this->amenityNames,
             'services'          => $this->serviceNames,
 
-            // Pricing
-            'lowest_price'      => $this->lowestPrice,
-            'currency'          => $this->currency,
+            // Backward-compatible display pricing
+            'lowest_price'      => $this->convertedLowestPrice,
+            'currency'          => $this->convertedCurrency,
+
+            // Base Pricing
+            'base_lowest_price'      => $this->baseLowestPrice,
+            'base_currency'          => $this->baseCurrency,
+
+            // Convered Pricing
+            'converted_lowest_price'      => $this->convertedLowestPrice,
+            'converted_currency'          => $this->convertedCurrency,
+            'is_discounted'               => $this->isDiscounted(),
 
             // Rooms
             'rooms'             => collect($this->rooms)->map(fn (HotelRoomOfferDto $r) => [
@@ -53,10 +62,16 @@ class HotelOfferResource extends JsonResource
                 'bed_configuration' => $r->bedConfiguration,
                 'max_adults'        => $r->maxAdults,
                 'max_children'      => $r->maxChildren,
-                'base_price'        => $r->basePrice,
-                'total_price'       => $r->totalPrice,
+                'base_original_price'      => $r->baseOriginalPrice,
+                'converted_original_price' => $r->convertedOriginalPrice,
+                'base_current_price'       => $r->baseCurrentPrice,
+                'converted_current_price'  => $r->convertedCurrentPrice,
+                'is_discounted'            => $r->convertedOriginalPrice > $r->convertedCurrentPrice,
+                'base_total_price'         => $r->baseTotalPrice,
+                'converted_total_price'    => $r->convertedTotalPrice,
                 'nights'            => $r->nights,
-                'currency'          => $r->currency,
+                'base_currency'     => $r->baseCurrency,
+                'converted_currency'=> $r->convertedCurrency,
                 'is_available'      => $r->isAvailable,
                 'amenities'         => $r->amenityNames,
                 'size_sqm'          => $r->sizeSqm,
@@ -64,7 +79,8 @@ class HotelOfferResource extends JsonResource
                 'description'       => $r->description,
                 'images'            => $r->images,
                 'deal_id'           => $r->dealId,           // non-null = price came from a deal
-                'original_price'    => $r->originalPrice,    // RoomType price before deal (for "was $X" display)
+                'is_discounted'     => $r->isDiscounted(),
+
             ])->values(),
 
             'badge'             => $this->badge,

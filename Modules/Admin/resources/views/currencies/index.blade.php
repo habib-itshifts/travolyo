@@ -8,7 +8,7 @@
                 </ol>
             </nav>
             <h5 class="fw-bold mb-0 text-dark">Currencies</h5>
-            <p class="text-muted mb-0" style="font-size:13px;">Manage all active currencies with AJAX CRUD.</p>
+            <p class="text-muted mb-0" style="font-size:13px;">Manage currencies using Torann Currency package.</p>
         </div>
         <button type="button" class="btn btn-sm text-white" id="add-currency-btn" style="background:var(--clr-primary);border-radius:var(--radius-btn);">
             Add Currency
@@ -16,16 +16,13 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body"><p class="text-muted text-uppercase mb-1" style="font-size:11px;letter-spacing:.08em;">Total</p><h4 class="fw-bold mb-0" data-stat="total">{{ $stats['total'] }}</h4></div></div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body"><p class="text-muted text-uppercase mb-1" style="font-size:11px;letter-spacing:.08em;">Active</p><h4 class="fw-bold mb-0 text-success" data-stat="active">{{ $stats['active'] }}</h4></div></div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body"><p class="text-muted text-uppercase mb-1" style="font-size:11px;letter-spacing:.08em;">Default</p><h4 class="fw-bold mb-0 text-primary" data-stat="default">{{ $stats['default'] }}</h4></div></div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm rounded-3 h-100"><div class="card-body"><p class="text-muted text-uppercase mb-1" style="font-size:11px;letter-spacing:.08em;">Inactive</p><h4 class="fw-bold mb-0 text-secondary" data-stat="inactive">{{ $stats['inactive'] }}</h4></div></div>
         </div>
     </div>
@@ -51,12 +48,10 @@
                             <th>ID</th>
                             <th>Code</th>
                             <th>Name</th>
-                            <th>Label</th>
                             <th>Symbol</th>
-                            <th>Flag</th>
-                            <th>Sort</th>
+                            <th>Format</th>
+                            <th>Exchange Rate</th>
                             <th>Status</th>
-                            <th>Default</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -79,37 +74,31 @@
                         <input type="hidden" id="currency-id">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label">Code</label>
-                                <input type="text" class="form-control" id="currency-code" maxlength="3" required>
+                                <label class="form-label">Code <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="currency-code" maxlength="3" placeholder="USD" required>
+                                <small class="text-muted">3-letter ISO code</small>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="currency-name" maxlength="100" placeholder="US Dollar" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Label</label>
-                                <input type="text" class="form-control" id="currency-label" maxlength="10" required>
+                                <label class="form-label">Symbol <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="currency-symbol" maxlength="25" placeholder="$" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Symbol</label>
-                                <input type="text" class="form-control" id="currency-symbol" maxlength="20" required>
+                                <label class="form-label">Format <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="currency-format" maxlength="50" placeholder="$1,0.00" required>
+                                <small class="text-muted">e.g. $1,0.00 or 1.0,00 €</small>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Name</label>
-                                <input type="text" class="form-control" id="currency-name" maxlength="100" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Flag</label>
-                                <input type="text" class="form-control" id="currency-flag" maxlength="5" placeholder="us" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Sort Order</label>
-                                <input type="number" min="0" class="form-control" id="currency-sort-order" value="0">
+                            <div class="col-md-4">
+                                <label class="form-label">Exchange Rate <span class="text-danger">*</span></label>
+                                <input type="number" step="any" min="0" class="form-control" id="currency-exchange-rate" placeholder="1.00000000" required>
                             </div>
                             <div class="col-md-6 d-flex align-items-end">
-                                <div class="form-check form-switch me-4">
-                                    <input class="form-check-input" type="checkbox" id="currency-is-active" checked>
-                                    <label class="form-check-label" for="currency-is-active">Active</label>
-                                </div>
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="currency-is-default">
-                                    <label class="form-check-label" for="currency-is-default">Default</label>
+                                    <input class="form-check-input" type="checkbox" id="currency-active" checked>
+                                    <label class="form-check-label" for="currency-active">Active</label>
                                 </div>
                             </div>
                         </div>
@@ -176,21 +165,15 @@
                 if (!q) return state.items;
 
                 return state.items.filter((item) => {
-                    return [item.code, item.label, item.symbol, item.flag, item.name]
+                    return [item.code, item.name, item.symbol, item.format]
                         .some((value) => String(value || '').toLowerCase().includes(q));
                 });
             }
 
             function badgeStatus(item) {
-                return item.is_active
+                return item.active
                     ? '<span class="badge bg-success-subtle text-success">Active</span>'
                     : '<span class="badge bg-secondary-subtle text-secondary">Inactive</span>';
-            }
-
-            function badgeDefault(item) {
-                return item.is_default
-                    ? '<span class="badge bg-primary-subtle text-primary">Default</span>'
-                    : '<span class="text-muted">-</span>';
             }
 
             function rowHtml(item) {
@@ -199,12 +182,10 @@
                         <td>${item.id}</td>
                         <td class="fw-semibold text-dark">${item.code || ''}</td>
                         <td>${item.name || ''}</td>
-                        <td>${item.label || ''}</td>
                         <td>${item.symbol || ''}</td>
-                        <td><span class="text-uppercase">${item.flag || ''}</span></td>
-                        <td>${item.sort_order ?? 0}</td>
+                        <td><code>${item.format || ''}</code></td>
+                        <td>${item.exchange_rate || ''}</td>
                         <td>${badgeStatus(item)}</td>
-                        <td>${badgeDefault(item)}</td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
                                 <button type="button" class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${item.id}">Edit</button>
@@ -219,16 +200,15 @@
                 const rows = filteredItems();
                 tableBody.innerHTML = rows.length
                     ? rows.map(rowHtml).join('')
-                    : '<tr><td colspan="10" class="text-center text-muted py-4">No currencies found.</td></tr>';
+                    : '<tr><td colspan="8" class="text-center text-muted py-4">No currencies found.</td></tr>';
             }
 
             function resetForm() {
                 state.editingId = null;
                 form.reset();
                 document.getElementById('currency-id').value = '';
-                document.getElementById('currency-sort-order').value = '0';
-                document.getElementById('currency-is-active').checked = true;
-                document.getElementById('currency-is-default').checked = false;
+                document.getElementById('currency-exchange-rate').value = '1.00000000';
+                document.getElementById('currency-active').checked = true;
                 formErrors.classList.add('d-none');
                 formErrors.innerHTML = '';
                 modalTitle.textContent = 'Add Currency';
@@ -239,13 +219,11 @@
                 state.editingId = item.id;
                 document.getElementById('currency-id').value = item.id;
                 document.getElementById('currency-code').value = item.code || '';
-                document.getElementById('currency-label').value = item.label || '';
-                document.getElementById('currency-symbol').value = item.symbol || '';
                 document.getElementById('currency-name').value = item.name || '';
-                document.getElementById('currency-flag').value = item.flag || '';
-                document.getElementById('currency-sort-order').value = item.sort_order ?? 0;
-                document.getElementById('currency-is-active').checked = Boolean(item.is_active);
-                document.getElementById('currency-is-default').checked = Boolean(item.is_default);
+                document.getElementById('currency-symbol').value = item.symbol || '';
+                document.getElementById('currency-format').value = item.format || '';
+                document.getElementById('currency-exchange-rate').value = item.exchange_rate || '1.00000000';
+                document.getElementById('currency-active').checked = Boolean(item.active);
                 formErrors.classList.add('d-none');
                 formErrors.innerHTML = '';
                 modalTitle.textContent = 'Edit Currency';
@@ -276,7 +254,7 @@
                 } else {
                     state.items.unshift(item);
                 }
-                state.items.sort((a, b) => Number(b.is_default) - Number(a.is_default) || (a.sort_order ?? 0) - (b.sort_order ?? 0) || String(a.code).localeCompare(String(b.code)));
+                state.items.sort((a, b) => String(a.code).localeCompare(String(b.code)));
             }
 
             function removeItem(id) {
@@ -311,13 +289,11 @@
 
                 const payload = new FormData();
                 payload.append('code', document.getElementById('currency-code').value);
-                payload.append('label', document.getElementById('currency-label').value);
-                payload.append('symbol', document.getElementById('currency-symbol').value);
                 payload.append('name', document.getElementById('currency-name').value);
-                payload.append('flag', document.getElementById('currency-flag').value);
-                payload.append('sort_order', document.getElementById('currency-sort-order').value);
-                payload.append('is_active', document.getElementById('currency-is-active').checked ? '1' : '0');
-                payload.append('is_default', document.getElementById('currency-is-default').checked ? '1' : '0');
+                payload.append('symbol', document.getElementById('currency-symbol').value);
+                payload.append('format', document.getElementById('currency-format').value);
+                payload.append('exchange_rate', document.getElementById('currency-exchange-rate').value);
+                payload.append('active', document.getElementById('currency-active').checked ? '1' : '0');
 
                 let url = storeUrl;
                 let method = 'POST';
