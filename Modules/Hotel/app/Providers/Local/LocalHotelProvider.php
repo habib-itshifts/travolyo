@@ -101,7 +101,7 @@ class LocalHotelProvider implements HotelProviderInterface
         );
     }
 
-    public function getOrder(string $orderId): HotelOrderDto
+   public function getOrder(string $orderId): HotelOrderDto
     {
         $bookingRoom = BookingRoom::with(['booking.metaItems', 'room.hotel', 'room.roomType'])
             ->whereHas('booking', fn ($q) => $q->where('code', $orderId))

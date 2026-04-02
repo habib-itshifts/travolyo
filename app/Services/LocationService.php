@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Http;
 class LocationService
 {
     private const CACHE_TTL = 24 * 60 * 60;
+    private const HOTEL_DESTINATIONS_FILE = 'data/world country and city locations.json';
 
     /**
      * Get unique countries list.
@@ -99,5 +100,70 @@ class LocationService
         }
 
         return json_decode(file_get_contents($file), true) ?? [];
+    }
+
+    /**
+     * Get hotel destinations from the local JSON file.
+     *
+     * Each item includes:
+     * - type: city|country
+     * - destination
+     * - city
+     * - country
+     * - country_code
+     * - location
+     * - region
+     * - display_name
+     */
+    public function getHotelDestinations(): array
+    {
+        $file = public_path(self::HOTEL_DESTINATIONS_FILE);
+
+        if (! is_file($file)) {
+            return [];
+        }
+
+        $raw = (string) file_get_contents($file);
+        $raw = preg_replace('/^\xEF\xBB\xBF/', '', $raw) ?? $raw;
+        $payload = json_decode($raw, true);
+        $destinations = data_get($payload, 'destinations', []);
+
+        if (! is_array($destinations)) {
+            return [];
+        }
+
+        return collect($destinations)
+            ->map(function (array $item) {
+                $type = ($item['type'] ?? 'city') === 'country' ? 'country' : 'city';
+                $city = trim((string) ($item['city'] ?? ''));
+                $country = trim((string) ($item['country'] ?? ''));
+                $destination = trim((string) ($item['destination'] ?? ($type === 'country' ? $country : $city)));
+                $countryCode = strtoupper(trim((string) ($item['country_code'] ?? '')));
+                $location = strtoupper(trim((string) ($item['location'] ?? '')));
+                $region = trim((string) ($item['region'] ?? ''));
+
+                $displayName = $type === 'country'
+                    ? $destination
+                    : collect([$city ?: $destination, $country])->filter()->implode(', ');
+
+                return [
+                    'type' => $type,
+                    'destination' => $destination,
+                    'city' => $city,
+                    'country' => $country,
+                    'country_code' => $countryCode,
+                    'location' => $location,
+                    'region' => $region,
+                    'display_name' => $displayName,
+                ];
+            })
+            ->filter(fn (array $item) => $item['destination'] !== '' && $item['country'] !== '')
+            ->unique(fn (array $item) => implode('|', [
+                $item['type'],
+                mb_strtolower($item['destination']),
+                mb_strtolower($item['country']),
+            ]))
+            ->values()
+            ->all();
     }
 }

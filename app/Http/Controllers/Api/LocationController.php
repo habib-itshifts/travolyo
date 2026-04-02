@@ -82,4 +82,19 @@ class LocationController extends Controller
             'data'    => $this->locationSearchService->searchAirports($request->keyword),
         ]);
     }
+
+    /**
+     * GET /api/locations/hotels/search?keyword=dub
+     */
+    public function searchHotelDestinations(Request $request): JsonResponse
+    {
+        $request->validate([
+            'keyword' => ['required', 'string', 'min:1', 'max:100'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->locationSearchService->searchHotelDestinations($request->keyword),
+        ]);
+    }
 }

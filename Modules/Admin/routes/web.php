@@ -15,6 +15,7 @@ use Modules\Admin\Http\Controllers\MediaController;
 use Modules\Admin\Http\Controllers\ProfileController;
 use Modules\Admin\Http\Controllers\ServiceController;
 use Modules\Admin\Http\Controllers\CustomerController;
+use Modules\Admin\Http\Controllers\DestinationController;
 use Modules\Admin\Http\Controllers\VendorController;
 use Modules\Admin\Http\Controllers\BookingController;
 use Modules\Admin\Http\Controllers\HotelDealController;
@@ -82,6 +83,10 @@ Route::prefix('admin')
         Route::post('currencies', [CurrencyController::class, 'store'])->name('currencies.store');
         Route::put('currencies/{currency}', [CurrencyController::class, 'update'])->name('currencies.update');
         Route::delete('currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.destroy');
+        Route::get('destinations', [DestinationController::class, 'index'])->name('destinations.index');
+        Route::post('destinations', [DestinationController::class, 'store'])->name('destinations.store');
+        Route::put('destinations/{destination}', [DestinationController::class, 'update'])->name('destinations.update');
+        Route::delete('destinations/{destination}', [DestinationController::class, 'destroy'])->name('destinations.destroy');
 
         // Users — Vendors & Customers
         Route::resource('vendors', VendorController::class)->only(['index', 'show', 'edit', 'update']);

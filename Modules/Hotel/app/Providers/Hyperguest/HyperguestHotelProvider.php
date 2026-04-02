@@ -3,7 +3,9 @@
 namespace Modules\Hotel\Providers\Hyperguest;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
@@ -16,6 +18,12 @@ class HyperguestHotelProvider implements HotelProviderInterface
 {
     private HyperguestHotelMapper $mapper;
     private string $bookingResponsePath;
+    private int $connectTimeout;
+    private int $staticTimeout;
+    private int $searchTimeout;
+    private int $staticCacheTtlMinutes;
+    private int $chunkSize;
+    private int $maxHotelIdsPerSearch;
 
     protected array $headers;
 
@@ -28,6 +36,12 @@ class HyperguestHotelProvider implements HotelProviderInterface
             'Accept' => 'application/json',
             'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
         ];
+        $this->connectTimeout = max(2, (int) config('hotel.search.hyperguest.connect_timeout', 3));
+        $this->staticTimeout = max(3, (int) config('hotel.search.hyperguest.static_timeout', 6));
+        $this->searchTimeout = max(3, (int) config('hotel.search.hyperguest.search_timeout', 8));
+        $this->staticCacheTtlMinutes = max(10, (int) config('hotel.search.hyperguest.static_cache_ttl_minutes', 720));
+        $this->chunkSize = max(1, (int) config('hotel.search.hyperguest.chunk_size', 25));
+        $this->maxHotelIdsPerSearch = max(1, (int) config('hotel.search.hyperguest.max_hotel_ids_per_search', 75));
     }
 
     public function search(SearchHotelDto $dto): array
@@ -218,6 +232,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
             return [];
         }
 
+        $hotelIds = array_slice($hotelIds, 0, $this->maxHotelIdsPerSearch);
+
         $results = collect($this->searchHotelsByIds(
             $hotelIds,
             $dto->checkIn,
@@ -260,19 +276,34 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     private function loadStaticHotels(): array
     {
-        $response = Http::withHeaders($this->headers)
-            ->acceptJson()
-            ->timeout(30)
-            ->get('https://hg-static.hyperguest.com/hotels.json')
-            ->throw();
+        try {
+            return Cache::store('file')->remember(
+                'hyperguest_static_hotels_v1',
+                now()->addMinutes($this->staticCacheTtlMinutes),
+                function (): array {
+                    $response = Http::withHeaders($this->headers)
+                        ->acceptJson()
+                        ->connectTimeout($this->connectTimeout)
+                        ->timeout($this->staticTimeout)
+                        ->get('https://hg-static.hyperguest.com/hotels.json')
+                        ->throw();
 
-        $payload = $response->json();
+                    $payload = $response->json();
 
-        if (isset($payload['hotels']) && is_array($payload['hotels'])) {
-            return $payload['hotels'];
+                    if (isset($payload['hotels']) && is_array($payload['hotels'])) {
+                        return $payload['hotels'];
+                    }
+
+                    return is_array($payload) ? $payload : [];
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Hyperguest static hotel load failed.', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return [];
         }
-
-        return is_array($payload) ? $payload : [];
     }
     // Step:: 02 - find hotel details using
     private function searchHotelsByIds(
@@ -284,13 +315,14 @@ class HyperguestHotelProvider implements HotelProviderInterface
         string $currency,
         string $nationality
     ): array {
-        $chunks = collect($hotelIds)->chunk(10);
+        $chunks = collect($hotelIds)->chunk($this->chunkSize);
         $results = collect();
 
         foreach ($chunks as $chunk) {
             $response = Http::withHeaders($this->headers)
                 ->acceptJson()
-                ->timeout(30)
+                ->connectTimeout($this->connectTimeout)
+                ->timeout($this->searchTimeout)
                 ->get('https://search-api.hyperguest.io/2.0/', [
                     'checkIn' => $checkIn,
                     'nights' => max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1),

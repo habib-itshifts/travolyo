@@ -83,12 +83,11 @@
 
 @section('content')
 
-{{-- Search widget --}}
-<div class="bg-white border-bottom py-3 shadow-sm">
-    <div class="container">
-        @include('website.partials._search-widget', ['activeTab' => 'hotels'])
-    </div>
-</div>
+@php
+    $hotelSearchKeyword = trim((string) ($params['city'] ?: $params['destination']));
+@endphp
+
+@include('website.partials._search-section', ['activeTab' => 'hotels'])
 
 <div class="hotel-page-bg py-4">
 <div class="container">
@@ -143,7 +142,7 @@
     {{-- ── Results column ─────────────────────────────── --}}
     <div class="col-12 col-lg-9">
 
-        @if(empty($params['city']))
+        @if(empty($hotelSearchKeyword))
             <div class="filter-card text-center py-5">
                 <i class="bi bi-building text-muted" style="font-size:3rem"></i>
                 <p class="text-muted mt-3 mb-0">Enter a destination above and click <strong>Search Hotels</strong>.</p>
@@ -222,12 +221,13 @@
 
 @endsection
 
-@if(!empty($params['city']))
+@if(!empty($hotelSearchKeyword))
 @push('scripts')
 <script>
 (function () {
 
     const params      = @json($params);
+    const hotelSearchKeyword = @json($hotelSearchKeyword);
     const isLoggedIn  = {{ auth()->check() ? 'true' : 'false' }};
     const searchUrl   = '{{ route('api.hotels.search') }}';
     const prebookUrl  = '{{ route('api.hotels.prebook') }}';
@@ -427,13 +427,13 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                 },
                 body: JSON.stringify({
-                    city:             params.city,
-                    check_in:         params.check_in,
-                    check_out:        params.check_out,
-                    adults:           parseInt(params.adults ?? 1, 10),
-                    children:         parseInt(params.children ?? 0, 10),
-                    page:             page,
-                    currency: document.querySelector('meta[name="currency"]')?.content ?? 'USD',
+                    city:       hotelSearchKeyword,
+                    destination: params.destination || hotelSearchKeyword,
+                    check_in:   params.check_in,
+                    check_out:  params.check_out,
+                    adults:     parseInt(params.adults ?? 1, 10),
+                    children:   parseInt(params.children ?? 0, 10),
+                    page:       page,
                 }),
             });
 
@@ -497,7 +497,7 @@
     function updateCount() {
         const visible = offersEl.querySelectorAll('.js-hotel-card:not([style*="none"])').length;
         const totalStr = totalHotels ? ` of ${totalHotels}` : '';
-        countEl.textContent = `Showing ${visible}${totalStr} hotel${visible !== 1 ? 's' : ''} in ${params.city ?? ''}`;
+        countEl.textContent = `Showing ${visible}${totalStr} hotel${visible !== 1 ? 's' : ''} in ${hotelSearchKeyword}`;
     }
 
     // ── Price slider ──────────────────────────────────────
