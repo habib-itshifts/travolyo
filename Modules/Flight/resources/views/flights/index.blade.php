@@ -198,12 +198,7 @@
 
 @section('content')
 
-{{-- Search widget --}}
-<div class="bg-white border-bottom py-3 shadow-sm">
-    <div class="container">
-        @include('website.partials._search-widget', ['activeTab' => 'flights'])
-    </div>
-</div>
+@include('website.partials._search-section', ['activeTab' => 'flights'])
 
 <div class="flight-page-bg py-4">
 <div class="container">

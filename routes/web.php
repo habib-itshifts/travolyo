@@ -1,13 +1,15 @@
 <?php
 
+use App\Models\Currency;
+use App\Models\TopDestination;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestController;
-use App\Models\Currency;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,14 +93,94 @@ Route::resource('test', TestController::class);
 Route::get('/', function () {
     $topCitiesFile = public_path('data/top-cities-to-book.json');
     $topCitiesConfig = [];
+    $uaeDestinationCards = collect([
+        [
+            'city' => 'Dubai',
+            'country' => 'UAE',
+            'country_code' => 'AE',
+            'location' => 'DXB',
+            'image' => asset('assets/images/website/top-destination/dubai.png'),
+            'image_alt' => 'Dubai skyline',
+            'accommodations' => '19,464 accommodations',
+        ],
+        [
+            'city' => 'Abu Dhabi',
+            'country' => 'UAE',
+            'country_code' => 'AE',
+            'location' => 'AUH',
+            'image' => asset('assets/images/website/top-destination/abu-dhabi.png'),
+            'image_alt' => 'Abu Dhabi',
+            'accommodations' => '721 accommodations',
+        ],
+        [
+            'city' => 'Sharjah',
+            'country' => 'UAE',
+            'country_code' => 'AE',
+            'location' => 'SHJ',
+            'image' => asset('assets/images/website/top-destination/sharjah.png'),
+            'image_alt' => 'Sharjah',
+            'accommodations' => '323 accommodations',
+        ],
+        [
+            'city' => 'Ras Al Khaimah',
+            'country' => 'UAE',
+            'country_code' => 'AE',
+            'location' => 'RKT',
+            'image' => asset('assets/images/website/top-destination/rasul-khema.png'),
+            'image_alt' => 'Ras Al Khaimah',
+            'accommodations' => '398 accommodations',
+        ],
+        [
+            'city' => 'Ajman',
+            'country' => 'UAE',
+            'country_code' => 'AE',
+            'location' => 'QAJ',
+            'image' => asset('assets/images/website/top-destination/ajman.png'),
+            'image_alt' => 'Ajman beach',
+            'accommodations' => '264 accommodations',
+        ],
+        [
+            'city' => 'Fujairah',
+            'country' => 'UAE',
+            'country_code' => 'AE',
+            'location' => 'FJR',
+            'image' => asset('assets/images/website/top-destination/fujairah.jpg'),
+            'image_alt' => 'Fujairah',
+            'accommodations' => '210 accommodations',
+        ],
+    ]);
 
     if (is_file($topCitiesFile)) {
         $decoded = json_decode((string) file_get_contents($topCitiesFile), true);
         $topCitiesConfig = is_array($decoded) ? $decoded : [];
     }
 
+    if (Schema::hasTable('top_destinations')) {
+        $managedDestinations = TopDestination::query()
+            ->active()
+            ->orderBy('sort_order')
+            ->orderBy('city')
+            ->get()
+            ->map(function (TopDestination $destination) {
+                return [
+                    'city' => $destination->city,
+                    'country' => $destination->country,
+                    'country_code' => $destination->country_code,
+                    'location' => $destination->location,
+                    'image' => $destination->image_url,
+                    'image_alt' => $destination->image_alt ?: $destination->city,
+                    'accommodations' => $destination->accommodations_label,
+                ];
+            });
+
+        if ($managedDestinations->isNotEmpty()) {
+            $uaeDestinationCards = $managedDestinations->values();
+        }
+    }
+
     return view('website.index', [
         'topCitiesConfig'      => $topCitiesConfig,
+        'uaeDestinationCards'  => $uaeDestinationCards,
         'defaultHotelCheckIn'  => now()->addDays(4)->toDateString(),
         'defaultHotelCheckOut' => now()->addDays(8)->toDateString(),
     ]);

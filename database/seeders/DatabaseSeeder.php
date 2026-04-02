@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             // Modules - Activity
             ActivitySeeder::class,
 
+            // Website
+            TopDestinationSeeder::class,
+
         ]);
     }
 }
