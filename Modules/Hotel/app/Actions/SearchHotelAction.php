@@ -56,7 +56,7 @@ class SearchHotelAction
     {
         return match ($provider) {
             HotelProviderEnum::Local       => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
+            // HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
             HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
     }
