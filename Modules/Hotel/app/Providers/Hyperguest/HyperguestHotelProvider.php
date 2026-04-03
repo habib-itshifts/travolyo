@@ -238,41 +238,36 @@ class HyperguestHotelProvider implements HotelProviderInterface
     }
 
 
-    //Step::01 - return hotel ids of that specific destination
+    // Step::01 — look up hotel IDs for destination from the pre-built index (instant key access)
     private function findHotelIdsByDestination(string $destination): array
     {
         $destination = strtolower(trim($destination));
-        $hotels = collect($this->loadStaticHotels());
 
-        return $hotels
-            ->filter(function (array $hotel) use ($destination) {
-                $city = strtolower((string) ($hotel['city'] ?? $hotel['cityName'] ?? ''));
-                $country = strtolower((string) ($hotel['country'] ?? $hotel['countryCode'] ?? ''));
+        // loadStaticHotels() now returns ['dubai' => ['123','456',...], 'ae' => [...], ...]
+        $index = $this->loadStaticHotels();
 
-                return $city === $destination || $country === $destination;
-            })
-            ->pluck('hotel_id')
-            ->filter()
-            ->map(fn ($id) => (string) $id)
-            ->values()
-            ->all();
+        return array_values(array_unique($index[$destination] ?? []));
     }
 
     /**
-     * Fetch the full Hyperguest static hotel list.
-     * The response is ~10MB so we cache it locally in storage/app/hyperguest_hotels.json
-     * and only re-download when the cache is older than 1 hour.
+     * Returns hotel IDs for a given destination using a pre-built destination index.
+     *
+     * Instead of loading all 52k hotels on every search, we build a city→[hotel_ids]
+     * map once and cache it. Each lookup is then an instant array key access.
+     * Cache refreshes every 24 hours (hotel list rarely changes).
      */
     private function loadStaticHotels(): array
     {
-        $cachePath = storage_path('app/hyperguest_hotels.json');
-        $ttl = 3600; // Refresh cache every 1 hour
+        $indexPath = storage_path('app/hyperguest_destination_index.json');
+        $ttl = 86400; // 24 hours — hotel list rarely changes
 
-        if (file_exists($cachePath) && (time() - filemtime($cachePath)) < $ttl) {
-            return json_decode(file_get_contents($cachePath), true) ?? [];
+        if (file_exists($indexPath) && (time() - filemtime($indexPath)) < $ttl) {
+            return json_decode(file_get_contents($indexPath), true) ?? [];
         }
 
-        // Fetch full hotel list from Hyperguest static endpoint
+        // First time or cache expired — download the full 10MB list and build index
+        ini_set('memory_limit', '512M');
+
         $response = Http::withHeaders($this->headers)
             ->acceptJson()
             ->timeout(60)
@@ -280,16 +275,32 @@ class HyperguestHotelProvider implements HotelProviderInterface
             ->throw();
 
         $payload = $response->json();
-
-        // API may wrap hotels under a 'hotels' key or return a flat array
-        $hotels = isset($payload['hotels']) && is_array($payload['hotels'])
+        $hotels  = isset($payload['hotels']) && is_array($payload['hotels'])
             ? $payload['hotels']
             : (is_array($payload) ? $payload : []);
 
-        // Save to cache file for next requests within the TTL window
-        file_put_contents($cachePath, json_encode($hotels));
+        // Build index: ['dubai' => ['123', '456', ...], 'ae' => [...], ...]
+        $index = [];
+        foreach ($hotels as $hotel) {
+            $city    = strtolower(trim((string) ($hotel['city'] ?? $hotel['cityName'] ?? '')));
+            $country = strtolower(trim((string) ($hotel['country'] ?? $hotel['countryCode'] ?? '')));
+            $id      = (string) ($hotel['hotel_id'] ?? '');
 
-        return $hotels;
+            if ($id === '') {
+                continue;
+            }
+
+            if ($city !== '') {
+                $index[$city][] = $id;
+            }
+            if ($country !== '' && $country !== $city) {
+                $index[$country][] = $id;
+            }
+        }
+
+        file_put_contents($indexPath, json_encode($index));
+
+        return $index;
     }
     // Step:: 02 - find hotel details using
     private function searchHotelsByIds(
