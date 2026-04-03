@@ -362,7 +362,7 @@ document.getElementById('btnPay').addEventListener('click', function () {
     label.textContent = 'Redirecting to payment…';
     err.classList.add('d-none');
 
-    fetch('{{ route('api.hotels.checkout') }}', {
+    fetch('{{ route('hotels.checkout.submit') }}', {
         method:  'POST',
         headers: {
             'Content-Type': 'application/json',
