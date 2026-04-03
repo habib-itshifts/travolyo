@@ -376,7 +376,7 @@
                     @foreach($hotelOffers as $hotel)
                         @php
                             $hotelImage = $hotel->images[0] ?? null;
-                            $hotelCurrency = strtoupper($hotel->currency ?: ($booking->currency ?? 'USD'));
+                            $hotelCurrency = strtoupper($hotel->convertedCurrency ?: ($booking->currency ?? 'USD'));
                             $hotelSymbol = match($hotelCurrency) {
                                 'EUR' => '€', 'GBP' => '£', 'AED' => 'AED ', default => '$',
                             };
@@ -411,7 +411,7 @@
                                     @endif
                                     <div class="hotel-suggestion-card__footer">
                                         <div>
-                                            <div class="hotel-suggestion-card__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->lowestPrice, 0) }}</div>
+                                            <div class="hotel-suggestion-card__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->convertedLowestPrice, 0) }}</div>
                                             <div class="hotel-suggestion-card__price-note">per night</div>
                                         </div>
                                         <div class="hotel-suggestion-card__link">View stay</div>
@@ -490,7 +490,7 @@
                     @foreach($hotelOffers as $hotel)
                         @php
                             $hotelImage = $hotel->images[0] ?? null;
-                            $hotelCurrency = strtoupper($hotel->currency ?: ($booking->currency ?? 'USD'));
+                            $hotelCurrency = strtoupper($hotel->convertedCurrency ?: ($booking->currency ?? 'USD'));
                             $hotelSymbol = match($hotelCurrency) {
                                 'EUR' => '€', 'GBP' => '£', 'AED' => 'AED ', default => '$',
                             };
@@ -525,7 +525,7 @@
                                     @endif
                                     <div class="hotel-suggestion-card__footer">
                                         <div>
-                                            <div class="hotel-suggestion-card__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->lowestPrice, 0) }}</div>
+                                            <div class="hotel-suggestion-card__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->convertedLowestPrice, 0) }}</div>
                                             <div class="hotel-suggestion-card__price-note">per night</div>
                                         </div>
                                         <div class="hotel-suggestion-card__link">View hotels</div>
@@ -578,7 +578,7 @@
                         @foreach($hotelOffers as $hotel)
                             @php
                                 $hotelImage = $hotel->images[0] ?? null;
-                                $hotelCurrency = strtoupper($hotel->currency ?: ($booking->currency ?? 'USD'));
+                                $hotelCurrency = strtoupper($hotel->convertedCurrency ?: ($booking->currency ?? 'USD'));
                                 $hotelSymbol = match($hotelCurrency) {
                                     'EUR' => '€', 'GBP' => '£', 'AED' => 'AED ', default => '$',
                                 };
@@ -600,7 +600,7 @@
                                     'check_out_time' => $hotel->checkOutTime,
                                     'images' => $hotel->images,
                                     'amenities' => $hotel->amenityNames,
-                                    'lowest_price' => $hotel->lowestPrice,
+                                    'lowest_price' => $hotel->convertedLowestPrice,
                                     'currency' => $hotelCurrency,
                                     'check_in' => $hotelCheckIn,
                                     'check_out' => $hotelCheckOut,
@@ -647,7 +647,7 @@
                                     </div>
                                     <div class="hotel-sidebar-item__footer">
                                         <div>
-                                            <div class="hotel-sidebar-item__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->lowestPrice, 0) }}</div>
+                                            <div class="hotel-sidebar-item__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->convertedLowestPrice, 0) }}</div>
                                             <div class="hotel-sidebar-item__note">per night</div>
                                         </div>
                                         <button
