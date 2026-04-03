@@ -1,0 +1,15 @@
+i have updated hotel Dtos 
+public readonly float             $baseLowestPrice,
+        public readonly string            $baseCurrency,
+
+        public readonly float             $convertedLowestPrice,
+        public readonly string            $convertedCurrency,
+
+you can check and now i want to implement this in flight module 
+if i have missed in hotel you can fix that we will
+
+why i am doing this 
+this is becasue i want to base currency and value till end and i want stripe or nigenus to do conversion rather then sending converted price which may result in cents error
+so we will take base and converted 
+if you have any question feel fre to ask 
+and then fix filght for me then we will fix activivty
