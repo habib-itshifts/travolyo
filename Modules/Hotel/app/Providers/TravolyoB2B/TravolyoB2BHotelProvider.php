@@ -67,7 +67,8 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
             $nights = max($dto->nights(), 1);
 
             return collect($hotels)
-                ->filter(fn (array $hotel) => ($hotel['source'] ?? null) !== 'tasspro_api')
+                // ->filter(fn (array $hotel) => ($hotel['source'] ?? null) !== 'tasspro_api')
+                ->filter(fn (array $hotel) => ($hotel['source'] ?? null) === 'local')
                 ->map(fn (array $hotel) => $this->mapper->toOfferDto($hotel, $nights, $dto->currency))
                 ->filter(fn (HotelOfferDto $offer) => $this->matchesPriceFilter($offer, $dto))
                 ->values()
