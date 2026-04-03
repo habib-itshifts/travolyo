@@ -1185,7 +1185,7 @@
         </div>
 
         <div id="sw-hotels-form" class="{{ $isHotelLikeTab ? '' : 'd-none' }}">
-            <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET" class="trav-search-form" data-hotel-destinations-url="{{ route('api.locations.hotels.search') }}">
+            <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET" class="trav-search-form" data-hotel-destinations-url="{{ route('api.locations.search') }}">
                 <div class="trav-search-grid">
                     <div class="trav-field trav-field--wide">
                         <label class="trav-field__label">Destination</label>
@@ -1276,7 +1276,7 @@
         </div>
 
         <div id="sw-flights-form-container" class="{{ $isHotelLikeTab ? 'd-none' : '' }}">
-            <form action="{{ Route::has('flights.index') ? route('flights.index') : '#' }}" method="GET" id="flightSearchForm" class="trav-search-form" data-airports-url="{{ route('api.locations.airports.search') }}" data-hotel-destinations-url="{{ route('api.locations.hotels.search') }}">
+            <form action="{{ Route::has('flights.index') ? route('flights.index') : '#' }}" method="GET" id="flightSearchForm" class="trav-search-form" data-airports-url="{{ route('api.locations.airports.search') }}" data-hotel-destinations-url="{{ route('api.locations.search') }}">
                 <input type="hidden" name="trip_type" id="tripTypeInput" value="{{ request('trip_type', 'one_way') }}" />
 
                 <div data-tab-pane="flights" class="{{ $activeTab !== 'flights' ? 'd-none' : '' }}">

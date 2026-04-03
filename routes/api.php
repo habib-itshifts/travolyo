@@ -32,10 +32,10 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
 Route::get('/bookings/{code}', [BookingController::class, 'show'])->name('api.bookings.show');
 
 Route::prefix('locations')->group(function () {
+    Route::get('/search',           [LocationController::class, 'searchHotelDestinations'])->name('api.locations.search');
     Route::get('/countries',        [LocationController::class, 'countries'])->name('api.locations.countries');
     Route::get('/cities/{country_code}', [LocationController::class, 'cities'])->name('api.locations.cities');
     Route::get('/airports',         [LocationController::class, 'airports'])->name('api.locations.airports');
     Route::get('/airports/search',  [LocationController::class, 'searchAirports'])->name('api.locations.airports.search');
-    Route::get('/hotels/search',    [LocationController::class, 'searchHotelDestinations'])->name('api.locations.hotels.search');
     Route::get('/find/{code}',      [LocationController::class, 'locationByCode'])->name('api.locations.find');
 });
