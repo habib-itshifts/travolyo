@@ -258,21 +258,43 @@ class HyperguestHotelProvider implements HotelProviderInterface
             ->all();
     }
 
+    /**
+     * Fetch the full Hyperguest static hotel list.
+     * The response is ~10MB so we cache it locally in storage/app/hyperguest_hotels.json
+     * and only re-download when the cache is older than 1 hour.
+     */
     private function loadStaticHotels(): array
     {
+        // Cache file path — stored in storage/app to avoid re-downloading 10MB on every request
+        $cachePath = storage_path('app/hyperguest_hotels.json');
+        $ttl = 3600; // Refresh cache every 1 hour
+
+        // If cache file exists and is still fresh, return it directly (fast path)
+        if (file_exists($cachePath) && (time() - filemtime($cachePath)) < $ttl) {
+            return json_decode(file_get_contents($cachePath), true) ?? [];
+        }
+
+        // The API returns ~10MB JSON — bump memory limit for this request only
+        ini_set('memory_limit', '512M');
+
+        // Fetch full hotel list from Hyperguest static endpoint
         $response = Http::withHeaders($this->headers)
             ->acceptJson()
-            ->timeout(30)
+            ->timeout(60)
             ->get('https://hg-static.hyperguest.com/hotels.json')
             ->throw();
 
         $payload = $response->json();
 
-        if (isset($payload['hotels']) && is_array($payload['hotels'])) {
-            return $payload['hotels'];
-        }
+        // API may wrap hotels under a 'hotels' key or return a flat array
+        $hotels = isset($payload['hotels']) && is_array($payload['hotels'])
+            ? $payload['hotels']
+            : (is_array($payload) ? $payload : []);
 
-        return is_array($payload) ? $payload : [];
+        // Save to cache file for next requests within the TTL window
+        file_put_contents($cachePath, json_encode($hotels));
+
+        return $hotels;
     }
     // Step:: 02 - find hotel details using
     private function searchHotelsByIds(
