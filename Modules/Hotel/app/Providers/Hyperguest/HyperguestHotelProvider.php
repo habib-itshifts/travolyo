@@ -287,7 +287,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
         $guests = max($adults + $children, 1);
 
-        $chunks = collect($hotelIds)->chunk(10)->take(5)->values();
+        $chunks = collect($hotelIds)->chunk(10)->take(10)->values();
 
         $responses = Http::pool(function ($pool) use ($chunks, $checkIn, $nights, $guests, $nationality, $currency) {
             return $chunks->map(fn ($chunk) => $pool
