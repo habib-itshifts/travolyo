@@ -284,27 +284,30 @@ class HyperguestHotelProvider implements HotelProviderInterface
         string $currency,
         string $nationality
     ): array {
-        $chunks = collect($hotelIds)->chunk(10);
-        $results = collect();
+        $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
+        $guests = max($adults + $children, 1);
 
-        foreach ($chunks as $chunk) {
-            $response = Http::withHeaders($this->headers)
+        $chunks = collect($hotelIds)->chunk(10)->take(5)->values();
+
+        $responses = Http::pool(function ($pool) use ($chunks, $checkIn, $nights, $guests, $nationality, $currency) {
+            return $chunks->map(fn ($chunk) => $pool
+                ->withHeaders($this->headers)
                 ->acceptJson()
                 ->timeout(30)
                 ->get('https://search-api.hyperguest.io/2.0/', [
-                    'checkIn' => $checkIn,
-                    'nights' => max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1),
-                    'guests' => max($adults + $children, 1),
-                    'hotelIds' => $chunk->implode(','),
+                    'checkIn'             => $checkIn,
+                    'nights'              => $nights,
+                    'guests'              => $guests,
+                    'hotelIds'            => $chunk->implode(','),
                     'customerNationality' => $nationality,
-                    'currency' => $currency,
+                    'currency'            => $currency,
                 ])
-                ->throw();
+            )->all();
+        });
 
-            $results = $results->merge($this->unwrapResults($response->json()));
-        }
-
-        return $results
+        return collect($responses)
+            ->filter(fn ($r) => ! ($r instanceof \Throwable) && $r->successful())
+            ->flatMap(fn ($r) => $this->unwrapResults($r->json()))
             ->filter(fn ($hotel) => is_array($hotel) && ! empty($hotel['propertyId']))
             ->values()
             ->all();
