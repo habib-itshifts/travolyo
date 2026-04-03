@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserType;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -31,6 +32,8 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
+        $user->assignRole(UserType::Customer->value);
+        
         event(new Registered($user));
 
         $token = $user->createToken('mobile')->plainTextToken;
