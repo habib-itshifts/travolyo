@@ -265,17 +265,12 @@ class HyperguestHotelProvider implements HotelProviderInterface
      */
     private function loadStaticHotels(): array
     {
-        // Cache file path — stored in storage/app to avoid re-downloading 10MB on every request
         $cachePath = storage_path('app/hyperguest_hotels.json');
         $ttl = 3600; // Refresh cache every 1 hour
 
-        // If cache file exists and is still fresh, return it directly (fast path)
         if (file_exists($cachePath) && (time() - filemtime($cachePath)) < $ttl) {
             return json_decode(file_get_contents($cachePath), true) ?? [];
         }
-
-        // The API returns ~10MB JSON — bump memory limit for this request only
-        ini_set('memory_limit', '512M');
 
         // Fetch full hotel list from Hyperguest static endpoint
         $response = Http::withHeaders($this->headers)
@@ -309,7 +304,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
         $guests = max($adults + $children, 1);
 
-        $chunks = collect($hotelIds)->chunk(10)->take(10)->values();
+        // chunk(20) → each parallel request checks 20 hotels, no take() limit so all IDs are checked
+        $chunks = collect($hotelIds)->chunk(20)->values();
 
         $responses = Http::pool(function ($pool) use ($chunks, $checkIn, $nights, $guests, $nationality, $currency) {
             return $chunks->map(fn ($chunk) => $pool
