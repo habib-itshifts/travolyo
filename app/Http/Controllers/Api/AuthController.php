@@ -33,7 +33,6 @@ class AuthController extends Controller
         ]);
 
         $user->assignRole(UserType::Customer->value);
-        
         event(new Registered($user));
 
         $token = $user->createToken('mobile')->plainTextToken;
