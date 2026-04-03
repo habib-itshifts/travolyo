@@ -284,7 +284,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
         string $currency,
         string $nationality
     ): array {
-        $chunks = collect($hotelIds)->chunk(10);
+        // $chunks = collect($hotelIds)->chunk(10);
+        $chunks = collect($hotelIds)->take(1)->chunk(10);
         $results = collect();
 
         foreach ($chunks as $chunk) {
