@@ -133,6 +133,10 @@ class HotelController extends Controller
             HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
         };
 
+        // Session takes priority over URL param so the currency switcher (redirect()->back()) works.
+        // This is the convertedCurrency — baseCurrency is resolved per-hotel inside the provider.
+        $convertedCurrency = (string) session('currency', $request->input('currency', config('currency.default', 'USD')));
+
         $rooms = $providerInstance->getRooms(
             offerId:  $request->input('offer_id'),
             cityCode: $request->input('city', ''),
@@ -140,7 +144,7 @@ class HotelController extends Controller
             checkOut: $request->input('check_out'),
             adults:   (int) $request->input('adults', 1),
             children: (int) $request->input('children', 0),
-            currency: (string) $request->input('currency', 'USD'),
+            currency: $convertedCurrency,
         );
 
         $params = [
@@ -152,7 +156,7 @@ class HotelController extends Controller
             'check_out'         => $request->input('check_out'),
             'adults'            => (int) $request->input('adults', 1),
             'children'          => (int) $request->input('children', 0),
-            'currency'          => (string) $request->input('currency', 'USD'),
+            'currency'          => $convertedCurrency,
             'hotel_name'        => $request->input('hotel_name', ''),
             'hotel_stars'       => (int) $request->input('hotel_stars', 0),
             'check_in_time'     => $request->input('check_in_time', ''),
