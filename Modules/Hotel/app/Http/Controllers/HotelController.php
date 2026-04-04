@@ -9,6 +9,10 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
+use Modules\Hotel\Enums\HotelProviderEnum;
+use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
+use Modules\Hotel\Providers\Local\LocalHotelProvider;
+use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
 
 class HotelController extends Controller
 {
@@ -98,6 +102,65 @@ class HotelController extends Controller
         $payload = json_decode((string) file_get_contents($file), true);
 
         return is_array($payload) ? $payload : [];
+    }
+
+    /**
+     * Hotel rooms page — shows available rooms for a specific hotel.
+     * Reusable from both the listing page and the checkout recommended stays.
+     */
+    public function showRooms(Request $request): View|RedirectResponse
+    {
+        $request->validate([
+            'offer_id'  => 'required|string',
+            'provider'  => 'required|string',
+            'city'      => 'nullable|string',
+            'country'   => 'nullable|string',
+            'check_in'  => 'required|date_format:Y-m-d',
+            'check_out' => 'required|date_format:Y-m-d|after:check_in',
+            'adults'    => 'required|integer|min:1',
+            'children'  => 'nullable|integer|min:0',
+            'currency'  => 'nullable|string|size:3',
+        ]);
+
+        $providerEnum = HotelProviderEnum::tryFrom($request->input('provider'));
+        if (! $providerEnum) {
+            return redirect()->route('hotels.index');
+        }
+
+        $providerInstance = match ($providerEnum) {
+            HotelProviderEnum::Local       => new LocalHotelProvider(),
+            HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
+            HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
+        };
+
+        $rooms = $providerInstance->getRooms(
+            offerId:  $request->input('offer_id'),
+            cityCode: $request->input('city', ''),
+            checkIn:  $request->input('check_in'),
+            checkOut: $request->input('check_out'),
+            adults:   (int) $request->input('adults', 1),
+            children: (int) $request->input('children', 0),
+            currency: (string) $request->input('currency', 'USD'),
+        );
+
+        $params = [
+            'offer_id'          => $request->input('offer_id'),
+            'provider'          => $request->input('provider'),
+            'city'              => $request->input('city', ''),
+            'country'           => $request->input('country', ''),
+            'check_in'          => $request->input('check_in'),
+            'check_out'         => $request->input('check_out'),
+            'adults'            => (int) $request->input('adults', 1),
+            'children'          => (int) $request->input('children', 0),
+            'currency'          => (string) $request->input('currency', 'USD'),
+            'hotel_name'        => $request->input('hotel_name', ''),
+            'hotel_stars'       => (int) $request->input('hotel_stars', 0),
+            'check_in_time'     => $request->input('check_in_time', ''),
+            'check_out_time'    => $request->input('check_out_time', ''),
+            'hotel_description' => $request->input('hotel_description', ''),
+        ];
+
+        return view('hotel::hotels.rooms', compact('rooms', 'params'));
     }
 
     /**

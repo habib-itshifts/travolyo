@@ -1,0 +1,7 @@
+tasks
+
+- add page relaoded
+- fix hotel currency
+- fix flight checkout
+- fix hotel B2B checkout
+- fix 

@@ -301,7 +301,7 @@
                     </div>
                     <button class="btn btn-primary btn-select-room js-view-deal"
                         data-hotel='${JSON.stringify(h)}'>
-                        View Deal
+                        View Deal <i class="bi bi-arrow-right ms-1"></i>
                     </button>
                 </div>
             </div>
@@ -580,55 +580,33 @@
         el.addEventListener('change', filterCards);
     });
 
-    // ── View Deal → fetch rooms via API → open modal ─────
-    const roomsUrl = '{{ route('api.hotels.rooms') }}';
+    // ── View Deal → navigate to /hotels/rooms page ───────
+    const roomsPageUrl = '{{ route('hotels.rooms') }}';
 
-    document.addEventListener('click', async function (e) {
+    document.addEventListener('click', function (e) {
         const btn = e.target.closest('.js-view-deal');
         if (!btn) return;
 
         let hotel;
         try { hotel = JSON.parse(btn.dataset.hotel); } catch { return; }
 
-        // Open modal immediately with loading spinner
-        document.getElementById('modalHotelName').textContent = hotel.name;
-        document.getElementById('modalBody').innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="text-muted mt-3 small">Checking availability…</p>
-            </div>`;
-        const bsModal = new bootstrap.Modal(document.getElementById('hotelModal'));
-        bsModal.show();
+        const url = new URL(roomsPageUrl, window.location.origin);
+        url.searchParams.set('offer_id',          hotel.id);
+        url.searchParams.set('provider',           hotel.provider);
+        url.searchParams.set('city',               hotel.city ?? '');
+        url.searchParams.set('country',            hotel.country ?? '');
+        url.searchParams.set('check_in',           params.check_in ?? '');
+        url.searchParams.set('check_out',          params.check_out ?? '');
+        url.searchParams.set('adults',             params.adults ?? 1);
+        url.searchParams.set('children',           params.children ?? 0);
+        url.searchParams.set('currency',           document.querySelector('meta[name="currency"]')?.content ?? 'USD');
+        url.searchParams.set('hotel_name',         hotel.name ?? '');
+        url.searchParams.set('hotel_stars',        hotel.star_rating ?? 0);
+        url.searchParams.set('check_in_time',      hotel.check_in_time ?? '');
+        url.searchParams.set('check_out_time',     hotel.check_out_time ?? '');
+        url.searchParams.set('hotel_description',  hotel.description ?? '');
 
-        // Local hotels already have rooms embedded from the search response — skip the API call
-        if (hotel.provider !== 'local') {
-            try {
-                const res = await fetch(roomsUrl, {
-                    method:  'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept':       'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    },
-                    body: JSON.stringify({
-                        offer_id:  hotel.id,
-                        city_code: hotel.city ?? '',
-                        check_in:  params.check_in  ?? '',
-                        check_out: params.check_out ?? '',
-                        adults:    parseInt(params.adults   ?? 1, 10),
-                        children:  parseInt(params.children ?? 0, 10),
-                        currency:  document.querySelector('meta[name="currency"]')?.content ?? 'USD',
-                        provider:  hotel.provider,
-                    }),
-                });
-                const data = await res.json();
-                hotel.rooms = (data.success && data.data?.length) ? data.data : (hotel.rooms ?? []);
-            } catch {
-                // keep whatever rooms were in the search result
-            }
-        }
-
-        renderModal(hotel);
+        window.location.href = url.toString();
     });
 
     // ── Select Room → prebook API → checkout ─────────────

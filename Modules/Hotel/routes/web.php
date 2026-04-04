@@ -5,6 +5,7 @@ use Modules\Hotel\Http\Controllers\HotelController;
 use Modules\Hotel\Http\Controllers\Api\HotelController as HotelApiController;
 
 Route::get('hotels',                          [HotelController::class, 'index'])->name('hotels.index');
+Route::get('hotels/rooms',                    [HotelController::class, 'showRooms'])->name('hotels.rooms');
 Route::get('hotels/checkout',                 [HotelController::class, 'checkout'])->name('hotels.checkout');
 Route::get('hotels/confirmation/{code}',      [HotelController::class, 'confirmation'])->name('hotels.confirmation');
 

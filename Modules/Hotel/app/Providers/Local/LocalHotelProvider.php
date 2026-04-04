@@ -77,8 +77,23 @@ class LocalHotelProvider implements HotelProviderInterface
         int    $children,
         string $currency = 'USD',
     ): array {
-        // Local hotels include rooms directly in search() results via LocalHotelMapper.
-        return [];
+        $hotel = Hotel::active()
+            ->with(['rooms' => fn ($q) => $q->active()->with('roomType.amenities')])
+            ->find((int) $offerId);
+
+        if (! $hotel) {
+            return [];
+        }
+
+        $nights       = max(1, (int) \Carbon\Carbon::parse($checkIn)->diffInDays(\Carbon\Carbon::parse($checkOut)));
+        $baseCurrency = (string) ($hotel->currency ?: $currency);
+
+        return $hotel->rooms
+            ->map(fn (HotelRoom $r) => $this->mapper->toRoomOfferDto(
+                $r, $nights, $baseCurrency, $currency, $adults, $checkIn, $checkOut
+            ))
+            ->values()
+            ->all();
     }
 
     public function prebook(PrebookHotelDto $dto): HotelOfferDto
