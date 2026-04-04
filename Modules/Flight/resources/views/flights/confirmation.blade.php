@@ -211,39 +211,6 @@
     padding: .32rem .5rem; border-radius: 999px; background: var(--primary-light);
     white-space: nowrap; border: none; cursor: pointer;
 }
-.hotel-room-modal .modal-dialog { max-width: 860px; }
-.hotel-room-modal .modal-header {
-    background: linear-gradient(135deg, var(--primary) 0%, #0e9aa7 100%);
-    color: #fff;
-}
-.hotel-room-modal .modal-header .btn-close { filter: invert(1); }
-.hotel-room-gallery {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
-    border-radius: 10px; overflow: hidden; max-height: 220px; margin-bottom: 16px;
-}
-.hotel-room-gallery img { width: 100%; height: 110px; object-fit: cover; }
-.hotel-room-gallery img:first-child { grid-row: 1 / 3; height: 100%; }
-.room-card {
-    border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px;
-    transition: border-color var(--transition), box-shadow var(--transition);
-}
-.room-card:hover {
-    border-color: var(--primary);
-    box-shadow: 0 10px 22px rgba(15, 23, 42, .06);
-}
-.room-card__name {
-    font-size: .92rem; font-weight: 700; color: var(--text-dark);
-}
-.room-card__meta,
-.room-card__sub {
-    font-size: .78rem; color: var(--text-muted);
-}
-.room-card__price {
-    font-size: 1rem; font-weight: 800; color: var(--primary);
-}
-.btn-select-room {
-    padding: .48rem .9rem; font-size: .78rem; border-radius: .7rem; font-weight: 700;
-}
 </style>
 @endpush
 
@@ -584,49 +551,25 @@
                                 };
                             @endphp
                             @php
-                                $hotelCheckIn = !empty($f['arr_date']) ? \Carbon\Carbon::parse($f['arr_date'])->format('Y-m-d') : now()->addDay()->format('Y-m-d');
+                                $hotelCheckIn  = !empty($f['arr_date']) ? \Carbon\Carbon::parse($f['arr_date'])->format('Y-m-d') : now()->addDay()->format('Y-m-d');
                                 $hotelCheckOut = !empty($f['arr_date']) ? \Carbon\Carbon::parse($f['arr_date'])->addDays(2)->format('Y-m-d') : now()->addDays(3)->format('Y-m-d');
-                                $hotelPayload = [
-                                    'id' => $hotel->offerId,
-                                    'provider' => $hotel->provider->value,
-                                    'name' => $hotel->name,
-                                    'star_rating' => $hotel->starRating,
-                                    'city' => $hotel->city,
-                                    'country' => $hotel->country,
-                                    'address' => $hotel->address,
-                                    'description' => $hotel->description,
-                                    'short_description' => $hotel->shortDescription,
-                                    'check_in_time' => $hotel->checkInTime,
-                                    'check_out_time' => $hotel->checkOutTime,
-                                    'images' => $hotel->images,
-                                    'amenities' => $hotel->amenityNames,
-                                    'lowest_price' => $hotel->convertedLowestPrice,
-                                    'currency' => $hotelCurrency,
-                                    'check_in' => $hotelCheckIn,
-                                    'check_out' => $hotelCheckOut,
-                                    'adults' => (int) ($f['adults'] ?? 1),
-                                    'children' => (int) ($f['children'] ?? 0),
-                                    'rooms' => collect($hotel->rooms ?? [])->map(fn ($room) => [
-                                        'id' => $room->roomId,
-                                        'name' => $room->name,
-                                        'room_type' => $room->roomType,
-                                        'bed_configuration' => is_array($room->bedConfiguration)
-                                            ? collect($room->bedConfiguration)->map(fn ($count, $type) => $count . ' ' . ucfirst((string) $type))->implode(', ')
-                                            : (string) $room->bedConfiguration,
-                                        'max_adults' => $room->maxAdults,
-                                        'max_children' => $room->maxChildren,
-                                        'base_price' => $room->convertedCurrentPrice,
-                                        'total_price' => $room->convertedTotalPrice,
-                                        'nights' => $room->nights,
-                                        'currency' => $room->convertedCurrency,
-                                        'is_available' => $room->isAvailable,
-                                        'amenities' => $room->amenityNames,
-                                        'size_sqm' => $room->sizeSqm,
-                                        'description' => $room->description,
-                                    ])->values()->all(),
-                                ];
+                                $roomsPageUrl  = route('hotels.rooms', array_filter([
+                                    'offer_id'          => $hotel->offerId,
+                                    'provider'          => $hotel->provider->value,
+                                    'city'              => $hotel->city ?? '',
+                                    'country'           => $hotel->country ?? '',
+                                    'check_in'          => $hotelCheckIn,
+                                    'check_out'         => $hotelCheckOut,
+                                    'adults'            => max(1, (int) ($f['adults'] ?? 1)),
+                                    'children'          => max(0, (int) ($f['children'] ?? 0)),
+                                    'hotel_name'        => $hotel->name,
+                                    'hotel_stars'       => $hotel->starRating,
+                                    'check_in_time'     => $hotel->checkInTime ?? '',
+                                    'check_out_time'    => $hotel->checkOutTime ?? '',
+                                    'hotel_description' => $hotel->shortDescription ?: ($hotel->description ?? ''),
+                                ], fn ($v) => $v !== null && $v !== ''));
                             @endphp
-                            <a href="{{ $hotelSearchUrl }}" class="hotel-sidebar-item">
+                            <a href="{{ $roomsPageUrl }}" class="hotel-sidebar-item">
                                 <div class="hotel-sidebar-item__media">
                                     @if($hotelImage)
                                         <img src="{{ $hotelImage }}" alt="{{ $hotel->name }}">
@@ -650,11 +593,7 @@
                                             <div class="hotel-sidebar-item__price">{{ $hotelSymbol }}{{ number_format((float) $hotel->convertedLowestPrice, 0) }}</div>
                                             <div class="hotel-sidebar-item__note">per night</div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            class="hotel-sidebar-item__cta js-view-hotel-rooms"
-                                            data-hotel='@json($hotelPayload)'
-                                        >Select Room</button>
+                                        <span class="hotel-sidebar-item__cta">Select Room</span>
                                     </div>
                                 </div>
                             </a>
@@ -728,34 +667,12 @@
 </div>
 </section>
 
-<div class="modal fade hotel-room-modal" id="hotelRoomModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="hotelRoomModalTitle">Select Room</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="hotelRoomModalBody">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 @endsection
 
 @push('scripts')
 <script>
 (function () {
-    const isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
-    const roomsUrl = '{{ route('api.hotels.rooms') }}';
-    const prebookUrl = '{{ route('api.hotels.prebook') }}';
-    const modalEl = document.getElementById('hotelRoomModal');
-    const modalTitleEl = document.getElementById('hotelRoomModalTitle');
-    const modalBodyEl = document.getElementById('hotelRoomModalBody');
-    const hotelModal = modalEl ? new bootstrap.Modal(modalEl) : null;
 
     function stars(count) {
         let html = '';
@@ -763,193 +680,6 @@
         return html;
     }
 
-    function renderHotelModal(hotel) {
-        modalTitleEl.textContent = hotel.name ?? 'Select Room';
-
-        const galleryHtml = (hotel.images ?? []).length
-            ? `<div class="hotel-room-gallery">
-                ${hotel.images.slice(0, 3).map(url => `<img src="${url}" alt="" loading="lazy">`).join('')}
-               </div>`
-            : '';
-
-        const amenitiesHtml = (hotel.amenities ?? []).length
-            ? `<div class="mb-3">
-                <div class="fw-semibold mb-2" style="font-size:.85rem;">Amenities</div>
-                <div class="d-flex flex-wrap gap-2">
-                    ${hotel.amenities.slice(0, 8).map(a => `<span class="badge bg-light text-dark border">${a}</span>`).join('')}
-                </div>
-               </div>`
-            : '';
-
-        const rooms = (hotel.rooms ?? []).filter(room => room.is_available !== false);
-        const roomsHtml = rooms.length
-            ? rooms.map(room => `
-                <div class="room-card">
-                    <div class="d-flex justify-content-between align-items-start gap-3">
-                        <div>
-                            <div class="room-card__name">${room.name ?? 'Room'}</div>
-                            <div class="room-card__meta mt-1">
-                                ${room.bed_configuration ? `<i class="bi bi-moon me-1"></i>${room.bed_configuration}` : ''}
-                                ${room.max_adults ? ` ${room.bed_configuration ? '&bull;' : ''} <i class="bi bi-person me-1"></i>${room.max_adults} Adults` : ''}
-                                ${room.max_children ? ` &bull; ${room.max_children} Children` : ''}
-                                ${room.size_sqm ? ` &bull; ${room.size_sqm} m²` : ''}
-                            </div>
-                            ${(room.amenities ?? []).length ? `<div class="d-flex flex-wrap gap-1 mt-2">
-                                ${room.amenities.slice(0, 5).map(a => `<span class="badge bg-light text-dark border" style="font-size:.7rem">${a}</span>`).join('')}
-                            </div>` : ''}
-                            ${room.description ? `<div class="room-card__sub mt-2">${room.description}</div>` : ''}
-                        </div>
-                        <div class="text-end" style="min-width:140px;">
-                            <div class="room-card__price">${room.currency ?? hotel.currency ?? 'USD'} ${parseFloat(room.base_price ?? room.total_price ?? 0).toLocaleString()}</div>
-                            <div class="room-card__sub">${room.nights ? `${room.nights} nights total: ${(parseFloat(room.total_price ?? 0)).toLocaleString()}` : 'per night'}</div>
-                            <button
-                                type="button"
-                                class="btn btn-primary btn-select-room mt-2 js-select-confirmation-room"
-                                data-offer-id="${hotel.id}"
-                                data-room-id="${room.id}"
-                                data-provider="${hotel.provider}"
-                                data-hotel-name="${hotel.name ?? ''}"
-                                data-room-name="${room.name ?? ''}"
-                                data-city="${hotel.city ?? ''}"
-                                data-country="${hotel.country ?? ''}"
-                                data-check-in="${hotel.check_in ?? ''}"
-                                data-check-out="${hotel.check_out ?? ''}"
-                                data-adults="${hotel.adults ?? 1}"
-                                data-children="${hotel.children ?? 0}"
-                                data-currency="${hotel.currency ?? 'USD'}"
-                            >Select Room</button>
-                        </div>
-                    </div>
-                </div>`).join('')
-            : `<div class="alert alert-warning mb-0">No rooms available for the selected stay.</div>`;
-
-        modalBodyEl.innerHTML = `
-            ${galleryHtml}
-            <div class="mb-2">
-                <span style="color:#f59e0b">${stars(hotel.star_rating ?? 0)}</span>
-                <span class="ms-2 text-muted small">${hotel.city ?? ''}${hotel.country ? ', ' + hotel.country : ''}</span>
-            </div>
-            ${(hotel.check_in_time || hotel.check_out_time) ? `
-                <div class="d-flex gap-3 mb-3 small text-muted">
-                    ${hotel.check_in_time ? `<span><i class="bi bi-door-open me-1"></i>Check-in: <strong>${hotel.check_in_time}</strong></span>` : ''}
-                    ${hotel.check_out_time ? `<span><i class="bi bi-door-closed me-1"></i>Check-out: <strong>${hotel.check_out_time}</strong></span>` : ''}
-                </div>` : ''}
-            ${(hotel.short_description || hotel.description) ? `<p class="text-muted small mb-3">${hotel.short_description ?? hotel.description}</p>` : ''}
-            ${amenitiesHtml}
-            <hr>
-            <h6 class="fw-bold mb-3">Available Rooms</h6>
-            ${roomsHtml}
-        `;
-    }
-
-    document.addEventListener('click', async function (event) {
-        const button = event.target.closest('.js-view-hotel-rooms');
-        if (!button) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        let hotel;
-        try {
-            hotel = JSON.parse(button.dataset.hotel);
-        } catch {
-            return;
-        }
-
-        modalTitleEl.textContent = hotel.name ?? 'Select Room';
-        modalBodyEl.innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status"></div>
-                <p class="text-muted mt-3 small mb-0">Checking available rooms...</p>
-            </div>`;
-        hotelModal?.show();
-
-        try {
-            if (hotel.provider !== 'local') {
-                const response = await fetch(roomsUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                    },
-                    body: JSON.stringify({
-                        offer_id: hotel.id,
-                        city_code: hotel.city ?? '',
-                        check_in: hotel.check_in ?? '',
-                        check_out: hotel.check_out ?? '',
-                        adults: parseInt(hotel.adults ?? 1, 10),
-                        children: parseInt(hotel.children ?? 0, 10),
-                        provider: hotel.provider,
-                    }),
-                });
-
-                const data = await response.json();
-                if (response.ok && data.success && Array.isArray(data.data)) {
-                    hotel.rooms = data.data;
-                }
-            }
-        } catch {}
-
-        renderHotelModal(hotel);
-    });
-
-    document.addEventListener('click', async function (event) {
-        const button = event.target.closest('.js-select-confirmation-room');
-        if (!button) return;
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (!isLoggedIn && typeof window.openAuthModal === 'function') {
-            hotelModal?.hide();
-            window.openAuthModal('signin');
-            return;
-        }
-
-        const originalText = button.textContent;
-        button.disabled = true;
-        button.textContent = 'Please wait...';
-
-        try {
-            const response = await fetch(prebookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-                },
-                body: JSON.stringify({
-                    offer_id: button.dataset.offerId,
-                    room_id: button.dataset.roomId,
-                    provider: button.dataset.provider,
-                    hotel_name: button.dataset.hotelName,
-                    room_name: button.dataset.roomName,
-                    city: button.dataset.city,
-                    country: button.dataset.country,
-                    check_in: button.dataset.checkIn,
-                    check_out: button.dataset.checkOut,
-                    adults: parseInt(button.dataset.adults ?? '1', 10),
-                    children: parseInt(button.dataset.children ?? '0', 10),
-                    currency: button.dataset.currency ?? 'USD',
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success && data.checkout_url) {
-                window.location.href = data.checkout_url;
-                return;
-            }
-
-            alert(data.message ?? 'Could not open hotel checkout. Please try again.');
-        } catch {
-            alert('Could not open hotel checkout. Please try again.');
-        }
-
-        button.disabled = false;
-        button.textContent = originalText;
-    });
 })();
 </script>
 @endpush
