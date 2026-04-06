@@ -165,6 +165,49 @@ class LocationSearchService
             return 60;
         }
 
+        $fuzzyMatches = array_filter([
+            $city,
+            $destination,
+            $displayName,
+            $country,
+            $region,
+        ]);
+
+        if ($this->matchesFuzzyKeyword($fuzzyMatches, $keyword)) {
+            return 70;
+        }
+
         return null;
+    }
+
+    /**
+     * Allow small typing mistakes while keeping the match tight.
+     */
+    private function matchesFuzzyKeyword(array $haystacks, string $keyword): bool
+    {
+        $keyword = trim($keyword);
+
+        if ($keyword === '' || mb_strlen($keyword) < 3) {
+            return false;
+        }
+
+        $normalizedKeyword = preg_replace('/\s+/', ' ', $keyword);
+
+        foreach ($haystacks as $haystack) {
+            $haystack = trim((string) $haystack);
+            if ($haystack === '') {
+                continue;
+            }
+
+            if (levenshtein($normalizedKeyword, $haystack) <= 2) {
+                return true;
+            }
+
+            if (str_contains($haystack, $normalizedKeyword) || str_contains($normalizedKeyword, $haystack)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
