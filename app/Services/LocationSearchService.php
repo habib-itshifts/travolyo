@@ -19,20 +19,107 @@ class LocationSearchService
         }
 
         return collect($this->locationService->getAirports())
-            ->filter(
-                fn($a) => str_contains(mb_strtolower((string) ($a['IATA_CODE'] ?? '')), $keyword)
-                       || str_contains(mb_strtolower((string) ($a['CITY'] ?? '')), $keyword)
-            )
+            ->map(function (array $airport) use ($keyword) {
+                $score = $this->scoreAirport($airport, $keyword);
+
+                if ($score === null) {
+                    return null;
+                }
+
+                return [
+                    'score' => $score,
+                    'item' => [
+                        'code'    => (string) ($airport['IATA_CODE'] ?? ''),
+                        'name'    => (string) ($airport['AIRPORT'] ?? ''),
+                        'city'    => (string) ($airport['CITY'] ?? ''),
+                        'country' => (string) ($airport['COUNTRY'] ?? ''),
+                        'label'   => trim(($airport['IATA_CODE'] ?? '') . ' - ' . ($airport['CITY'] ?? '') . ', ' . ($airport['COUNTRY'] ?? '')),
+                    ],
+                ];
+            })
+            ->filter()
+            ->sortBy(fn (array $row) => sprintf('%04d_%s', $row['score'], mb_strtolower($row['item']['label'] ?? '')))
             ->take(10)
-            ->map(fn($a) => [
-                'code'    => (string) ($a['IATA_CODE'] ?? ''),
-                'name'    => (string) ($a['AIRPORT'] ?? ''),
-                'city'    => (string) ($a['CITY'] ?? ''),
-                'country' => (string) ($a['COUNTRY'] ?? ''),
-                'label'   => trim(($a['IATA_CODE'] ?? '') . ' - ' . ($a['CITY'] ?? '') . ', ' . ($a['COUNTRY'] ?? '')),
-            ])
+            ->map(fn (array $row) => $row['item'])
             ->values()
             ->all();
+    }
+
+    private function scoreAirport(array $airport, string $keyword): ?int
+    {
+        $code = mb_strtolower(trim((string) ($airport['IATA_CODE'] ?? '')));
+        $city = mb_strtolower(trim((string) ($airport['CITY'] ?? '')));
+        $name = mb_strtolower(trim((string) ($airport['AIRPORT'] ?? '')));
+        $country = mb_strtolower(trim((string) ($airport['COUNTRY'] ?? '')));
+
+        if ($code === '' && $city === '' && $name === '') {
+            return null;
+        }
+
+        if ($code === $keyword || $city === $keyword) {
+            return 0;
+        }
+
+        if ($code !== '' && str_starts_with($code, $keyword)) {
+            return 5;
+        }
+
+        if ($city !== '' && str_starts_with($city, $keyword)) {
+            return 8;
+        }
+
+        if ($name !== '' && str_contains($name, $keyword)) {
+            return 10;
+        }
+
+        if ($city !== '' && str_contains($city, $keyword)) {
+            return 12;
+        }
+
+        if ($country !== '' && str_contains($country, $keyword)) {
+            return 20;
+        }
+
+        $compactKeyword = preg_replace('/[^a-z0-9]/', '', $keyword);
+        if ($compactKeyword === '') {
+            return null;
+        }
+
+        foreach (array_filter([$code, $city, $name, $country]) as $candidate) {
+            foreach (preg_split('/[\s,\-\/]+/', $candidate) ?: [] as $part) {
+                $partCompact = preg_replace('/[^a-z0-9]/', '', $part);
+                if ($partCompact === '') {
+                    continue;
+                }
+
+                if (str_starts_with($partCompact, $compactKeyword)) {
+                    return 25;
+                }
+
+                if (mb_strlen($compactKeyword) <= 3 && $this->shortAirportMatch($partCompact, $compactKeyword)) {
+                    return 30;
+                }
+
+                $distance = levenshtein($compactKeyword, mb_substr($partCompact, 0, max(mb_strlen($compactKeyword), 4)));
+                if ($distance <= 2 && abs(mb_strlen($partCompact) - mb_strlen($compactKeyword)) <= 4) {
+                    return 35 + $distance;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function shortAirportMatch(string $haystack, string $keyword): bool
+    {
+        if ($haystack === '' || $keyword === '') {
+            return false;
+        }
+
+        $keywordPrefix = mb_substr($keyword, 0, 2);
+        $haystackPrefix = mb_substr($haystack, 0, 2);
+
+        return $keywordPrefix !== '' && $keywordPrefix === $haystackPrefix;
     }
 
     /**
