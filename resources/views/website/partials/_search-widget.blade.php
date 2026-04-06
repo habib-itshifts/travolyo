@@ -12,7 +12,18 @@
     $defaultSearchCity = '';
     $defaultHotelCheckIn = $defaultHotelCheckIn ?? now()->addDays(4)->format('Y-m-d');
     $defaultHotelCheckOut = $defaultHotelCheckOut ?? now()->addDays(8)->format('Y-m-d');
-    $hotelDestinationValue = request('city', request('destination', $defaultSearchCity));
+
+    // Only fall back to request('destination') on hotel pages — avoids flight destination leaking in
+    $hotelDestinationValue = request('city', $isHotelLikeTab ? request('destination', $defaultSearchCity) : $defaultSearchCity);
+
+    // If the hotel destination looks like an IATA code (e.g. "DXB"), resolve it to the city name ("Dubai")
+    if ($hotelDestinationValue !== '' && preg_match('/^[A-Z]{3}$/', $hotelDestinationValue)) {
+        $resolvedAirport = app(\App\Services\LocationSearchService::class)->findByCode($hotelDestinationValue);
+        if ($resolvedAirport) {
+            $hotelDestinationValue = $resolvedAirport['city'];
+        }
+    }
+
     $activityCityValue = request('city', $defaultSearchCity);
     $initialHotelAdults = max(1, (int) request('adults', 1));
     $initialHotelChildren = max(0, (int) request('children', 0));
@@ -1193,7 +1204,7 @@
                             <div class="input-icon-wrap">
                                 <i class="bi bi-search input-icon"></i>
                                 <input id="hotelDestinationInput" type="text" name="city" class="form-control search-input" placeholder="Enter a destination or property" value="{{ $hotelDestinationValue }}" autocomplete="off" />
-                                <input type="hidden" name="destination" id="hotelDestinationMirror" value="{{ request('destination', $hotelDestinationValue) }}" />
+                                <input type="hidden" name="destination" id="hotelDestinationMirror" value="{{ $isHotelLikeTab ? request('destination', $hotelDestinationValue) : $hotelDestinationValue }}" />
                                 <input type="hidden" name="country" value="{{ request('country', '') }}" />
                                 <input type="hidden" name="country_code" value="{{ request('country_code', '') }}" />
                                 <input type="hidden" name="location" value="{{ request('location', '') }}" />
