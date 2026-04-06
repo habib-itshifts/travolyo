@@ -9,7 +9,7 @@
     $isHotelLikeTab = in_array($activeTab, $hotelLikeTabs, true);
     $widgetVariant = $widgetVariant ?? 'inline';
     $isHeroWidget = $widgetVariant === 'hero';
-    $defaultSearchCity = 'Dubai';
+    $defaultSearchCity = '';
     $defaultHotelCheckIn = $defaultHotelCheckIn ?? now()->addDays(4)->format('Y-m-d');
     $defaultHotelCheckOut = $defaultHotelCheckOut ?? now()->addDays(8)->format('Y-m-d');
     $hotelDestinationValue = request('city', request('destination', $defaultSearchCity));
@@ -1297,7 +1297,7 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-geo-alt input-icon"></i>
-                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ request('destination') }}" autocomplete="off" data-airport-input="destination" />
+                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" autocomplete="off" data-airport-input="destination" />
                                     <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
                                 </div>
                             </div>
@@ -1370,7 +1370,7 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-geo-alt input-icon"></i>
-                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ request('destination') }}" autocomplete="off" data-airport-input="destination" />
+                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" autocomplete="off" data-airport-input="destination" />
                                     <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
                                 </div>
                             </div>
@@ -1554,7 +1554,7 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-geo-alt input-icon"></i>
-                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Flying to city or airport" value="{{ request('destination') }}" autocomplete="off" data-airport-input="destination" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
+                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Flying to city or airport" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" autocomplete="off" data-airport-input="destination" {{ $activeTab !== 'flight_hotel' ? 'disabled' : '' }} />
                                     <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
                                 </div>
                             </div>
@@ -2579,6 +2579,54 @@
             }
         });
     }
+})();
+</script>
+
+<script>
+(function () {
+    const nearbyUrl = '{{ route('api.locations.airports.nearby') }}';
+    const STORAGE_KEY = 'trav_ip_origin_airport';
+    const STORAGE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+    const originInputs = [...document.querySelectorAll('[data-airport-input="origin"]')];
+    if (!originInputs.length) return;
+
+    // Only auto-fill if all origin inputs are empty
+    const allEmpty = originInputs.every(el => !(el.value || '').trim());
+    if (!allEmpty) return;
+
+    const applyAirport = (code) => {
+        originInputs.forEach(el => { el.value = code; });
+    };
+
+    const run = async () => {
+        // Check localStorage cache first
+        try {
+            const cached = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+            if (cached && cached.code && (Date.now() - cached.ts) < STORAGE_TTL) {
+                applyAirport(cached.code);
+                return;
+            }
+        } catch {}
+
+        try {
+            const res = await fetch(nearbyUrl, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+            });
+            if (!res.ok) return;
+            const payload = await res.json();
+            if (!payload.success || !payload.data?.code) return;
+
+            const code = payload.data.code;
+            applyAirport(code);
+
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ code, ts: Date.now() }));
+            } catch {}
+        } catch {}
+    };
+
+    run();
 })();
 </script>
 @endpush

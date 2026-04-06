@@ -69,6 +69,54 @@ class LocationController extends Controller
     }
 
     /**
+     * GET /api/locations/airports/nearby
+     * Detects user IP server-side, resolves city, returns nearest airport.
+     */
+    public function nearbyAirport(Request $request): JsonResponse
+    {
+        $ip = $request->ip();
+
+        // On localhost / private IPs, skip geolocation
+        $isLocal = in_array($ip, ['127.0.0.1', '::1'])
+            || str_starts_with($ip, '192.168.')
+            || str_starts_with($ip, '10.')
+            || str_starts_with($ip, '172.');
+
+        if ($isLocal) {
+            return response()->json(['success' => false, 'message' => 'Local IP'], 422);
+        }
+
+        try {
+            $geo = \Illuminate\Support\Facades\Http::timeout(4)
+                ->withHeaders(['Accept' => 'application/json'])
+                ->get("https://ipapi.co/{$ip}/json/");
+
+            if (! $geo->successful()) {
+                return response()->json(['success' => false, 'message' => 'Geo lookup failed'], 422);
+            }
+
+            $city = $geo->json('city') ?? $geo->json('region') ?? null;
+        } catch (\Throwable) {
+            return response()->json(['success' => false, 'message' => 'Geo error'], 422);
+        }
+
+        if (! $city) {
+            return response()->json(['success' => false, 'message' => 'City not found'], 422);
+        }
+
+        $results = $this->locationSearchService->searchAirports($city);
+
+        if (empty($results)) {
+            return response()->json(['success' => false, 'message' => 'No airport found'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $results[0],
+        ]);
+    }
+
+    /**
      * GET /api/locations/airports/search?keyword=dub
      */
     public function searchAirports(Request $request): JsonResponse
