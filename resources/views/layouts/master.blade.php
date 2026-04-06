@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="currency" content="{{ session('currency', config('currency.default')) }}" />
-
+<meta name="google-site-verification" content="ZmG2HehMNaaxwbpoyOcIDTjplDl92HKElUfJbANNS8Q" />
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#17C3CE" />
