@@ -4,6 +4,7 @@ namespace Modules\Activity\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\Activity\Actions\CheckoutActivityAction;
@@ -91,7 +92,7 @@ class ActivityController extends Controller
             $offer = (new PrebookActivityAction)->handle($dto);
 
             $participants = (int) $validated['participants'];
-            $unitPrice    = $offer->pricePerPerson;
+            $unitPrice    = $offer->basePricePerPerson;
             $totalPrice   = round($unitPrice * $participants, 2);
 
             $checkoutData = [
@@ -108,7 +109,7 @@ class ActivityController extends Controller
                 'participants'      => $participants,
                 'unit_price'        => $unitPrice,
                 'total_price'       => $totalPrice,
-                'currency'          => $offer->currency,
+                'currency'          => $offer->baseCurrency,
             ];
 
             // For local provider, store the image_id for the confirmation page
@@ -123,7 +124,7 @@ class ActivityController extends Controller
                 'success'       => true,
                 'total_price'   => $totalPrice,
                 'unit_price'    => $unitPrice,
-                'currency'      => $offer->currency,
+                'currency'      => $offer->baseCurrency,
                 'checkout_token'=> $token,
                 'checkout_url'  => url('/activities/checkout?token=' . $token),
             ]);
@@ -151,7 +152,7 @@ class ActivityController extends Controller
                 paymentGateway: $validated['payment_gateway'],
                 passengers:     $validated['passengers'],
                 specialRequests:$validated['special_requests'] ?? null,
-                customerId:     auth()->id(),
+                customerId:     Auth::id(),
             );
 
             $result = (new CheckoutActivityAction)->handle($dto);

@@ -18,56 +18,21 @@ class ActivityController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Activity::query()
-            ->with(['image', 'author'])
-            ->published()
-            ->orderByDesc('id');
+        $params = [
+            'destination'          => trim((string) $request->query('city', $request->query('destination', ''))),
+            'city'                 => trim((string) $request->query('city', '')),
+            'country'              => trim((string) $request->query('country', '')),
+            'country_code'         => trim((string) $request->query('country_code', '')),
+            'category'             => trim((string) $request->query('category', '')),
+            'activity_date'        => (string) $request->query('activity_date', now()->format('Y-m-d')),
+            'participants'         => max(1, (int) $request->query('participants', 1)),
+            'price_max'            => $request->filled('price_max') ? (float) $request->query('price_max') : null,
+            'instant_confirmation' => $request->boolean('instant_confirmation'),
+            'sort_by'              => (string) $request->query('sort', 'recommended'),
+        ];
 
-        if ($city = trim((string) $request->query('city', ''))) {
-            $query->where(function ($activityQuery) use ($city) {
-                $activityQuery
-                    ->where('city', 'like', '%'.$city.'%')
-                    ->orWhere('title', 'like', '%'.$city.'%')
-                    ->orWhere('address', 'like', '%'.$city.'%');
-            });
-        }
-
-        if ($country = trim((string) $request->query('country', ''))) {
-            $countryAliases = $this->buildCountrySearchTerms(
-                $country,
-                trim((string) $request->query('country_code', ''))
-            );
-
-            $query->where(function ($activityQuery) use ($country, $countryAliases) {
-                $activityQuery->where('country', 'like', '%'.$country.'%');
-
-                foreach ($countryAliases as $alias) {
-                    $activityQuery->orWhereRaw('UPPER(country) = ?', [$alias]);
-                }
-            });
-        }
-
-        if ($category = trim((string) $request->query('category', ''))) {
-            $query->where('category', $category);
-        }
-
-        if ($request->filled('price_max')) {
-            $query->where('price_per_person', '<=', (float) $request->query('price_max'));
-        }
-
-        if ($request->boolean('instant_confirmation')) {
-            $query->where('instant_confirmation', true);
-        }
-
-        $sort = (string) $request->query('sort', 'recommended');
-        if ($sort === 'price_asc') {
-            $query->orderBy('price_per_person');
-        } elseif ($sort === 'price_desc') {
-            $query->orderByDesc('price_per_person');
-        }
-
-        $activities = $query->paginate(12)->withQueryString();
-        $baseQuery = Activity::query()->published();
+        // Lightweight queries for the filter sidebar only
+        $baseQuery  = Activity::query()->published();
         $categories = (clone $baseQuery)
             ->whereNotNull('category')
             ->where('category', '!=', '')
@@ -76,10 +41,8 @@ class ActivityController extends Controller
             ->pluck('category');
         $maxPrice = (int) ceil((float) ((clone $baseQuery)->max('price_per_person') ?: 1000));
         $maxPrice = max($maxPrice, 1000);
-        $selectedDate = (string) $request->query('activity_date', now()->format('Y-m-d'));
-        $selectedParticipants = max(1, (int) $request->query('participants', 1));
 
-        return view('activity::index', compact('activities', 'categories', 'maxPrice', 'selectedDate', 'selectedParticipants'));
+        return view('activity::index', compact('params', 'categories', 'maxPrice'));
     }
 
     public function show(Activity $activity, Request $request): View

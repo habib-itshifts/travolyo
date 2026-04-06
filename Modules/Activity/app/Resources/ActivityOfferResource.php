@@ -25,8 +25,10 @@ class ActivityOfferResource extends JsonResource
             'description'           => $this->description,
 
             // Pricing
-            'price_per_person'      => $this->pricePerPerson,
-            'currency'              => $this->currency,
+            'base_price_per_person'      => $this->basePricePerPerson,
+            'base_currency'              => $this->baseCurrency,
+            'converted_price_per_person' => $this->convertedPricePerPerson,
+            'converted_currency'         => $this->convertedCurrency,
 
             // Capacity & duration
             'max_participants'      => $this->maxParticipants,

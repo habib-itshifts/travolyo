@@ -21,8 +21,10 @@ class ActivityOfferDto
         public readonly ?string              $description,
 
         // Pricing
-        public readonly float                $pricePerPerson,
-        public readonly string               $currency,
+        public readonly float                $basePricePerPerson,
+        public readonly string               $baseCurrency,
+        public readonly float                $convertedPricePerPerson,
+        public readonly string               $convertedCurrency,
 
         // Capacity & duration
         public readonly ?int                 $maxParticipants,
