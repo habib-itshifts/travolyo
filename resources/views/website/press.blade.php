@@ -2,6 +2,8 @@
 
 @section('title', 'Press - Travolyo')
 
+@section('canonical', 'https://www.travolyo.com/press')
+
 @push('styles')
 <style>
     .press-page {

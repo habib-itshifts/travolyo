@@ -2,6 +2,44 @@
 
 @section('title', 'FAQs')
 
+@section('canonical', 'https://www.travolyo.com/faqs')
+
+@push('schema')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"How does Travolyo work?","acceptedAnswer":{"@type":"Answer","text":"With Travolyo, you can search, compare, and book flights, hotels, apartments, and events online. Once your booking is complete, a confirmation is sent to your registered email."}},
+    {"@type":"Question","name":"Does Travolyo work with verified airlines, hotels, apartments, and event organizers?","acceptedAnswer":{"@type":"Answer","text":"Yes. Travolyo partners with authorized airlines, trusted hotels, verified apartment providers, and event organizers to ensure reliable bookings."}},
+    {"@type":"Question","name":"Is Travolyo a safe platform for booking flights, hotels, apartments, and events?","acceptedAnswer":{"@type":"Answer","text":"Yes. Travolyo uses secure systems and trusted payment gateways to protect your personal and payment information."}},
+    {"@type":"Question","name":"Can I book flights on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. On Travolyo, you can search and book both domestic and international flights through multiple airline partners."}},
+    {"@type":"Question","name":"Are flight prices on Travolyo final?","acceptedAnswer":{"@type":"Answer","text":"Flight prices on Travolyo include all applicable taxes and fees and are confirmed before payment."}},
+    {"@type":"Question","name":"Will I get my flight ticket immediately after booking on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"In most cases, flight tickets on Travolyo are issued shortly after payment confirmation and sent directly to your email."}},
+    {"@type":"Question","name":"Can I manage my flight booking after purchase on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. After booking on Travolyo, airline reference details are provided so you can manage your booking directly with the airline where applicable."}},
+    {"@type":"Question","name":"Can I book hotels on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. On Travolyo, hotel bookings are available across multiple destinations, covering a variety of budgets and stay options."}},
+    {"@type":"Question","name":"Are hotels on Travolyo verified?","acceptedAnswer":{"@type":"Answer","text":"Yes. Hotels on Travolyo are sourced from trusted partners and global suppliers to ensure reliability."}},
+    {"@type":"Question","name":"Can I book apartments on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. Travolyo offers apartment booking options in multiple cities for short-term and long-term stays."}},
+    {"@type":"Question","name":"Will I receive booking confirmation instantly for hotels or apartments on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Most hotel and apartment bookings on Travolyo are confirmed instantly, with details sent to your email."}},
+    {"@type":"Question","name":"Are taxes and fees included in hotel and apartment prices on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. Prices on Travolyo generally include all applicable taxes and fees unless stated otherwise before checkout."}},
+    {"@type":"Question","name":"Can I book tickets for events on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. On Travolyo, you can book tickets for concerts, workshops, and other events through verified partners."}},
+    {"@type":"Question","name":"Are events listed on Travolyo verified?","acceptedAnswer":{"@type":"Answer","text":"Yes. Events on Travolyo are sourced from trusted and authorized organizers."}},
+    {"@type":"Question","name":"Will I receive confirmation instantly for event bookings on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. After successful payment on Travolyo, event booking confirmations are sent immediately to your email."}},
+    {"@type":"Question","name":"What payment methods does Travolyo accept?","acceptedAnswer":{"@type":"Answer","text":"Travolyo supports secure online payment methods, with availability depending on your location and booking type."}},
+    {"@type":"Question","name":"Is my payment information secure on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. On Travolyo, all payment information is protected using encryption and trusted payment gateways."}},
+    {"@type":"Question","name":"Will I receive a payment receipt after booking on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Yes. Once a transaction is completed on Travolyo, a payment confirmation and receipt are sent via email."}},
+    {"@type":"Question","name":"Can I cancel my booking on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"On Travolyo, cancellation eligibility depends on the airline, hotel, apartment, or event policy displayed before booking."}},
+    {"@type":"Question","name":"How do refunds work on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"Refunds on Travolyo are processed according to the supplier cancellation policy and issued to the original payment method."}},
+    {"@type":"Question","name":"How long does a Travolyo refund take?","acceptedAnswer":{"@type":"Answer","text":"Refund timelines on Travolyo vary by supplier and bank and may take several business days to reflect in your account."}},
+    {"@type":"Question","name":"Are all bookings refundable on Travolyo?","acceptedAnswer":{"@type":"Answer","text":"No. On Travolyo, some bookings are non-refundable. Always review cancellation and refund terms before confirming your booking."}},
+    {"@type":"Question","name":"Does Travolyo provide post-booking support?","acceptedAnswer":{"@type":"Answer","text":"Yes. Travolyo offers support for booking confirmations, cancellations, refunds, and related issues."}},
+    {"@type":"Question","name":"How can I contact Travolyo customer support?","acceptedAnswer":{"@type":"Answer","text":"Travolyo customer support can be reached through the official contact channels listed on the website."}},
+    {"@type":"Question","name":"What should I do if I face an issue with my Travolyo booking?","acceptedAnswer":{"@type":"Answer","text":"For assistance, contact Travolyo customer support using the official channels on the website."}}
+  ]
+}
+</script>
+@endpush
+
 @section('content')
 @php
     $faq_groups = [

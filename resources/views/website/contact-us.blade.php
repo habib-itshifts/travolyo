@@ -2,6 +2,8 @@
 
 @section('title', 'Contact Us')
 
+@section('canonical', 'https://www.travolyo.com/contact-us')
+
 @section('content')
 <div class="contact-us-page">
     <section class="contact-hero">

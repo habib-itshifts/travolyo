@@ -2,6 +2,8 @@
 
 @section('title', 'Cookies Policy')
 
+@section('canonical', 'https://www.travolyo.com/cookies-policy')
+
 @section('content')
 <div class="cookies-policy-page">
     <section class="cookies-hero">

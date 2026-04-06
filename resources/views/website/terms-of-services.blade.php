@@ -2,6 +2,8 @@
 
 @section('title', 'Terms of Services')
 
+@section('canonical', 'https://www.travolyo.com/terms-of-services')
+
 @section('content')
 <div class="terms-conditions-page">
     <section class="terms-hero">

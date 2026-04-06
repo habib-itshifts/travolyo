@@ -19,6 +19,16 @@
 
     <title>@yield('title', 'Travolyo') – Where Your Journey Takes Off</title>
 
+    {{-- Canonical Tag --}}
+    @hasSection('canonical')
+        <link rel="canonical" href="@yield('canonical')" />
+    @else
+        <link rel="canonical" href="{{ rtrim(config('app.url'), '/') . '/' . ltrim(request()->path() === '/' ? '' : request()->path(), '/') }}" />
+    @endif
+
+    {{-- Page Schema (JSON-LD) --}}
+    @stack('schema')
+
     {{-- Bootstrap 5 --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     {{-- Bootstrap Icons --}}

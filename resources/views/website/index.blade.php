@@ -1,5 +1,36 @@
 @extends('layouts.master')
 
+@section('canonical', 'https://www.travolyo.com/')
+
+@push('schema')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Travolyo",
+  "url": "https://www.travolyo.com",
+  "logo": "https://www.travolyo.com/assets/logo/travolyo-logo.svg",
+  "description": "Travolyo helps users book flights, hotels, and travel activities worldwide.",
+  "foundingDate": "2025",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+97142296659",
+    "contactType": "customer service",
+    "email": "support@travolyo.com",
+    "areaServed": "Worldwide",
+    "availableLanguage": ["English"]
+  },
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Glass Building - Office 201, Al Maktoum Rd, next to Khalidiya Palace Hotel",
+    "addressLocality": "Al Muraqqabat",
+    "addressRegion": "Dubai",
+    "addressCountry": "United Arab Emirates"
+  }
+}
+</script>
+@endpush
+
 @php
     $directoryTabs = collect(data_get($topCitiesConfig ?? [], 'tabs', []))->values();
     $topCitiesTab = $directoryTabs->firstWhere('key', 'top_cities_to_book') ?? [];

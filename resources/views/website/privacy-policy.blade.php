@@ -2,6 +2,8 @@
 
 @section('title', 'Privacy Policy')
 
+@section('canonical', 'https://www.travolyo.com/privacy-policy')
+
 @section('content')
 <div class="privacy-policy-page">
     <section class="privacy-hero">

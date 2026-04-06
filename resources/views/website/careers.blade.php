@@ -2,6 +2,8 @@
 
 @section('title', 'Careers')
 
+@section('canonical', 'https://www.travolyo.com/careers')
+
 @section('content')
 <div class="careers-page">
     <section class="careers-hero">

@@ -1,2 +1,39 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /*$
+Allow: /page/
+Allow: /hotel/
+Allow: /event/
+Allow: /space/
+Allow: /news/
+Allow: /location/
+Allow: /ar/
+Allow: /blog/
+
+Disallow: /admin
+Disallow: /agent/
+Disallow: /user/
+Disallow: /profile/
+Disallow: /public/
+Disallow: /*?page=2
+Disallow: /*?page=3
+Disallow: /*?page=*
+Disallow: /*?location_id=
+Disallow: /*?term_id=
+Disallow: /*?terms%5B
+Disallow: /*?_layout=
+Disallow: /chat
+Disallow: /user/chat
+Disallow: /messages
+Disallow: /api/
+Disallow: /includes/
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /cache/
+Disallow: /logs/
+Disallow: /backup/
+Disallow: /config/
+Disallow: /search
+Disallow: /results
+
+Sitemap: https://www.travolyo.com/sitemap-index.xml
