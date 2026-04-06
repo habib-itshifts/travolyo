@@ -15,14 +15,11 @@ use Modules\Hotel\Providers\HotelProviderInterface;
 class HyperguestHotelProvider implements HotelProviderInterface
 {
     private HyperguestHotelMapper $mapper;
-    private string $bookingResponsePath;
-
     protected array $headers;
 
     public function __construct()
     {
         $this->mapper = new HyperguestHotelMapper();
-        $this->bookingResponsePath = public_path('data/hyperguest/booking_response.json');
         $this->headers = [
             'Accept-Encoding' => 'gzip, deflate',
             'Accept' => 'application/json',
@@ -103,7 +100,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'from' => $checkoutData['check_in'],
                 'to' => $checkoutData['check_out'],
             ],
-            'propertyId' => $keys['property_id'],
+            'propertyId' => (int) $keys['property_id'],
             'leadGuest' => [
                 'birthDate' => $guest['birth_date'] ?? '1990-01-01',
                 'contact' => [
@@ -128,7 +125,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'roomCode' => $keys['room_code'],
                 'rateCode' => $keys['rate_code'],
                 'expectedPrice' => [
-                    'amount' => $checkoutData['total_price'],
+                    'amount' => (float) $checkoutData['total_price'],
                     'currency' => $checkoutData['currency'],
                 ],
                 'guests' => [[
@@ -150,22 +147,19 @@ class HyperguestHotelProvider implements HotelProviderInterface
             'groupBooking' => false,
         ];
 
-        $response = $this->loadBookingResponse();
-        $response['reference'] = $payload['reference'];
-        $response['content']['dates'] = $payload['dates'];
-        $response['leadGuest']['name'] = $payload['leadGuest']['name'];
-        $response['leadGuest']['contact']['email'] = $guest['email'];
-        $response['leadGuest']['contact']['phone'] = $guest['phone'];
+        $response = Http::withHeaders($this->headers)
+            ->acceptJson()
+            ->timeout(30)
+            ->post('https://book-api.hyperguest.com/2.0/booking/create', $payload);
 
-        if (! empty($response['rooms'][0])) {
-            $response['rooms'][0]['roomCode'] = $keys['room_code'];
-            $response['rooms'][0]['rateCode'] = $keys['rate_code'];
-            $response['rooms'][0]['propertyId'] = $keys['property_id'];
+        if ($response->failed()) {
+            throw new HotelException(
+                'Hyperguest booking failed: ' . $response->status() . ' ' . $response->body(),
+                $response->status()
+            );
         }
 
-        $response['_request_payload'] = $payload;
-
-        return $response;
+        return $response->json();
     }
 
     public function getOrder(string $orderId): HotelOrderDto
@@ -397,18 +391,4 @@ class HyperguestHotelProvider implements HotelProviderInterface
         return true;
     }
 
-    private function loadBookingResponse(): array
-    {
-        if (! is_file($this->bookingResponsePath)) {
-            throw new \RuntimeException('Hyperguest booking response fixture not found.');
-        }
-
-        $decoded = json_decode((string) file_get_contents($this->bookingResponsePath), true);
-
-        if (! is_array($decoded)) {
-            throw new \RuntimeException('Hyperguest booking response fixture is invalid JSON.');
-        }
-
-        return $decoded;
-    }
 }
