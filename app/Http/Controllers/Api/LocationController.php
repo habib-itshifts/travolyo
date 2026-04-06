@@ -86,34 +86,61 @@ class LocationController extends Controller
             return response()->json(['success' => false, 'message' => 'Local IP'], 422);
         }
 
-        try {
-            $geo = \Illuminate\Support\Facades\Http::timeout(4)
-                ->withHeaders(['Accept' => 'application/json'])
-                ->get("https://ipapi.co/{$ip}/json/");
-
-            if (! $geo->successful()) {
-                return response()->json(['success' => false, 'message' => 'Geo lookup failed'], 422);
-            }
-
-            $city = $geo->json('city') ?? $geo->json('region') ?? null;
-        } catch (\Throwable) {
-            return response()->json(['success' => false, 'message' => 'Geo error'], 422);
+        // Cache per IP for 6 hours to avoid hitting rate limits
+        $cacheKey = 'nearby_airport_' . md5($ip);
+        $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+        if ($cached !== null) {
+            return response()->json($cached);
         }
 
+        $city = $this->resolveCity($ip);
+
         if (! $city) {
-            return response()->json(['success' => false, 'message' => 'City not found'], 422);
+            $fail = ['success' => false, 'message' => 'City not found'];
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $fail, now()->addHour());
+            return response()->json($fail, 422);
         }
 
         $results = $this->locationSearchService->searchAirports($city);
 
         if (empty($results)) {
-            return response()->json(['success' => false, 'message' => 'No airport found'], 422);
+            $fail = ['success' => false, 'message' => 'No airport found'];
+            \Illuminate\Support\Facades\Cache::put($cacheKey, $fail, now()->addHour());
+            return response()->json($fail, 422);
         }
 
-        return response()->json([
-            'success' => true,
-            'data'    => $results[0],
-        ]);
+        $result = ['success' => true, 'data' => $results[0]];
+        \Illuminate\Support\Facades\Cache::put($cacheKey, $result, now()->addHours(6));
+
+        return response()->json($result);
+    }
+
+    /**
+     * Try multiple IP geolocation services in order, return city string or null.
+     */
+    private function resolveCity(string $ip): ?string
+    {
+        // 1. ip-api.com — 45 req/min free, very reliable
+        try {
+            $res = \Illuminate\Support\Facades\Http::timeout(5)
+                ->get("http://ip-api.com/json/{$ip}?fields=status,city,regionName");
+
+            if ($res->successful() && $res->json('status') === 'success') {
+                return $res->json('city') ?? $res->json('regionName') ?? null;
+            }
+        } catch (\Throwable) {}
+
+        // 2. ipwho.is — free HTTPS fallback
+        try {
+            $res = \Illuminate\Support\Facades\Http::timeout(5)
+                ->get("https://ipwho.is/{$ip}");
+
+            if ($res->successful() && $res->json('success') === true) {
+                return $res->json('city') ?? $res->json('region') ?? null;
+            }
+        } catch (\Throwable) {}
+
+        return null;
     }
 
     /**

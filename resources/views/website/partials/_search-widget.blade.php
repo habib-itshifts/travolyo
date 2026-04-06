@@ -2586,17 +2586,16 @@
 (function () {
     const nearbyUrl = '{{ route('api.locations.airports.nearby') }}';
     const STORAGE_KEY = 'trav_ip_origin_airport';
-    const STORAGE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+    const STORAGE_TTL = 6 * 60 * 60 * 1000; // 6 hours (matches server cache)
 
     const originInputs = [...document.querySelectorAll('[data-airport-input="origin"]')];
     if (!originInputs.length) return;
 
-    // Only auto-fill if all origin inputs are empty
-    const allEmpty = originInputs.every(el => !(el.value || '').trim());
-    if (!allEmpty) return;
-
     const applyAirport = (code) => {
-        originInputs.forEach(el => { el.value = code; });
+        // Re-check emptiness at apply time so we never overwrite user input
+        originInputs.forEach(el => {
+            if (!(el.value || '').trim()) el.value = code;
+        });
     };
 
     const run = async () => {
@@ -2607,12 +2606,22 @@
                 applyAirport(cached.code);
                 return;
             }
-        } catch {}
+            // Remove stale/corrupt cache entries
+            localStorage.removeItem(STORAGE_KEY);
+        } catch {
+            localStorage.removeItem(STORAGE_KEY);
+        }
 
         try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 8000);
+
             const res = await fetch(nearbyUrl, {
+                signal: controller.signal,
                 headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
             });
+            clearTimeout(timer);
+
             if (!res.ok) return;
             const payload = await res.json();
             if (!payload.success || !payload.data?.code) return;
@@ -2626,7 +2635,12 @@
         } catch {}
     };
 
-    run();
+    // Run after DOM is fully ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+    } else {
+        run();
+    }
 })();
 </script>
 @endpush
