@@ -136,13 +136,13 @@
         ->values();
     $uaeDestinationCards = collect($uaeDestinationCards ?? []);
     $accommodationPromotions = [
-        ['image' => asset('assets/images/website/accomodaion-pomotion/accomodation-promations-1.png'), 'alt' => 'Accommodation Promotion 1'],
-        ['image' => asset('assets/images/website/accomodaion-pomotion/accomodation-promations-2.png'), 'alt' => 'Accommodation Promotion 2'],
-        ['image' => asset('assets/images/website/accomodaion-pomotion/accomodation-promations-3.png'), 'alt' => 'Accommodation Promotion 3'],
+        ['image' => asset('assets/images/website/accomodaion-pomotion/image-1.png'), 'alt' => 'Luxury hotel resort'],
+        ['image' => asset('assets/images/website/accomodaion-pomotion/image-2.png'), 'alt' => 'Resort pool and stay offer'],
+        ['image' => asset('assets/images/website/accomodaion-pomotion/image-3.png'), 'alt' => 'City hotel promotion'],
     ];
     $flightActivityPromotions = [
-        ['image' => asset('assets/images/website/accomodaion-pomotion/accomodation-promations-4.png'), 'alt' => 'Flights and Activities Promotion 1'],
-        ['image' => asset('assets/images/website/accomodaion-pomotion/accomodation-promations-5.png'), 'alt' => 'Flights and Activities Promotion 2'],
+        ['image' => asset('assets/images/website/accomodaion-pomotion/image-4.png'), 'alt' => 'Airplane travel promotion'],
+        ['image' => asset('assets/images/website/accomodaion-pomotion/image-5.png'), 'alt' => 'Adventure activities promotion'],
     ];
     $inspireTripCards = [
         ['title' => 'Anywhere', 'badge' => null, 'image' => asset('assets/images/website/inspired-trip/inpired-trip-image-1.avif'), 'active' => false],
@@ -703,22 +703,23 @@
     display: block;
     margin: 0;
     overflow: hidden;
+    aspect-ratio: 16 / 9;
 }
 
 .promotion-static-card img {
     display: block;
     height: 100%;
-    object-fit: cover;
+    /* object-fit: cover; */
     object-position: center center;
     width: 100%;
 }
 
 .promotion-static-grid--three .promotion-static-card {
-    min-height: 160px;
+    min-height: 146px;
 }
 
 .promotion-static-grid--two .promotion-static-card {
-    min-height: 176px;
+    min-height: 146px;
 }
 
 .promotion-static-arrow {

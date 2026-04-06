@@ -2158,6 +2158,17 @@
         });
     };
 
+    const formatAirportSelection = (item = {}) => {
+        const city = (item.city || '').trim();
+        const code = (item.code || '').trim().toUpperCase();
+
+        if (city && code) {
+            return `${city} (${code})`;
+        }
+
+        return city || code || '';
+    };
+
     const setHotelDestinationMeta = (item = {}) => {
         if (hotelDestinationMirror) {
             hotelDestinationMirror.value = item.destination || item.city || item.country || hotelDestinationInput?.value || '';
@@ -2209,7 +2220,12 @@
 
         list.querySelectorAll('.airport-suggest-item').forEach((btn) => {
             btn.addEventListener('click', () => {
-                syncAirportInputs(type, (btn.dataset.code || '').toUpperCase());
+                const item = {
+                    code: btn.dataset.code || '',
+                    city: btn.dataset.city || '',
+                    country: btn.dataset.country || '',
+                };
+                syncAirportInputs(type, formatAirportSelection(item));
                 hideAllLists();
             });
         });
