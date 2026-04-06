@@ -165,7 +165,7 @@ class LocationSearchService
             return 60;
         }
 
-        $fuzzyMatches = array_filter([
+        $searchValues = array_filter([
             $city,
             $destination,
             $displayName,
@@ -173,41 +173,113 @@ class LocationSearchService
             $region,
         ]);
 
-        if ($this->matchesFuzzyKeyword($fuzzyMatches, $keyword)) {
-            return 70;
+        $fuzzyScore = $this->matchesSearchKeyword($searchValues, $keyword);
+        if ($fuzzyScore !== null) {
+            return $fuzzyScore;
         }
 
         return null;
     }
 
     /**
-     * Allow small typing mistakes while keeping the match tight.
+     * Match partial words in city/country names without pulling random results.
      */
-    private function matchesFuzzyKeyword(array $haystacks, string $keyword): bool
+    private function matchesSearchKeyword(array $haystacks, string $keyword): ?int
     {
         $keyword = trim($keyword);
 
-        if ($keyword === '' || mb_strlen($keyword) < 3) {
-            return false;
+        if ($keyword === '') {
+            return null;
         }
 
-        $normalizedKeyword = preg_replace('/\s+/', ' ', $keyword);
+        $normalizedKeyword = mb_strtolower(preg_replace('/\s+/', ' ', $keyword));
+        $keywordCompact = preg_replace('/[^a-z0-9]/', '', $normalizedKeyword);
+        $bestScore = null;
+        $shortKeyword = mb_strlen($keywordCompact) <= 3;
 
         foreach ($haystacks as $haystack) {
-            $haystack = trim((string) $haystack);
+            $haystack = mb_strtolower(trim((string) $haystack));
             if ($haystack === '') {
                 continue;
             }
 
-            if (levenshtein($normalizedKeyword, $haystack) <= 2) {
-                return true;
+            $haystackCompact = preg_replace('/[^a-z0-9]/', '', $haystack);
+
+            if ($haystackCompact !== '' && str_contains($haystackCompact, $keywordCompact)) {
+                return 20;
             }
 
-            if (str_contains($haystack, $normalizedKeyword) || str_contains($normalizedKeyword, $haystack)) {
-                return true;
+            foreach (preg_split('/[\s,\-\/]+/', $haystack) ?: [] as $part) {
+                $part = trim($part);
+                if ($part === '') {
+                    continue;
+                }
+
+                $partCompact = preg_replace('/[^a-z0-9]/', '', $part);
+                $score = $this->scoreCandidate($partCompact, $keywordCompact);
+                if ($score === null) {
+                    continue;
+                }
+
+                if ($shortKeyword && $this->matchesShortKeyword($partCompact, $keywordCompact)) {
+                    return 0;
+                }
+
+                $bestScore = $bestScore === null ? $score : min($bestScore, $score);
+                if ($bestScore === 0) {
+                    return 0;
+                }
             }
         }
 
-        return false;
+        return $bestScore;
     }
+
+    private function scoreCandidate(string $haystack, string $keyword): ?int
+    {
+        if ($haystack === '' || $keyword === '') {
+            return null;
+        }
+
+        if (str_starts_with($haystack, $keyword)) {
+            return 0;
+        }
+
+        $shortHaystack = mb_substr($haystack, 0, max(mb_strlen($keyword), 4));
+        $distance = levenshtein($keyword, $shortHaystack);
+
+        if (mb_strlen($keyword) >= 3 && soundex($haystack) === soundex($keyword)) {
+            $distance = min($distance, 2);
+        }
+
+        if (abs(mb_strlen($haystack) - mb_strlen($keyword)) > 5) {
+            return null;
+        }
+
+        return ($distance * 10) + abs(mb_strlen($haystack) - mb_strlen($keyword));
+    }
+
+    private function matchesShortKeyword(string $haystack, string $keyword): bool
+    {
+        if ($haystack === '' || $keyword === '') {
+            return false;
+        }
+
+        if (str_starts_with($haystack, $keyword)) {
+            return true;
+        }
+
+        $keywordPrefix = mb_substr($keyword, 0, 2);
+        $haystackPrefix = mb_substr($haystack, 0, 2);
+
+        if ($keywordPrefix !== '' && $keywordPrefix === $haystackPrefix) {
+            return true;
+        }
+
+        $normalizedHaystack = preg_replace('/[aeiouy]/', '', $haystack);
+        $normalizedKeyword = preg_replace('/[aeiouy]/', '', $keyword);
+
+        return $normalizedHaystack !== '' && $normalizedHaystack === $normalizedKeyword;
+    }
+
 }
