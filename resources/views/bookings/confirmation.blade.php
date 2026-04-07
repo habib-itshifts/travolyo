@@ -347,6 +347,40 @@
                                 'participants' => $activitySearchParams['participants'] ?? 1,
                             ]);
                         @endphp
+                        @php
+                            $selectedCurrency = strtoupper((string) session('currency', $bookingData['currency'] ?? 'USD'));
+                            $activityCurrency = strtoupper((string) (
+                                is_object($activity)
+                                    ? $selectedCurrency
+                                    : data_get($activity, 'converted_currency', data_get($bookingData, 'currency', data_get($activity, 'base_currency', 'AED')))
+                            ));
+                            $activityPrice = (float) (
+                                is_object($activity)
+                                    ? ($activity->convertedPricePerPerson
+                                        ?? $activity->basePricePerPerson
+                                        ?? $activity->pricePerPerson
+                                        ?? $activity->price_per_person
+                                        ?? $activity->price
+                                        ?? 0)
+                                    : data_get($activity, 'converted_price_per_person', data_get($activity, 'base_price_per_person', data_get($activity, 'pricePerPerson', data_get($activity, 'price_per_person', data_get($activity, 'price', 0)))))
+                            );
+                        @endphp
+                        @php
+                            $activityBaseCurrency = strtoupper((string) (
+                                is_object($activity)
+                                    ? ($activity->baseCurrency
+                                        ?? 'AED')
+                                    : data_get($activity, 'base_currency', 'AED')
+                            ));
+                            $activityBasePrice = (float) (
+                                is_object($activity)
+                                    ? ($activity->basePricePerPerson
+                                        ?? $activity->price_per_person
+                                        ?? $activity->price
+                                        ?? 0)
+                                    : data_get($activity, 'base_price_per_person', data_get($activity, 'price_per_person', data_get($activity, 'price', 0)))
+                            );
+                        @endphp
                         <a href="{{ $activityCheckoutUrl }}" class="activity-card">
                             <img src="{{ $activityImage }}" alt="{{ $activity->title }}" class="activity-card__image" loading="lazy">
                             <div class="flex-grow-1">
@@ -365,7 +399,7 @@
                                 <div class="activity-card__bottom">
                                     <div class="activity-card__price">
                                         from
-                                        <strong>{{ $activity->currency }} {{ number_format((float) $activity->pricePerPerson, 2) }}</strong>
+                                        <strong>{{ $activityCurrency }} {{ number_format($activityPrice, 2) }} @if($activityBasePrice > 0) <span class="text-muted">({{ $activityBaseCurrency }} {{ number_format($activityBasePrice, 2) }})</span>@endif</strong>
                                     </div>
                                     <span class="activity-card__cta">Book Now</span>
                                 </div>

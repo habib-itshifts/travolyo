@@ -70,7 +70,7 @@ class BookingController extends Controller
                     'destination' => $activitySearchParams['city'],
                     'activity_date' => $activitySearchParams['activity_date'],
                     'participants' => $activitySearchParams['participants'],
-                    'currency' => strtoupper((string) ($hotel['currency'] ?? $booking->currency ?? 'AED')),
+                    'currency' => strtoupper((string) session('currency', $hotel['currency'] ?? $booking->currency ?? 'AED')),
                 ]))['offers'] ?? [])
                     ->take(3)
                     ->values()

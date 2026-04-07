@@ -12,7 +12,7 @@
     $children   = (int) ($hc['children']    ?? 0);
     $unitPrice  = (float) ($hc['unit_price']  ?? 0);
     $totalPrice = (float) ($hc['total_price'] ?? 0);
-    $currency   = $hc['currency'] ?? 'USD';
+    $currency   = strtoupper((string) session('currency', $hc['currency'] ?? config('currency.default', 'USD')));
 @endphp
 
 @push('styles')

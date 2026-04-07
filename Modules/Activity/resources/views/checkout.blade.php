@@ -339,8 +339,10 @@
 
 @section('content')
 @php
-    $unitPrice = (float) ($activity->price_per_person ?: 0);
-    $currency = strtoupper((string) ($activity->currency ?: 'AED'));
+    $basePrice = (float) ($displayBasePrice ?? ($activity->price_per_person ?? 0));
+    $baseCurrency = strtoupper((string) ($displayBaseCurrency ?? $activity->currency ?? 'AED'));
+    $unitPrice = (float) ($displayConvertedPrice ?? $basePrice);
+    $currency = strtoupper((string) ($displayCurrency ?? session('currency', $baseCurrency)));
     $activityImage = $activity->image_url ?: asset('assets/images/favicon/favicon1.png');
     $participantsValue = (int) old('participants', $participants);
     $todayDate = now()->toDateString();
@@ -616,11 +618,20 @@
                 <hr class="summary-card__divider">
 
                 <div class="summary-price-breakdown">
-                    {{ $currency }} {{ number_format($unitPrice, 2) }} x <span id="participantCountBreakdown">{{ $participantsValue }}</span> participant(s)
+                    {{ $currency }} {{ number_format($unitPrice, 2) }}
+                    @if($basePrice > 0)
+                        <span class="text-muted">({{ $baseCurrency }} {{ number_format($basePrice, 2) }})</span>
+                    @endif
+                    x <span id="participantCountBreakdown">{{ $participantsValue }}</span> participant(s)
                 </div>
                 <div class="summary-row">
                     <span class="summary-row__label">Subtotal</span>
-                    <span class="summary-row__value" id="activitySubtotalLabel">{{ $currency }} {{ number_format($unitPrice * $participantsValue, 2) }}</span>
+                    <span class="summary-row__value" id="activitySubtotalLabel">
+                        {{ $currency }} {{ number_format($unitPrice * $participantsValue, 2) }}
+                        @if($basePrice > 0)
+                            <span class="text-muted">({{ $baseCurrency }} {{ number_format($basePrice * $participantsValue, 2) }})</span>
+                        @endif
+                    </span>
                 </div>
                 <div class="summary-row">
                     <span class="summary-row__label">Taxes &amp; fees</span>
@@ -631,7 +642,12 @@
 
                 <div class="summary-total">
                     <span>Total</span>
-                    <span id="activityTotalLabel">{{ $currency }} {{ number_format($unitPrice * $participantsValue, 2) }}</span>
+                    <span id="activityTotalLabel">
+                        {{ $currency }} {{ number_format($unitPrice * $participantsValue, 2) }}
+                        @if($basePrice > 0)
+                            <span class="text-muted">({{ $baseCurrency }} {{ number_format($basePrice * $participantsValue, 2) }})</span>
+                        @endif
+                    </span>
                 </div>
 
                 <div class="form-check summary-terms">
