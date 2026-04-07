@@ -168,11 +168,27 @@
         }
     </style>
 
+    {{-- PWA Install Banner --}}
+    <div id="pwa-install-banner" style="display:none;position:fixed;top:1rem;right:1rem;z-index:10000;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.18);padding:1.1rem 1.25rem 1rem;max-width:300px;width:calc(100vw - 2rem);font-family:var(--site-font-family,Inter,sans-serif);">
+        <div style="font-weight:700;font-size:.97rem;color:#1a2942;margin-bottom:.25rem;">Install Travolyo</div>
+        <div style="font-size:.8rem;color:#6b7280;margin-bottom:.9rem;line-height:1.4;">Add Travolyo to your desktop for quick access — works like a native app, no browser needed.</div>
+        <div style="display:flex;gap:.6rem;">
+            <button id="pwa-dismiss-btn" style="flex:1;padding:.45rem .75rem;border:1.5px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:.82rem;font-weight:500;cursor:pointer;">Not now</button>
+            <button id="pwa-install-btn" style="flex:1;padding:.45rem .75rem;border:none;border-radius:8px;background:#17C3CE;color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.3rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/></svg>
+                Install App
+            </button>
+        </div>
+    </div>
+
     {{-- PWA: Service Worker + Install Prompt --}}
     <script>
     (function () {
         var deferredPrompt = null;
+        var banner = document.getElementById('pwa-install-banner');
         var installBtn = document.getElementById('pwa-install-btn');
+        var dismissBtn = document.getElementById('pwa-dismiss-btn');
+        var DISMISSED_KEY = 'pwa_banner_dismissed';
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
@@ -182,26 +198,46 @@
             });
         }
 
+        // Don't show if already installed or previously dismissed
+        if (window.matchMedia('(display-mode: standalone)').matches || localStorage.getItem(DISMISSED_KEY)) {
+            banner && (banner.style.display = 'none');
+        }
+
         window.addEventListener('beforeinstallprompt', function (e) {
             e.preventDefault();
             deferredPrompt = e;
+            if (banner && !localStorage.getItem(DISMISSED_KEY) && !window.matchMedia('(display-mode: standalone)').matches) {
+                setTimeout(function () { banner.style.display = 'block'; }, 3000);
+            }
         });
 
         if (installBtn) {
             installBtn.addEventListener('click', function () {
                 if (deferredPrompt) {
+                    banner && (banner.style.display = 'none');
                     deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
-                } else if (window.matchMedia('(display-mode: standalone)').matches) {
-                    showPwaToast('Travolyo is already installed on your device.');
+                    deferredPrompt.userChoice.then(function (choice) {
+                        if (choice.outcome === 'accepted') {
+                            localStorage.setItem(DISMISSED_KEY, '1');
+                        }
+                        deferredPrompt = null;
+                    });
                 } else {
                     showPwaToast('To install: open your browser menu and choose "Install app" or "Add to Home Screen".');
                 }
             });
         }
 
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', function () {
+                banner && (banner.style.display = 'none');
+                localStorage.setItem(DISMISSED_KEY, '1');
+            });
+        }
+
         window.addEventListener('appinstalled', function () {
-            if (installBtn) installBtn.style.display = 'none';
+            banner && (banner.style.display = 'none');
+            localStorage.setItem(DISMISSED_KEY, '1');
             deferredPrompt = null;
         });
 

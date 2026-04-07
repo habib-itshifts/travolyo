@@ -65,7 +65,7 @@ class LocalActivityProvider implements ActivityProviderInterface
 
         return [
             'offers' => collect($activities->items())
-                ->map(fn (Activity $a) => $this->mapper->toOfferDto($a))
+                ->map(fn (Activity $a) => $this->mapper->toOfferDto($a, $dto->currency))
                 ->all(),
             'pagination' => [
                 'current_page' => $activities->currentPage(),
