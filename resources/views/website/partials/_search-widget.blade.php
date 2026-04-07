@@ -1297,7 +1297,8 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-send input-icon"></i>
-                                    <input type="text" name="origin" class="form-control search-input airport-autocomplete" placeholder="Departure city or IATA" value="{{ request('origin') }}" autocomplete="off" data-airport-input="origin" />
+                                    <input type="text" name="origin_display" class="form-control search-input airport-autocomplete" placeholder="Departure city or IATA" value="{{ request()->filled('origin_display') ? request('origin_display') : (request()->filled('origin') ? request('origin') : '') }}" autocomplete="off" data-airport-input="origin" />
+                                    <input type="hidden" name="origin" value="{{ request('origin') }}" data-airport-code="origin" />
                                     <div class="airport-suggest-list d-none" data-airport-list="origin"></div>
                                 </div>
                             </div>
@@ -1308,7 +1309,8 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-geo-alt input-icon"></i>
-                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" autocomplete="off" data-airport-input="destination" />
+                                    <input type="text" name="destination_display" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? (request()->filled('destination_display') ? request('destination_display') : (request()->filled('destination') ? request('destination') : '')) : '' }}" autocomplete="off" data-airport-input="destination" />
+                                    <input type="hidden" name="destination" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" data-airport-code="destination" />
                                     <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
                                 </div>
                             </div>
@@ -1370,7 +1372,8 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-send input-icon"></i>
-                                    <input type="text" name="origin" class="form-control search-input airport-autocomplete" placeholder="Departure city or IATA" value="{{ request('origin') }}" autocomplete="off" data-airport-input="origin" />
+                                    <input type="text" name="origin_display" class="form-control search-input airport-autocomplete" placeholder="Departure city or IATA" value="{{ request()->filled('origin_display') ? request('origin_display') : (request()->filled('origin') ? request('origin') : '') }}" autocomplete="off" data-airport-input="origin" />
+                                    <input type="hidden" name="origin" value="{{ request('origin') }}" data-airport-code="origin" />
                                     <div class="airport-suggest-list d-none" data-airport-list="origin"></div>
                                 </div>
                             </div>
@@ -1381,7 +1384,8 @@
                             <div class="trav-field__surface flight-airport-field">
                                 <div class="input-icon-wrap">
                                     <i class="bi bi-geo-alt input-icon"></i>
-                                    <input type="text" name="destination" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" autocomplete="off" data-airport-input="destination" />
+                                    <input type="text" name="destination_display" class="form-control search-input airport-autocomplete" placeholder="Destination city or IATA" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? (request()->filled('destination_display') ? request('destination_display') : (request()->filled('destination') ? request('destination') : '')) : '' }}" autocomplete="off" data-airport-input="destination" />
+                                    <input type="hidden" name="destination" value="{{ in_array($activeTab, ['flights', 'flight_hotel']) ? request('destination') : '' }}" data-airport-code="destination" />
                                     <div class="airport-suggest-list d-none" data-airport-list="destination"></div>
                                 </div>
                             </div>
@@ -2112,6 +2116,8 @@
     const destinationInputs = [...document.querySelectorAll('[data-airport-input="destination"]')];
     const originLists = [...document.querySelectorAll('[data-airport-list="origin"]')];
     const destinationLists = [...document.querySelectorAll('[data-airport-list="destination"]')];
+    const originCodes = [...document.querySelectorAll('[data-airport-code="origin"]')];
+    const destinationCodes = [...document.querySelectorAll('[data-airport-code="destination"]')];
     const airportRequestState = new WeakMap();
     let activeList = null;
 
@@ -2156,6 +2162,18 @@
         inputs.forEach((input) => {
             input.value = value;
         });
+    };
+
+    const syncAirportCodes = (type, code) => {
+        if (type === 'origin') {
+            originCodes.forEach((input) => {
+                input.value = code || '';
+            });
+        } else if (type === 'destination') {
+            destinationCodes.forEach((input) => {
+                input.value = code || '';
+            });
+        }
     };
 
     const formatAirportSelection = (item = {}) => {
@@ -2226,6 +2244,7 @@
                     country: btn.dataset.country || '',
                 };
                 syncAirportInputs(type, formatAirportSelection(item));
+                syncAirportCodes(type, item.code || '');
                 hideAllLists();
             });
         });
@@ -2305,6 +2324,9 @@
 
             input.addEventListener('input', () => {
                 syncAirportInputs(type, input.value);
+                const raw = (input.value || '').trim();
+                const match = raw.match(/\(([A-Za-z]{3})\)\s*$/);
+                syncAirportCodes(type, match ? match[1].toUpperCase() : (/^[A-Za-z]{3}$/.test(raw) ? raw.toUpperCase() : ''));
                 handler();
             });
 
@@ -2587,7 +2609,9 @@
 
                 const qs = new URLSearchParams({
                     origin: payload.origin ?? '',
+                    origin_display: fd.get('origin_display') ?? '',
                     destination: payload.destination ?? '',
+                    destination_display: fd.get('destination_display') ?? '',
                     departure_date: payload.departure_date ?? '',
                     trip_type: payload.trip_type ?? 'one_way',
                     adults: payload.adults ?? 1,
