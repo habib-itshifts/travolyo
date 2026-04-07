@@ -24,11 +24,17 @@ class HotelController extends Controller
     {
         $destination = trim((string) $request->query('destination', ''));
 
-        if ($destination !== '' && $request->query('city', '') === '') {
+        if ($destination !== '') {
             $resolved = $this->resolveDestinationConfig($destination);
 
             if ($resolved !== []) {
-                $request->merge($resolved);
+                $request->merge(array_merge($resolved, array_filter([
+                    'destination' => $destination,
+                    'city' => $request->query('city', '') !== '' ? (string) $request->query('city', '') : ($resolved['city'] ?? ''),
+                    'country' => (string) $request->query('country', $resolved['country'] ?? ''),
+                    'country_code' => (string) $request->query('country_code', $resolved['country_code'] ?? ''),
+                    'location' => (string) $request->query('location', $resolved['location'] ?? ''),
+                ], static fn ($value) => $value !== '')));
             }
         }
 
