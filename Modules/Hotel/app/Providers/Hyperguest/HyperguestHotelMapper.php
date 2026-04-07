@@ -18,6 +18,7 @@ class HyperguestHotelMapper
     public function toOfferDto(array $hotel, int $nights, string $currency): HotelOfferDto
     {
         $property = $hotel['propertyInfo'] ?? [];
+        dd($hotel);
 
         $rooms = collect($hotel['rooms'] ?? [])
             ->flatMap(fn (array $room) => $this->toRoomOfferDtos($room, $nights, $currency, $hotel))

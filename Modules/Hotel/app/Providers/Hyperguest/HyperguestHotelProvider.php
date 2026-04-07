@@ -256,17 +256,27 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $ttl = 86400; // 24 hours — hotel list rarely changes
 
         if (file_exists($indexPath) && (time() - filemtime($indexPath)) < $ttl) {
-            return json_decode(file_get_contents($indexPath), true) ?? [];
+            $cached = json_decode(file_get_contents($indexPath), true);
+
+            if (is_array($cached) && ! empty($cached)) {
+                return $cached;
+            }
+            // cached file is corrupt or empty — fall through and re-download
         }
 
         // First time or cache expired — download the full 10MB list and build index
+        $previousMemoryLimit = ini_get('memory_limit');
         ini_set('memory_limit', '512M');
 
-        $response = Http::withHeaders($this->headers)
-            ->acceptJson()
-            ->timeout(60)
-            ->get('https://hg-static.hyperguest.com/hotels.json')
-            ->throw();
+        try {
+            $response = Http::withHeaders($this->headers)
+                ->acceptJson()
+                ->timeout(60)
+                ->get('https://hg-static.hyperguest.com/hotels.json')
+                ->throw();
+        } finally {
+            ini_set('memory_limit', $previousMemoryLimit);
+        }
 
         $payload = $response->json();
         $hotels  = isset($payload['hotels']) && is_array($payload['hotels'])
@@ -292,7 +302,10 @@ class HyperguestHotelProvider implements HotelProviderInterface
             }
         }
 
-        file_put_contents($indexPath, json_encode($index));
+        // Atomic write: write to a temp file then rename to prevent partial reads
+        $tmpPath = $indexPath . '.tmp';
+        file_put_contents($tmpPath, json_encode($index));
+        rename($tmpPath, $indexPath);
 
         return $index;
     }
@@ -309,12 +322,12 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
         $guests = max($adults + $children, 1);
 
-        // chunk(20) → each parallel request checks 20 hotels, no take() limit so all IDs are checked
-        $chunks = collect($hotelIds)->chunk(20)->values();
+        $chunks = collect($hotelIds)->take(1)->chunk(20)->values();
 
-        $responses = Http::pool(function ($pool) use ($chunks, $checkIn, $nights, $guests, $nationality, $currency) {
-            return $chunks->map(fn ($chunk) => $pool
-                ->withHeaders($this->headers)
+        $results = [];
+
+        foreach ($chunks as $chunk) {
+            $response = Http::withHeaders($this->headers)
                 ->acceptJson()
                 ->timeout(30)
                 ->get('https://search-api.hyperguest.io/2.0/', [
@@ -324,13 +337,14 @@ class HyperguestHotelProvider implements HotelProviderInterface
                     'hotelIds'            => $chunk->implode(','),
                     'customerNationality' => $nationality,
                     'currency'            => $currency,
-                ])
-            )->all();
-        });
+                ]);
 
-        return collect($responses)
-            ->filter(fn ($r) => ! ($r instanceof \Throwable) && $r->successful())
-            ->flatMap(fn ($r) => $this->unwrapResults($r->json()))
+            if ($response->successful()) {
+                array_push($results, ...$this->unwrapResults($response->json()));
+            }
+        }
+
+        return collect($results)
             ->filter(fn ($hotel) => is_array($hotel) && ! empty($hotel['propertyId']))
             ->values()
             ->all();
