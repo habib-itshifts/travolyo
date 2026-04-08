@@ -141,11 +141,13 @@
         const baseCur  = a.base_currency || '';
         const basePrice = parseFloat(a.base_price_per_person || 0);
         const showBase  = baseCur && baseCur !== cur;
-
+        
+        // <span class="text-muted small">(${baseCur} ${basePrice.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})})</span>
         const priceHtml = showBase
             ? `<div class="d-flex align-items-baseline gap-2 flex-wrap">
                    <span class="price-current">${cur} ${price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>
-                   <span class="text-muted small">(${baseCur} ${basePrice.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})})</span>
+
+                   
                </div>`
             : `<span class="price-current">${cur} ${price.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`;
 

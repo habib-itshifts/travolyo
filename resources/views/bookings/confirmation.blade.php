@@ -373,7 +373,9 @@
                                 <div class="activity-card__bottom">
                                     <div class="activity-card__price">
                                         from
-                                        <strong>{{ $activityCurrency }} {{ number_format($activityPrice, 2) }} @if($activityBasePrice > 0) <span class="text-muted">({{ $activityBaseCurrency }} {{ number_format($activityBasePrice, 2) }})</span>@endif</strong>
+                                        <strong>{{ $activityCurrency }} {{ number_format($activityPrice, 2) }} @if($activityBasePrice > 0) 
+                                            <!-- <span class="text-muted">({{ $activityBaseCurrency }} {{ number_format($activityBasePrice, 2) }})</span> -->
+                                            @endif</strong>
                                     </div>
                                     <span class="activity-card__cta">Book Now</span>
                                 </div>
