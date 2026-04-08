@@ -42,7 +42,7 @@ class SyncHyperguestHotelsJob implements ShouldQueue
             ->throw()
             ->json();
 
-        $hotels = array_slice($hotels , 0,1);    
+        $hotels = array_slice($hotels , 0,10);    
 
         Log::info('[HyperguestSync] Loaded ' . count($hotels) . ' hotels from static list.');
 
