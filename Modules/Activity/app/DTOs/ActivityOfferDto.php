@@ -44,4 +44,9 @@ class ActivityOfferDto
         // Author info
         public readonly ?string              $authorName     = null,
     ) {}
+
+    public function isDiscounted(): bool
+    {
+        return round($this->convertedPricePerPerson, 2) < round($this->basePricePerPerson, 2);
+    }
 }

@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Checkout - ' . $activity->title . ' - Travolyo')
+@section('title', 'Checkout - ' . ($activityOffer?->title ?? 'Activity') . ' - Travolyo')
 
 @push('styles')
 <style>
@@ -339,11 +339,12 @@
 
 @section('content')
 @php
-    $basePrice = (float) ($displayBasePrice ?? ($activity->price_per_person ?? 0));
-    $baseCurrency = strtoupper((string) ($displayBaseCurrency ?? $activity->currency ?? 'AED'));
-    $unitPrice = (float) ($displayConvertedPrice ?? $basePrice);
-    $currency = strtoupper((string) ($displayCurrency ?? session('currency', $baseCurrency)));
-    $activityImage = $activity->image_url ?: asset('assets/images/favicon/favicon1.png');
+    $offer = $activityOffer ?? null;
+    $basePrice = (float) ($offer?->basePricePerPerson ?? 0);
+    $baseCurrency = strtoupper((string) ($offer?->baseCurrency ?? 'AED'));
+    $unitPrice = (float) ($offer?->convertedPricePerPerson ?? $basePrice);
+    $currency = strtoupper((string) ($offer?->convertedCurrency ?? $displayCurrency ?? session('currency', $baseCurrency)));
+    $activityImage = $offer?->imageUrl ?: asset('assets/images/favicon/favicon1.png');
     $participantsValue = (int) old('participants', $participants);
     $todayDate = now()->toDateString();
     $passengerForms = old('passengers', $passengersData ?? []);
@@ -373,23 +374,23 @@
 
     <div class="checkout-activity-header">
         <h1 class="checkout-activity-header__title">
-            {{ $activity->title }}
-            @if($activity->instant_confirmation)
+            {{ $offer?->title ?? 'Activity' }}
+            @if($offer?->instantConfirmation)
                 <span class="checkout-activity-header__badge">Instant</span>
             @endif
         </h1>
         <div class="checkout-activity-header__address">
-            <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ $activity->city ?: '-' }}, {{ $activity->country ?: '-' }}
-            @if($activity->address)
-                <span class="mx-1">|</span>{{ $activity->address }}
+            <i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ $offer?->city ?: '-' }}, {{ $offer?->country ?: '-' }}
+            @if($offer?->address)
+                <span class="mx-1">|</span>{{ $offer->address }}
             @endif
         </div>
         <div class="checkout-activity-header__meta">
-            @if($activity->category)
-                <span class="checkout-activity-header__tag">{{ $activity->category }}</span>
+            @if($offer?->category)
+                <span class="checkout-activity-header__tag">{{ $offer->category }}</span>
             @endif
-            @if($activity->duration)
-                <span class="checkout-activity-header__tag">{{ $activity->duration }}</span>
+            @if($offer?->duration)
+                <span class="checkout-activity-header__tag">{{ $offer->duration }}</span>
             @endif
             <span class="checkout-activity-header__tag">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</span>
         </div>
@@ -448,7 +449,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label-sm">Participants *</label>
-                                <input type="number" min="1" max="{{ (int) ($activity->max_participants ?: 20) }}" id="participantsInput" name="participants" value="{{ $participantsValue }}" class="form-input @error('participants') is-invalid @enderror" placeholder="Enter participants" required>
+                                <input type="number" min="1" max="{{ (int) ($offer?->maxParticipants ?: 20) }}" id="participantsInput" name="participants" value="{{ $participantsValue }}" class="form-input @error('participants') is-invalid @enderror" placeholder="Enter participants" required>
                                 @error('participants')
                                     <div class="field-error">{{ $message }}</div>
                                 @enderror
@@ -591,16 +592,16 @@
             <div class="summary-card">
                 <div class="summary-card__title">Booking Summary</div>
 
-                <img src="{{ $activityImage }}" alt="{{ $activity->title }}" class="summary-card__img">
+                <img src="{{ $activityImage }}" alt="{{ $offer?->title ?? 'Activity' }}" class="summary-card__img">
 
-                <div class="summary-card__hotel-name">{{ $activity->title }}</div>
-                <div class="summary-card__hotel-addr">{{ $activity->city ?: '-' }}, {{ $activity->country ?: '-' }}</div>
+                <div class="summary-card__hotel-name">{{ $offer?->title ?? 'Activity' }}</div>
+                <div class="summary-card__hotel-addr">{{ $offer?->city ?: '-' }}, {{ $offer?->country ?: '-' }}</div>
 
                 <hr class="summary-card__divider">
 
                 <div class="summary-row">
                     <span class="summary-row__label">Category</span>
-                    <span class="summary-row__value">{{ $activity->category ?: '-' }}</span>
+                    <span class="summary-row__value">{{ $offer?->category ?: '-' }}</span>
                 </div>
                 <div class="summary-row">
                     <span class="summary-row__label">Date</span>
@@ -608,7 +609,7 @@
                 </div>
                 <div class="summary-row">
                     <span class="summary-row__label">Duration</span>
-                    <span class="summary-row__value">{{ $activity->duration ?: '-' }}</span>
+                    <span class="summary-row__value">{{ $offer?->duration ?: '-' }}</span>
                 </div>
                 <div class="summary-row">
                     <span class="summary-row__label">Participants</span>

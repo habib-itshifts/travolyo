@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Modules\Activity\Models\Activity;
 use Modules\Activity\Models\ActivityBookingPassenger;
+use Modules\Activity\Providers\Local\LocalActivityMapper;
 use Modules\Admin\Models\MediaFile;
 
 class ActivityController extends Controller
@@ -87,11 +88,7 @@ class ActivityController extends Controller
         $date = (string) $request->query('date', $request->query('activity_date', now()->format('Y-m-d')));
         $participants = $this->limitParticipants($activity, (int) $request->query('participants', 1));
         $displayCurrency = strtoupper((string) session('currency', $request->query('currency', $activity->currency ?: 'AED')));
-        $baseCurrency = strtoupper((string) ($activity->currency ?: 'AED'));
-        $basePrice = (float) ($activity->price_per_person ?: 0);
-        $displayPrice = $displayCurrency === $baseCurrency
-            ? $basePrice
-            : (float) currency($basePrice, $baseCurrency, $displayCurrency, false);
+        $activityOffer = (new LocalActivityMapper())->toOfferDto($activity, $displayCurrency);
 
         $booking = $this->resolveDraftBooking($activity);
         if ($booking) {
@@ -121,9 +118,7 @@ class ActivityController extends Controller
             'passenger' => $passenger,
             'passengersData' => $passengersData,
             'displayCurrency' => $displayCurrency,
-            'displayBaseCurrency' => $baseCurrency,
-            'displayBasePrice' => $basePrice,
-            'displayConvertedPrice' => $displayPrice,
+            'activityOffer' => $activityOffer,
         ]);
     }
 

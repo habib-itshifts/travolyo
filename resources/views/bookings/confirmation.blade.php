@@ -339,9 +339,10 @@
                     <div class="text-muted small mb-3">Top things to do in {{ $activityLocation ?: 'your destination' }}</div>
                     @foreach ($activities as $activity)
                         @php
-                            $activityImage = $activity->imageUrl ?: asset('assets/images/favicon/favicon1.png');
+                            $offer = $activity;
+                            $activityImage = $offer->imageUrl ?: asset('assets/images/favicon/favicon1.png');
                             $activityCheckoutUrl = route('activities.checkout', [
-                                'activity' => $activity->slug ?: $activity->dbActivityId ?: $activity->offerId,
+                                'activity' => $offer->slug ?: $offer->dbActivityId ?: $offer->offerId,
                                 'city' => $activitySearchParams['city'] ?? '',
                                 'date' => $activitySearchParams['activity_date'] ?? now()->toDateString(),
                                 'participants' => $activitySearchParams['participants'] ?? 1,
@@ -349,51 +350,24 @@
                         @endphp
                         @php
                             $selectedCurrency = strtoupper((string) session('currency', $bookingData['currency'] ?? 'USD'));
-                            $activityCurrency = strtoupper((string) (
-                                is_object($activity)
-                                    ? $selectedCurrency
-                                    : data_get($activity, 'converted_currency', data_get($bookingData, 'currency', data_get($activity, 'base_currency', 'AED')))
-                            ));
-                            $activityPrice = (float) (
-                                is_object($activity)
-                                    ? ($activity->convertedPricePerPerson
-                                        ?? $activity->basePricePerPerson
-                                        ?? $activity->pricePerPerson
-                                        ?? $activity->price_per_person
-                                        ?? $activity->price
-                                        ?? 0)
-                                    : data_get($activity, 'converted_price_per_person', data_get($activity, 'base_price_per_person', data_get($activity, 'pricePerPerson', data_get($activity, 'price_per_person', data_get($activity, 'price', 0)))))
-                            );
-                        @endphp
-                        @php
-                            $activityBaseCurrency = strtoupper((string) (
-                                is_object($activity)
-                                    ? ($activity->baseCurrency
-                                        ?? 'AED')
-                                    : data_get($activity, 'base_currency', 'AED')
-                            ));
-                            $activityBasePrice = (float) (
-                                is_object($activity)
-                                    ? ($activity->basePricePerPerson
-                                        ?? $activity->price_per_person
-                                        ?? $activity->price
-                                        ?? 0)
-                                    : data_get($activity, 'base_price_per_person', data_get($activity, 'price_per_person', data_get($activity, 'price', 0)))
-                            );
+                            $activityCurrency = strtoupper((string) ($offer->convertedCurrency ?: $selectedCurrency));
+                            $activityPrice = (float) ($offer->convertedPricePerPerson ?: $offer->basePricePerPerson ?: 0);
+                            $activityBaseCurrency = strtoupper((string) ($offer->baseCurrency ?: 'AED'));
+                            $activityBasePrice = (float) ($offer->basePricePerPerson ?: 0);
                         @endphp
                         <a href="{{ $activityCheckoutUrl }}" class="activity-card">
-                            <img src="{{ $activityImage }}" alt="{{ $activity->title }}" class="activity-card__image" loading="lazy">
+                            <img src="{{ $activityImage }}" alt="{{ $offer->title }}" class="activity-card__image" loading="lazy">
                             <div class="flex-grow-1">
-                                <div class="activity-card__title">{{ $activity->title }}</div>
+                                <div class="activity-card__title">{{ $offer->title }}</div>
                                 <div class="activity-card__meta">
-                                    {{ $activity->city ?: ($activitySearchParams['city'] ?? '-') }}{{ $activity->country ? ', ' . $activity->country : '' }}
+                                    {{ $offer->city ?: ($activitySearchParams['city'] ?? '-') }}{{ $offer->country ? ', ' . $offer->country : '' }}
                                 </div>
                                 <div>
-                                    @if ($activity->category)
-                                        <span class="activity-card__tag">{{ $activity->category }}</span>
+                                    @if ($offer->category)
+                                        <span class="activity-card__tag">{{ $offer->category }}</span>
                                     @endif
-                                    @if ($activity->duration)
-                                        <span class="activity-card__tag"><i class="bi bi-clock"></i>{{ $activity->duration }}</span>
+                                    @if ($offer->duration)
+                                        <span class="activity-card__tag"><i class="bi bi-clock"></i>{{ $offer->duration }}</span>
                                     @endif
                                 </div>
                                 <div class="activity-card__bottom">
