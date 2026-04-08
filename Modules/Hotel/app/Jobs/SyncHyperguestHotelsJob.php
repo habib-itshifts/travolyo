@@ -28,9 +28,22 @@ class SyncHyperguestHotelsJob implements ShouldQueue
         'Authorization'   => 'Bearer 720c616825804c4498f1f21a1d128d4f',
     ];
 
+    /**
+     * @param  string|null  $country  Filter by country code (e.g. "AE", "PT"). Null = all.
+     * @param  string|null  $city     Filter by city name (e.g. "lisbon", "dubai"). Null = all.
+     */
+    public function __construct(
+        public readonly ?string $country = 'AE',
+        public readonly ?string $city = null,
+    ) {}
+
     public function handle(): void
     {
-        Log::info('[HyperguestSync] Starting hotel sync...');
+        $scope = $this->country
+            ? ($this->city ? "city={$this->city}, country={$this->country}" : "country={$this->country}")
+            : ($this->city ? "city={$this->city}" : 'all hotels');
+
+        Log::info("[HyperguestSync] Starting hotel sync ({$scope})...");
 
         // ── Step 1: Load the full hotel list from Hyperguest static API ──────────
         ini_set('memory_limit', '512M');
@@ -42,9 +55,24 @@ class SyncHyperguestHotelsJob implements ShouldQueue
             ->throw()
             ->json();
 
-        $hotels = array_slice($hotels , 0,10);    
+        // ── Filter by country / city if provided ────────────────────────────────
+        if ($this->country) {
+            $filterCountry = strtoupper(trim($this->country));
+            $hotels = array_filter($hotels, fn (array $h) =>
+                strtoupper(trim((string) ($h['country'] ?? ''))) === $filterCountry
+            );
+        }
 
-        Log::info('[HyperguestSync] Loaded ' . count($hotels) . ' hotels from static list.');
+        if ($this->city) {
+            $filterCity = strtolower(trim($this->city));
+            $hotels = array_filter($hotels, fn (array $h) =>
+                strtolower(trim((string) ($h['city'] ?? ''))) === $filterCity
+            );
+        }
+
+        $hotels = array_values($hotels);
+
+        Log::info('[HyperguestSync] Loaded ' . count($hotels) . " hotels from static list ({$scope}).");
 
         // ── Step 2: Process each hotel — fetch property-static and upsert into DB ─
         $synced  = 0;

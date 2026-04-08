@@ -33,6 +33,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $destination = strtolower(trim($dto->destination));
 
         $query = DB::table('hotels')
+            ->where('external_id', '59363')
             ->where('source', 'hyperguest')
             ->where('is_external', true)
             ->where('status', 'active')
@@ -59,12 +60,13 @@ class HyperguestHotelProvider implements HotelProviderInterface
         int $children,
         string $currency = 'USD',
     ): array {
+
         $hotel = $this->findHotel($offerId, $checkIn, $checkOut, $adults, $children, $currency);
 
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
 
         return collect($hotel['rooms'] ?? [])
-            ->flatMap(fn (array $room) => $this->mapper->toRoomOfferDtos($room, $nights, $currency, $hotel))
+            ->flatMap(fn (array $room) => $this->mapper->toRoomOfferDtos($room, $nights, $currency, $hotel, $adults, $children))
             ->values()
             ->all();
     }

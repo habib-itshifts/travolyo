@@ -131,8 +131,8 @@ class HyperguestHotelMapper
 
         $baseTotalPrice = $basePrice * $nights;
 
-        // $convertedPrice = currency($basePrice, $baseCurrency, $currency, false);
-        $convertedPrice = $baseTotalPrice;
+        $convertedPrice = currency($basePrice, $baseCurrency, $currency, false);
+        // $convertedPrice = $baseTotalPrice;
 
         $convertedTotalPrice = $convertedPrice * $nights;
 
