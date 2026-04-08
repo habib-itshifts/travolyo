@@ -4,6 +4,7 @@ use App\Models\Currency;
 use App\Models\TopDestination;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestController;
@@ -185,6 +186,9 @@ Route::get('/', function () {
         'defaultHotelCheckOut' => now()->addDays(8)->toDateString(),
     ]);
 })->name('website');
+
+Route::get('/destinations/{key}', [WebsiteController::class, 'exploreDestinationShow'])->name('destinations.show');
+Route::get('/explore-destination-by-hotel', [WebsiteController::class, 'exploreDestinationPublicHotels'])->name('explore-destination-by-hotel');
 
 Route::view('/about-us', 'website.about-us')->name('about');
 Route::view('/contact-us', 'website.contact-us')->name('contact');

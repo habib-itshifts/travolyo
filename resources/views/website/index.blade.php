@@ -61,6 +61,24 @@
 
         return route('hotels.index') . '?' . http_build_query(array_filter($query, fn ($value) => $value !== '' && $value !== null));
     };
+    $destinationPageKey = function (string $label): string {
+        return match ($label) {
+            'Popular in UAE' => 'popular_in_uae',
+            'Middle East' => 'middle_east',
+            'Asia Pacific' => 'asia_pacific',
+            'Europe' => 'europe',
+            'Beach Escapes' => 'beach_escapes',
+            default => strtolower(str_replace(' ', '_', $label)),
+        };
+    };
+    $destinationPageUrl = function (string $label) use ($destinationPageKey) {
+        $destination = preg_replace('/\s+Hotels?$/i', '', trim($label));
+        return route('explore-destination-by-hotel', [
+            'tab' => $destinationPageKey($label),
+            'destination' => $destination,
+            'city' => $destination,
+        ]);
+    };
     $exploreRegions = collect([
         [
             'label' => 'Asia',
@@ -1636,11 +1654,14 @@
                         <div class="top-cities-region">
                             <div class="top-cities-region__title">
                                 <i class="bi {{ data_get($region, 'icon', 'bi-globe2') }}"></i>
-                                <span>{{ data_get($region, 'label') }}</span>
+                                <a class="text-decoration-none text-reset"
+                                    href="{{ $destinationPageUrl(data_get($region, 'label')) }}">
+                                    {{ data_get($region, 'label') }}
+                                </a>
                             </div>
                             <div class="top-cities-region__grid">
                                 @foreach(data_get($region, 'items', []) as $entry)
-                                    <a class="top-cities-chip" href="{{ $buildExploreHotelUrl($entry) }}">{{ data_get($entry, 'label') }}</a>
+                                    <a class="top-cities-chip" href="{{ $destinationPageUrl(data_get($entry, 'label')) }}">{{ data_get($entry, 'label') }}</a>
                                 @endforeach
                             </div>
                         </div>
@@ -1651,11 +1672,14 @@
                         <div class="top-cities-region">
                             <div class="top-cities-region__title">
                                 <i class="bi {{ data_get($region, 'icon', 'bi-globe2') }}"></i>
-                                <span>{{ data_get($region, 'label') }}</span>
+                                <a class="text-decoration-none text-reset"
+                                    href="{{ $destinationPageUrl(data_get($region, 'label')) }}">
+                                    {{ data_get($region, 'label') }}
+                                </a>
                             </div>
                             <div class="top-cities-region__grid">
                                 @foreach(data_get($region, 'items', []) as $entry)
-                                    <a class="top-cities-chip" href="{{ $buildExploreHotelUrl($entry) }}">{{ data_get($entry, 'label') }}</a>
+                                    <a class="top-cities-chip" href="{{ $destinationPageUrl(data_get($entry, 'label')) }}">{{ data_get($entry, 'label') }}</a>
                                 @endforeach
                             </div>
                         </div>
@@ -1666,11 +1690,14 @@
                         <div class="top-cities-region">
                             <div class="top-cities-region__title">
                                 <i class="bi {{ data_get($region, 'icon', 'bi-globe2') }}"></i>
-                                <span>{{ data_get($region, 'label') }}</span>
+                                <a class="text-decoration-none text-reset"
+                                    href="{{ $destinationPageUrl(data_get($region, 'label')) }}">
+                                    {{ data_get($region, 'label') }}
+                                </a>
                             </div>
                             <div class="top-cities-region__grid">
                                 @foreach(data_get($region, 'items', []) as $entry)
-                                    <a class="top-cities-chip" href="{{ $buildExploreHotelUrl($entry) }}">{{ data_get($entry, 'label') }}</a>
+                                    <a class="top-cities-chip" href="{{ $destinationPageUrl(data_get($entry, 'label')) }}">{{ data_get($entry, 'label') }}</a>
                                 @endforeach
                             </div>
                         </div>
