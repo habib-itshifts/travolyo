@@ -153,7 +153,7 @@ class SyncHyperguestHotelsJob implements ShouldQueue
                 'gallery_urls'        => $staticDetail['gallery_urls'],
                 // External hotels are hidden from admin CMS, active for search
                 'status'              => 'active',
-                'is_hidden'           => true,
+                'is_external'         => true,
                 'external_synced_at'  => now(),
             ]
         );

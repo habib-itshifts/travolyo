@@ -86,13 +86,16 @@ return new class extends Migration
             // Null for local hotels. Combined with source, forms a unique pair.
             $table->string('external_id', 100)->nullable();
 
-            // is_hidden: external hotels are hidden from the admin CMS panel by default.
+            // is_external: external hotels are hidden from the admin CMS panel by default.
             // Local hotels created by admin/vendor are always visible (false).
-            $table->boolean('is_hidden')->default(false);
+            $table->boolean('is_external')->default(false)->index();
+
+            // external_data: raw API response cached to avoid repeated provider calls.
+            $table->json('external_data')->nullable();
 
             // external_synced_at: timestamp of the last successful sync from the provider.
             // Used by the nightly job to decide whether to re-fetch or skip.
-            $table->timestamp('external_synced_at')->nullable();
+            $table->timestamp('external_synced_at')->nullable()->index();
             // ─────────────────────────────────────────────────────────────────────────
 
             $table->timestamps();

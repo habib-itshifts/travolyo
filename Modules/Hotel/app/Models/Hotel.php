@@ -2,17 +2,27 @@
 
 namespace Modules\Hotel\Models;
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
 use Modules\Admin\Models\MediaFile;
 
 class Hotel extends Model
 {
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        // External hotels are cached locally to avoid repeated API calls for static data (name, location, images).
+        // Room availability and pricing are always fetched live as they change frequently.
+        static::addGlobalScope('exclude_external', static function (Builder $builder): void {
+            $builder->where('is_external', false);
+        });
+    }
 
     protected $fillable = [
         'author_id',
@@ -57,7 +67,8 @@ class Hotel extends Model
         'sort_order',
         'source',
         'external_id',
-        'is_hidden',
+        'is_external',
+        'external_data',
         'external_synced_at',
     ];
 
@@ -81,7 +92,8 @@ class Hotel extends Model
         'languages_spoken' => 'array',
         'is_featured'         => 'boolean',
         'sort_order'          => 'integer',
-        'is_hidden'           => 'boolean',
+        'is_external'    => 'boolean',
+        'external_data'       => 'array',
         'external_synced_at'  => 'datetime',
     ];
 
@@ -261,6 +273,7 @@ class Hotel extends Model
     {
         return $query->where('is_featured', true);
     }
+
 
     // Relationships
     public function author(): BelongsTo
