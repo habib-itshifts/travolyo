@@ -3,6 +3,7 @@
 namespace Modules\Hotel\Providers\Hyperguest;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
@@ -15,14 +16,11 @@ use Modules\Hotel\Providers\HotelProviderInterface;
 class HyperguestHotelProvider implements HotelProviderInterface
 {
     private HyperguestHotelMapper $mapper;
-    private string $bookingResponsePath;
-
     protected array $headers;
 
     public function __construct()
     {
         $this->mapper = new HyperguestHotelMapper();
-        $this->bookingResponsePath = public_path('data/hyperguest/booking_response.json');
         $this->headers = [
             'Accept-Encoding' => 'gzip, deflate',
             'Accept' => 'application/json',
@@ -32,14 +30,24 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     public function search(SearchHotelDto $dto): array
     {
-        $hotels = $this->loadHotels($dto);
-        $nights = max($dto->nights(), 1);
+        $destination = strtolower(trim($dto->destination));
 
-        return collect($hotels)
-            ->map(fn (array $hotel) => $this->mapper->toOfferDto($hotel, $nights, $dto->currency))
-            ->filter(fn (HotelOfferDto $offer) => ! empty($offer->rooms))
-            ->filter(fn (HotelOfferDto $offer) => $this->matchesPriceFilter($offer, $dto))
-            ->values()
+        $query = DB::table('hotels')
+            ->where('external_id', '59363')
+            ->where('source', 'hyperguest')
+            ->where('is_external', true)
+            ->where('status', 'active')
+            ->where(function ($q) use ($destination) {
+                $q->whereRaw('LOWER(city) = ?', [$destination])
+                  ->orWhereRaw('LOWER(country) = ?', [$destination]);
+            });
+
+        if ($dto->starRating !== null) {
+            $query->where('star_rating', $dto->starRating);
+        }
+
+        return $query->get()
+            ->map(fn ($row) => $this->mapper->toOfferDtoFromDb((array) $row))
             ->all();
     }
 
@@ -52,12 +60,13 @@ class HyperguestHotelProvider implements HotelProviderInterface
         int $children,
         string $currency = 'USD',
     ): array {
+
         $hotel = $this->findHotel($offerId, $checkIn, $checkOut, $adults, $children, $currency);
 
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
 
         return collect($hotel['rooms'] ?? [])
-            ->flatMap(fn (array $room) => $this->mapper->toRoomOfferDtos($room, $nights, $currency, $hotel))
+            ->flatMap(fn (array $room) => $this->mapper->toRoomOfferDtos($room, $nights, $currency, $hotel, $adults, $children))
             ->values()
             ->all();
     }
@@ -103,7 +112,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'from' => $checkoutData['check_in'],
                 'to' => $checkoutData['check_out'],
             ],
-            'propertyId' => $keys['property_id'],
+            'propertyId' => (int) $keys['property_id'],
             'leadGuest' => [
                 'birthDate' => $guest['birth_date'] ?? '1990-01-01',
                 'contact' => [
@@ -128,7 +137,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'roomCode' => $keys['room_code'],
                 'rateCode' => $keys['rate_code'],
                 'expectedPrice' => [
-                    'amount' => $checkoutData['total_price'],
+                    'amount' => (float) $checkoutData['total_price'],
                     'currency' => $checkoutData['currency'],
                 ],
                 'guests' => [[
@@ -150,22 +159,19 @@ class HyperguestHotelProvider implements HotelProviderInterface
             'groupBooking' => false,
         ];
 
-        $response = $this->loadBookingResponse();
-        $response['reference'] = $payload['reference'];
-        $response['content']['dates'] = $payload['dates'];
-        $response['leadGuest']['name'] = $payload['leadGuest']['name'];
-        $response['leadGuest']['contact']['email'] = $guest['email'];
-        $response['leadGuest']['contact']['phone'] = $guest['phone'];
+        $response = Http::withHeaders($this->headers)
+            ->acceptJson()
+            ->timeout(30)
+            ->post('https://book-api.hyperguest.com/2.0/booking/create', $payload);
 
-        if (! empty($response['rooms'][0])) {
-            $response['rooms'][0]['roomCode'] = $keys['room_code'];
-            $response['rooms'][0]['rateCode'] = $keys['rate_code'];
-            $response['rooms'][0]['propertyId'] = $keys['property_id'];
+        if ($response->failed()) {
+            throw new HotelException(
+                'Hyperguest booking failed: ' . $response->status() . ' ' . $response->body(),
+                $response->status()
+            );
         }
 
-        $response['_request_payload'] = $payload;
-
-        return $response;
+        return $response->json();
     }
 
     public function getOrder(string $orderId): HotelOrderDto
@@ -210,99 +216,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         return true;
     }
 
-    private function loadHotels(SearchHotelDto $dto): array
-    {
-        $hotelIds = $this->findHotelIdsByDestination($dto->destination);
-
-        if ($hotelIds === []) {
-            return [];
-        }
-
-        $results = collect($this->searchHotelsByIds(
-            $hotelIds,
-            $dto->checkIn,
-            $dto->checkOut,
-            $dto->adults,
-            $dto->children,
-            $dto->currency,
-            $dto->nationality,
-        ));
-
-        if ($dto->starRating !== null) {
-            $results = $results->filter(
-                fn (array $hotel) => (int) data_get($hotel, 'propertyInfo.starRating', 0) === $dto->starRating
-            );
-        }
-
-        return $results->values()->all();
-    }
-
-
-    // Step::01 — look up hotel IDs for destination from the pre-built index (instant key access)
-    private function findHotelIdsByDestination(string $destination): array
-    {
-        $destination = strtolower(trim($destination));
-
-        // loadStaticHotels() now returns ['dubai' => ['123','456',...], 'ae' => [...], ...]
-        $index = $this->loadStaticHotels();
-
-        return array_values(array_unique($index[$destination] ?? []));
-    }
-
-    /**
-     * Returns hotel IDs for a given destination using a pre-built destination index.
-     *
-     * Instead of loading all 52k hotels on every search, we build a city→[hotel_ids]
-     * map once and cache it. Each lookup is then an instant array key access.
-     * Cache refreshes every 24 hours (hotel list rarely changes).
-     */
-    private function loadStaticHotels(): array
-    {
-        $indexPath = storage_path('app/hyperguest_destination_index.json');
-        $ttl = 86400; // 24 hours — hotel list rarely changes
-
-        if (file_exists($indexPath) && (time() - filemtime($indexPath)) < $ttl) {
-            return json_decode(file_get_contents($indexPath), true) ?? [];
-        }
-
-        // First time or cache expired — download the full 10MB list and build index
-        ini_set('memory_limit', '512M');
-
-        $response = Http::withHeaders($this->headers)
-            ->acceptJson()
-            ->timeout(60)
-            ->get('https://hg-static.hyperguest.com/hotels.json')
-            ->throw();
-
-        $payload = $response->json();
-        $hotels  = isset($payload['hotels']) && is_array($payload['hotels'])
-            ? $payload['hotels']
-            : (is_array($payload) ? $payload : []);
-
-        // Build index: ['dubai' => ['123', '456', ...], 'ae' => [...], ...]
-        $index = [];
-        foreach ($hotels as $hotel) {
-            $city    = strtolower(trim((string) ($hotel['city'] ?? $hotel['cityName'] ?? '')));
-            $country = strtolower(trim((string) ($hotel['country'] ?? $hotel['countryCode'] ?? '')));
-            $id      = (string) ($hotel['hotel_id'] ?? '');
-
-            if ($id === '') {
-                continue;
-            }
-
-            if ($city !== '') {
-                $index[$city][] = $id;
-            }
-            if ($country !== '' && $country !== $city) {
-                $index[$country][] = $id;
-            }
-        }
-
-        file_put_contents($indexPath, json_encode($index));
-
-        return $index;
-    }
-    // Step:: 02 - find hotel details using
+    // Fetch live room availability from Hyperguest API
     private function searchHotelsByIds(
         array $hotelIds,
         string $checkIn,
@@ -315,12 +229,12 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
         $guests = max($adults + $children, 1);
 
-        // chunk(20) → each parallel request checks 20 hotels, no take() limit so all IDs are checked
         $chunks = collect($hotelIds)->chunk(20)->values();
 
-        $responses = Http::pool(function ($pool) use ($chunks, $checkIn, $nights, $guests, $nationality, $currency) {
-            return $chunks->map(fn ($chunk) => $pool
-                ->withHeaders($this->headers)
+        $results = [];
+
+        foreach ($chunks as $chunk) {
+            $response = Http::withHeaders($this->headers)
                 ->acceptJson()
                 ->timeout(30)
                 ->get('https://search-api.hyperguest.io/2.0/', [
@@ -330,13 +244,14 @@ class HyperguestHotelProvider implements HotelProviderInterface
                     'hotelIds'            => $chunk->implode(','),
                     'customerNationality' => $nationality,
                     'currency'            => $currency,
-                ])
-            )->all();
-        });
+                ]);
 
-        return collect($responses)
-            ->filter(fn ($r) => ! ($r instanceof \Throwable) && $r->successful())
-            ->flatMap(fn ($r) => $this->unwrapResults($r->json()))
+            if ($response->successful()) {
+                array_push($results, ...$this->unwrapResults($response->json()));
+            }
+        }
+
+        return collect($results)
             ->filter(fn ($hotel) => is_array($hotel) && ! empty($hotel['propertyId']))
             ->values()
             ->all();
@@ -397,18 +312,4 @@ class HyperguestHotelProvider implements HotelProviderInterface
         return true;
     }
 
-    private function loadBookingResponse(): array
-    {
-        if (! is_file($this->bookingResponsePath)) {
-            throw new \RuntimeException('Hyperguest booking response fixture not found.');
-        }
-
-        $decoded = json_decode((string) file_get_contents($this->bookingResponsePath), true);
-
-        if (! is_array($decoded)) {
-            throw new \RuntimeException('Hyperguest booking response fixture is invalid JSON.');
-        }
-
-        return $decoded;
-    }
 }

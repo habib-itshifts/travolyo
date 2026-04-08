@@ -4,4 +4,5 @@ tasks
 - fix hotel currency
 - fix flight checkout
 - fix hotel B2B checkout
-- fix 
+- change images on landing page
+- two way search

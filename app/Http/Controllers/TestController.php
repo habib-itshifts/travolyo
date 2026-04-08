@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class TestController extends Controller
 {
@@ -154,9 +155,9 @@ class TestController extends Controller
             'Accept-Encoding' => 'gzip, deflate',
             'Accept' => 'application/json',
         ])->get("https://search-api.hyperguest.io/2.0/",[
-            'checkIn' => '2026-04-02',
+            'checkIn' => '2026-04-09',
             'nights' => 1,
-            'guests' => 2,
+            'guests' => 1,
             'hotelIds' => '59363',
             'customerNationality' => 'US',
         ]);

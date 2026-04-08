@@ -90,6 +90,15 @@
 @include('website.partials._search-section', ['activeTab' => 'hotels'])
 
 <div class="hotel-page-bg py-4">
+
+@if(session('error'))
+    <div class="container mt-3">
+        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+@endif
 <div class="container">
 <div class="row g-4">
 
@@ -296,11 +305,13 @@
                 </div>
                 <div class="d-flex align-items-center justify-content-between mt-3">
                     <div>
-                        <div class="hotel-card__price">${h.currency} ${parseFloat(h.lowest_price).toLocaleString('en-US', {minimumFractionDigits:0})}</div>
-                        <div class="hotel-card__night">per night</div>
+                        ${parseFloat(h.lowest_price) > 0
+                            ? `<div class="hotel-card__price">${h.currency} ${parseFloat(h.lowest_price).toLocaleString('en-US', {minimumFractionDigits:0})}</div>
+                               <div class="hotel-card__night">per night</div>`
+                            : `<div class="hotel-card__price" style="font-size:.85rem;color:#6c757d">View for pricing</div>`}
                     </div>
                     <button class="btn btn-primary btn-select-room js-view-deal"
-                        data-hotel='${JSON.stringify(h)}'>
+                        data-hotel="${JSON.stringify(h).replace(/"/g, '&quot;')}">
                         View Deal <i class="bi bi-arrow-right ms-1"></i>
                     </button>
                 </div>

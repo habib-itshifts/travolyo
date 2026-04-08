@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Schema;
 |--------------------------------------------------------------------------
 */
 
-
+Route::get('test-load-hotel-details', [TestController::class , 'loadHotelDetails']);
 
 Route::get('/hyperguest-test-b2b', function () {
 
