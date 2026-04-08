@@ -137,16 +137,23 @@ class HotelController extends Controller
         // This is the convertedCurrency — baseCurrency is resolved per-hotel inside the provider.
         $convertedCurrency = (string) session('currency', $request->input('currency', config('currency.default', 'USD')));
 
-        $rooms = $providerInstance->getRooms(
-            offerId:  $request->input('offer_id'),
-            cityCode: $request->input('city', ''),
-            checkIn:  $request->input('check_in'),
-            checkOut: $request->input('check_out'),
-            adults:   (int) $request->input('adults', 1),
-            children: (int) $request->input('children', 0),
-            currency: $convertedCurrency,
-        );
+        try {
+            \Log::info('HG showRooms params', $request->only(['offer_id', 'provider', 'city', 'check_in', 'check_out', 'adults', 'children']));
 
+            $rooms = $providerInstance->getRooms(
+                offerId:  $request->input('offer_id'),
+                cityCode: $request->input('city', ''),
+                checkIn:  $request->input('check_in'),
+                checkOut: $request->input('check_out'),
+                adults:   (int) $request->input('adults', 1),
+                children: (int) $request->input('children', 0),
+                currency: $convertedCurrency,
+            );
+
+        } catch (\Throwable $e) {
+            $rooms = [];
+        }
+        
         $params = [
             'offer_id'          => $request->input('offer_id'),
             'provider'          => $request->input('provider'),
