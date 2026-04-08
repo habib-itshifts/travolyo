@@ -55,6 +55,10 @@ class Hotel extends Model
         'status',
         'is_featured',
         'sort_order',
+        'source',
+        'external_id',
+        'is_hidden',
+        'external_synced_at',
     ];
 
     protected $casts = [
@@ -75,8 +79,10 @@ class Hotel extends Model
         'currency'         => 'string',
         'payment_methods'  => 'array',
         'languages_spoken' => 'array',
-        'is_featured'      => 'boolean',
-        'sort_order'       => 'integer',
+        'is_featured'         => 'boolean',
+        'sort_order'          => 'integer',
+        'is_hidden'           => 'boolean',
+        'external_synced_at'  => 'datetime',
     ];
 
     protected function mediaIdFromStoredPath(?string $path): ?int

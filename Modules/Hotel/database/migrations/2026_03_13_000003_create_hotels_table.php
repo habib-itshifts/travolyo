@@ -34,10 +34,10 @@ return new class extends Migration
             $table->string('video_url', 2048)->nullable();
 
             // Location
-            $table->string('address', 255);
-            $table->string('city', 100);
+            $table->string('address', 255)->nullable();
+            $table->string('city', 100)->nullable();
             $table->string('state', 100)->nullable();
-            $table->char('country', 2);                               // ISO 3166-1 alpha-2
+            $table->char('country', 2)->nullable();                               // ISO 3166-1 alpha-2
             $table->string('postal_code', 20)->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
@@ -75,10 +75,31 @@ return new class extends Migration
             $table->boolean('is_featured')->default(false);
             $table->unsignedSmallInteger('sort_order')->default(0);
 
+            // ─── Multi-source / external provider fields ──────────────────────────────
+            // source: identifies who owns this record.
+            //   'local'      → created manually by admin/vendor in the CMS
+            //   'hyperguest' → synced automatically by the nightly HyperguestSyncJob
+            //   Add more values as new provider APIs are integrated.
+            $table->string('source', 50)->default('local')->index();
+
+            // external_id: the provider's own hotel ID (e.g. Hyperguest hotel_id).
+            // Null for local hotels. Combined with source, forms a unique pair.
+            $table->string('external_id', 100)->nullable();
+
+            // is_hidden: external hotels are hidden from the admin CMS panel by default.
+            // Local hotels created by admin/vendor are always visible (false).
+            $table->boolean('is_hidden')->default(false);
+
+            // external_synced_at: timestamp of the last successful sync from the provider.
+            // Used by the nightly job to decide whether to re-fetch or skip.
+            $table->timestamp('external_synced_at')->nullable();
+            // ─────────────────────────────────────────────────────────────────────────
+
             $table->timestamps();
             $table->softDeletes();
 
             $table->index(['author_id', 'scraping_url'], 'hotels_author_scraping_url_index');
+            $table->unique(['source', 'external_id']);                // prevent duplicate syncs
         });
     }
 
