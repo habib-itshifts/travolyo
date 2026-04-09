@@ -20,8 +20,11 @@ class CheckoutHotelAction
 {
     public function handle(CheckoutHotelDto $dto): array
     {
+
+   
         $hotel = Cache::get('hotel_checkout_' . $dto->checkoutToken);
 
+        
         if (empty($hotel)) {
             throw new \RuntimeException('Hotel session expired. Please search and select your room again.');
         }
@@ -53,36 +56,37 @@ class CheckoutHotelAction
             }
         }
 
-        // ── Hyperguest: call their booking API before creating the local record ──
-        $hyperguestBooking = null;
         $travolyoB2BBooking = null;
 
+        // ── Hyperguest: pre-book to confirm price, actual booking happens after payment ──
         if ($provider === 'hyperguest') {
-            $hyperguestBooking = (new HyperguestHotelProvider())->book(
-                checkoutData: array_merge($hotel, ['special_requests' => $dto->specialRequests]),
-                guest: [
-                    'first_name' => $dto->firstName,
-                    'last_name'  => $dto->lastName,
-                    'email'      => $dto->email,
-                    'phone'      => $dto->phone,
-                    'title'      => 'MR',
-                    'birth_date' => '1990-01-01',
-                    'address'    => 'N/A',
-                    'city'       => 'N/A',
-                    'country'    => 'N/A',
-                    'state'      => 'N/A',
-                    'zip'        => 'N/A',
-                ],
+            $prebookDto = new \Modules\Hotel\DTOs\PrebookHotelDto(
+                offerId:  $hotel['offer_id'],
+                roomId:   $hotel['room_id'],
+                provider: \Modules\Hotel\Enums\HotelProviderEnum::Hyperguest,
+                checkIn:  $hotel['check_in'],
+                checkOut: $hotel['check_out'],
+                adults:   (int) ($hotel['adults'] ?? 1),
+                children: (int) ($hotel['children'] ?? 0),
+                currency: $hotel['currency'],
             );
 
-            $confirmedPrice = $hyperguestBooking['content']['prices']['sell']['price'] ?? null;
-            if ($confirmedPrice) {
-                $hotel['total_price'] = (float) $confirmedPrice;
-            }
+            (new HyperguestHotelProvider())->prebook($prebookDto);
 
-            $hotel['supplier_status'] = $hyperguestBooking['content']['status'] ?? ($hotel['supplier_status'] ?? '');
-            $hotel['supplier_reference'] = $hyperguestBooking['reference']['agency'] ?? ($hotel['supplier_reference'] ?? '');
-            $hotel['supplier_booking_code'] = $hyperguestBooking['bookingId'] ?? ($hotel['supplier_booking_code'] ?? '');
+            // Store guest details in hotel meta — used by Booking::markAsPaid() to call booking/create
+            $hotel['guest_details'] = [
+                'first_name' => $dto->firstName,
+                'last_name'  => $dto->lastName,
+                'email'      => $dto->email,
+                'phone'      => $dto->phone,
+                'title'      => 'MR',
+                'birth_date' => '1990-01-01',
+                'address'    => 'N/A',
+                'city'       => 'N/A',
+                'country'    => 'AE',
+                'state'      => 'N/A',
+                'zip'        => 'N/A',
+            ];
         }
 
         if ($provider === 'travolyo_b2b') {
@@ -140,18 +144,7 @@ class CheckoutHotelAction
         // Store hotel details in booking meta for confirmation page
         $booking->addMeta('hotel_details', $hotel);
 
-        // Hyperguest: persist the full API response + booking ID for reference
-        if ($hyperguestBooking !== null) {
-            $booking->addMeta('hyperguest_booking', $hyperguestBooking);
-            $booking->addMeta('hyperguest_booking_id', $hyperguestBooking['bookingId'] ?? null);
-            $booking->addMeta('hyperguest_status', $hyperguestBooking['content']['status'] ?? 'unknown');
-            $booking->addMeta('hyperguest_cancellation_policy',
-                $hyperguestBooking['rooms'][0]['cancellationPolicy'] ?? []
-            );
-            $booking->addMeta('hyperguest_remarks',
-                $hyperguestBooking['rooms'][0]['remarks'] ?? []
-            );
-        }
+        // Hyperguest: booking meta is saved in Booking::markAsPaid() after payment succeeds
 
         if ($travolyoB2BBooking !== null) {
             $booking->addMeta('travolyo_b2b_booking', $travolyoB2BBooking);

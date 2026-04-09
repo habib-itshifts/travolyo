@@ -43,6 +43,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
             $query->where('star_rating', $dto->starRating);
         }
 
+
         return $query->get()
             ->map(fn ($row) => $this->mapper->toSearchOfferDto((array) $row))
             ->all();
@@ -70,8 +71,53 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     public function prebook(PrebookHotelDto $dto): HotelOfferDto
     {
+        
         $keys = $this->mapper->decodeBookingKey($dto->roomId);
 
+        //Call Hyperguest pre-book API to confirm price/availability
+        $payload = [
+            'search' => [
+                'dates' => [
+                    'from' => $dto->checkIn,
+                    'to' => $dto->checkOut,
+                ],
+                'propertyId' => $dto->offerId,
+                'nationality' => 'AE',
+                'pax' => [
+                    [
+                        'adults' => $dto->adults,
+                        'children' => [], // TODO: add child ages when children logic is implemented
+                    ],
+                ],
+            ],
+            'rooms' => [
+                [
+                    'roomCode' => $keys['room_code'],
+                    'rateCode' => $keys['rate_code'],
+                    'expectedPrice' => [
+                        'amount' => (float) $keys['price'],
+                        'currency' => $keys['currency'],
+                    ],
+                ],
+            ],
+        ];
+        
+
+
+        $response = Http::withHeaders($this->headers)
+            ->acceptJson()
+            ->timeout(30)
+            ->post('https://book-api.hyperguest.com/2.0/booking/pre-book', $payload);
+        if ($response->failed()) {
+            throw new HotelException(
+                'Hyperguest pre-book failed: ' . $response->status() . ' ' . $response->body(),
+                $response->status()
+            );
+        }
+
+        $prebook = $response->json();
+
+        // Also fetch the hotel data for the offer DTO (DB + API enrichment)
         $hotel = $this->findHotel(
             (string) ($keys['property_id'] ?? $keys['hotel_id']),
             $dto->checkIn,
@@ -80,18 +126,6 @@ class HyperguestHotelProvider implements HotelProviderInterface
             $dto->children,
             $dto->currency
         );
-
-        $rawRoom = collect($hotel['rooms'] ?? [])
-            ->firstWhere('roomId', $keys['room_id']);
-
-        $ratePlan = collect($rawRoom['ratePlans'] ?? [])
-            ->firstWhere('ratePlanCode', $keys['rate_code']);
-
-        $isAvailable = ((int) ($rawRoom['numberOfAvailableRooms'] ?? 0)) > 0;
-
-        if (! $rawRoom || ! $ratePlan || ! $isAvailable) {
-            throw HotelException::roomUnavailable();
-        }
 
         return $this->mapper->toOfferDto(
             $hotel,
@@ -114,7 +148,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'contact' => [
                     'address' => $guest['address'] ?? 'N/A',
                     'city' => $guest['city'] ?? 'N/A',
-                    'country' => $guest['country'] ?? 'AE',
+                    'country' => 'AE',
                     'email' => $guest['email'],
                     'phone' => $guest['phone'],
                     'state' => $guest['state'] ?? 'N/A',
@@ -177,7 +211,6 @@ class HyperguestHotelProvider implements HotelProviderInterface
             ->acceptJson()
             ->timeout(30)
             ->post('https://book-api.hyperguest.com/2.0/booking/create', $payload);
-        
             if ($response->failed()) {
             throw new HotelException(
                 'Hyperguest booking failed: ' . $response->status() . ' ' . $response->body(),

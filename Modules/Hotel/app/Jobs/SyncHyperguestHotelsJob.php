@@ -36,7 +36,7 @@ class SyncHyperguestHotelsJob implements ShouldQueue
      * @param  string|null  $city     Filter by city name (e.g. "lisbon", "dubai"). Null = all.
      */
     public function __construct(
-        public readonly ?string $country = 'AE',
+        public readonly ?string $country = 'IL',
         public readonly ?string $city = null,
     ) {}
 

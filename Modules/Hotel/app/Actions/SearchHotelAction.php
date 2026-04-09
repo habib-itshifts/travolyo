@@ -25,7 +25,7 @@ class SearchHotelAction
         foreach ($providers as $providerEnum) {
             try {
                 $providerDto = new SearchHotelDto(
-                    destination:       $dto->destination,
+                    destination:$dto->destination,
                     checkIn:    $dto->checkIn,
                     checkOut:   $dto->checkOut,
                     adults:     $dto->adults,
@@ -36,6 +36,7 @@ class SearchHotelAction
                     priceMax:   $dto->priceMax,
                     amenityIds: $dto->amenityIds,
                     currency:   $dto->currency,
+                    nationality:$dto->nationality,
                     sortBy:     $dto->sortBy,
                     perPage:    $dto->perPage,
                     provider:   $providerEnum,

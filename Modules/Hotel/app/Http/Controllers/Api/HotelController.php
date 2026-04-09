@@ -35,9 +35,10 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
+      
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
-
+             
             $perPage = $dto->perPage;
             $page    = $dto->page;
             $searchCache = Cache::store('file');
@@ -246,6 +247,7 @@ class HotelController extends Controller
                 //  customerId:      auth()->id(),
                 customerId:      Auth::id(),
             );
+
 
             $result = (new CheckoutHotelAction)->handle($dto);
 

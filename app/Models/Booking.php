@@ -192,12 +192,44 @@ class Booking extends Model
             ->where('booking_id', $this->id)
             ->where('status', 'pending')
             ->update(['status' => 'confirmed', 'updated_at' => now()]);
+
+        // Hyperguest: create the reservation only after payment is confirmed
+        if ($this->source === 'hyperguest') {
+            $this->createHyperguestBooking();
+        }
     }
 
     public function markAsPaymentFailed(): void
     {
         $this->status = self::BOOKING_FAILED;
         $this->save();
+    }
+
+    private function createHyperguestBooking(): void
+    {
+        $hotel = $this->getJsonMeta('hotel_details');
+        $guest = $hotel['guest_details'] ?? [];
+
+        if (empty($hotel) || empty($guest)) {
+            \Illuminate\Support\Facades\Log::error("[HyperguestBooking] Missing hotel/guest meta for booking {$this->code}");
+            return;
+        }
+
+        try {
+            $hgBooking = (new \Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider())->book(
+                checkoutData: array_merge($hotel, ['special_requests' => $this->customer_notes]),
+                guest: $guest,
+            );
+
+            $this->addMeta('hyperguest_booking', $hgBooking);
+            $this->addMeta('hyperguest_booking_id', $hgBooking['bookingId'] ?? null);
+            $this->addMeta('hyperguest_status', $hgBooking['content']['status'] ?? 'unknown');
+            $this->addMeta('hyperguest_cancellation_policy', $hgBooking['rooms'][0]['cancellationPolicy'] ?? []);
+            $this->addMeta('hyperguest_remarks', $hgBooking['rooms'][0]['remarks'] ?? []);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("[HyperguestBooking] Failed for booking {$this->code}: " . $e->getMessage());
+            $this->addMeta('hyperguest_booking_error', $e->getMessage());
+        }
     }
 
     /**

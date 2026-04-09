@@ -132,7 +132,7 @@ class TestController extends Controller
 
         $hotelsList = collect($response->json());
 
-        $destination = strtolower('Dubai');
+        $destination = strtolower('IL');
 
         $destinationHotels = $hotelsList->filter(function ($h) use ($destination) {
                 $city = strtolower($h['city'] ?? '');
@@ -155,11 +155,11 @@ class TestController extends Controller
             'Accept-Encoding' => 'gzip, deflate',
             'Accept' => 'application/json',
         ])->get("https://search-api.hyperguest.io/2.0/",[
-            'checkIn' => '2026-04-09',
+            'checkIn' => '2026-04-15',
             'nights' => 1,
             'guests' => 1,
-            'hotelIds' => '59363',
-            'customerNationality' => 'US',
+            'hotelIds' => '19912',
+            'customerNationality' => 'AE',
         ]);
 
         
