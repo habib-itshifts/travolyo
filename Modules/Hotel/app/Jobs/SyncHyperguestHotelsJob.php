@@ -7,10 +7,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Modules\Hotel\Models\Hotel;
 
 class SyncHyperguestHotelsJob implements ShouldQueue
 {
@@ -146,7 +146,7 @@ class SyncHyperguestHotelsJob implements ShouldQueue
         ];
     }
 
-    // ── Step 2b: Upsert hotel into the DB using source + external_id as the key ──
+    // ── Step 2b: Upsert hotel into the new external_hyperguest_hotels table ──
     private function upsertHotel(string $externalId, array $staticList, array $staticDetail): void
     {
         $name = $staticDetail['name']
@@ -155,12 +155,8 @@ class SyncHyperguestHotelsJob implements ShouldQueue
         $city    = strtolower(trim($staticDetail['city'] ?: (string) ($staticList['city'] ?? '')));
         $country = strtoupper(substr($staticDetail['country'] ?: (string) ($staticList['country'] ?? 'XX'), 0, 2));
 
-        Hotel::updateOrCreate(
-            // Match on source + external_id (unique pair — no duplicates)
-            [
-                'source'      => 'hyperguest',
-                'external_id' => $externalId,
-            ],
+        DB::table('external_hyperguest_hotels')->updateOrInsert(
+            ['property_id' => (int) $externalId],
             [
                 'name'                => $name,
                 'slug'                => $this->uniqueSlug($name, $externalId),
@@ -172,17 +168,14 @@ class SyncHyperguestHotelsJob implements ShouldQueue
                 'latitude'            => $staticDetail['latitude'],
                 'longitude'           => $staticDetail['longitude'],
                 'star_rating'         => $staticDetail['star_rating'],
-                'check_in_time'       => $staticDetail['check_in_time'] ?? '14:00',
-                'check_out_time'      => $staticDetail['check_out_time'] ?? '12:00',
-                'email'               => $staticDetail['email'],
-                'phone'               => $staticDetail['phone'],
-                'website'             => $staticDetail['website'],
+                'check_in_time'       => $staticDetail['check_in_time'],
+                'check_out_time'      => $staticDetail['check_out_time'],
                 'featured_image_url'  => $staticDetail['featured_image_url'],
-                'gallery_urls'        => $staticDetail['gallery_urls'],
-                // External hotels are hidden from admin CMS, active for search
+                'gallery_urls'        => json_encode($staticDetail['gallery_urls']),
                 'status'              => 'active',
-                'is_external'         => true,
-                'external_synced_at'  => now(),
+                'synced_at'           => now(),
+                'updated_at'          => now(),
+                'created_at'          => now(),
             ]
         );
     }

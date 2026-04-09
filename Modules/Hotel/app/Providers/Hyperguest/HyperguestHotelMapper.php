@@ -15,7 +15,7 @@ class HyperguestHotelMapper
      * @param  int    $nights   Number of nights
      * @param  string $currency Requested/converted currency
      */
-    public function toOfferDtoFromDb(array $db): HotelOfferDto
+    public function toSearchOfferDto(array $db): HotelOfferDto
     {
         $galleryUrls = $db['gallery_urls'] ?? null;
         if (is_string($galleryUrls)) {
@@ -24,7 +24,7 @@ class HyperguestHotelMapper
         $images = is_array($galleryUrls) ? array_values(array_filter($galleryUrls)) : [];
 
         return new HotelOfferDto(
-            offerId:              (string) ($db['external_id'] ?? ''),
+            offerId:              (string) ($db['property_id'] ?? ''),
             provider:             HotelProviderEnum::Hyperguest,
             name:                 (string) ($db['name'] ?? ''),
             starRating:           (int) ($db['star_rating'] ?? 0),
@@ -132,7 +132,6 @@ class HyperguestHotelMapper
         $baseTotalPrice = $basePrice * $nights;
 
         $convertedPrice = currency($basePrice, $baseCurrency, $currency, false);
-        // $convertedPrice = $baseTotalPrice;
 
         $convertedTotalPrice = $convertedPrice * $nights;
 

@@ -32,10 +32,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
     {
         $destination = strtolower(trim($dto->destination));
 
-        $query = DB::table('hotels')
-            ->where('external_id', '59363')
-            ->where('source', 'hyperguest')
-            ->where('is_external', true)
+        $query = DB::table('external_hyperguest_hotels')
             ->where('status', 'active')
             ->where(function ($q) use ($destination) {
                 $q->whereRaw('LOWER(city) = ?', [$destination])
@@ -47,7 +44,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         }
 
         return $query->get()
-            ->map(fn ($row) => $this->mapper->toOfferDtoFromDb((array) $row))
+            ->map(fn ($row) => $this->mapper->toSearchOfferDto((array) $row))
             ->all();
     }
 
@@ -106,13 +103,13 @@ class HyperguestHotelProvider implements HotelProviderInterface
     public function book(array $checkoutData, array $guest): array
     {
         $keys = $this->mapper->decodeBookingKey($checkoutData['room_id']);
-
         $payload = [
             'dates' => [
                 'from' => $checkoutData['check_in'],
                 'to' => $checkoutData['check_out'],
             ],
             'propertyId' => (int) $keys['property_id'],
+            'nationality' => $guest['nationality'] ?? 'US',
             'leadGuest' => [
                 'birthDate' => $guest['birth_date'] ?? '1990-01-01',
                 'contact' => [
@@ -163,7 +160,6 @@ class HyperguestHotelProvider implements HotelProviderInterface
             ->acceptJson()
             ->timeout(30)
             ->post('https://book-api.hyperguest.com/2.0/booking/create', $payload);
-
         if ($response->failed()) {
             throw new HotelException(
                 'Hyperguest booking failed: ' . $response->status() . ' ' . $response->body(),
