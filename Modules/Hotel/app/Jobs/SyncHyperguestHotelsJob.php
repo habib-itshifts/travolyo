@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
+// php artisan tinker --execute="Modules\Hotel\Jobs\SyncHyperguestHotelsJob::dispatch()"
+// php artisan queue:work
+
 class SyncHyperguestHotelsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;

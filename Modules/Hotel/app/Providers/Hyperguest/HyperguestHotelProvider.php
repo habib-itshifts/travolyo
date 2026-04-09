@@ -109,13 +109,12 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'to' => $checkoutData['check_out'],
             ],
             'propertyId' => (int) $keys['property_id'],
-            'nationality' => $guest['nationality'] ?? 'US',
             'leadGuest' => [
                 'birthDate' => $guest['birth_date'] ?? '1990-01-01',
                 'contact' => [
                     'address' => $guest['address'] ?? 'N/A',
                     'city' => $guest['city'] ?? 'N/A',
-                    'country' => $guest['country'] ?? 'N/A',
+                    'country' => $guest['country'] ?? 'AE',
                     'email' => $guest['email'],
                     'phone' => $guest['phone'],
                     'state' => $guest['state'] ?? 'N/A',
@@ -129,6 +128,23 @@ class HyperguestHotelProvider implements HotelProviderInterface
             ],
             'reference' => [
                 'agency' => 'travolyo-' . uniqid(),
+            ],
+            // TODO: replace test card with real payment details or switch type (credit_balance, external, etc.) for production
+            'paymentDetails' => [
+                'type' => 'credit_card',
+                'details' => [
+                    'number' => '4111111111111111', // test card — safe because charge is false
+                    'cvv' => '123',
+                    'expiry' => [
+                        'month' => '12',
+                        'year' => '2028',
+                    ],
+                    'name' => [
+                        'first' => $guest['first_name'],
+                        'last' => $guest['last_name'],
+                    ],
+                    'charge' => false, // DO NOT set true unless pre-arranged with HyperGuest
+                ],
             ],
             'rooms' => [[
                 'roomCode' => $keys['room_code'],
@@ -152,15 +168,17 @@ class HyperguestHotelProvider implements HotelProviderInterface
             'meta' => [
                 ['key' => 'Source', 'value' => 'Travolyo'],
             ],
-            'isTest' => true,
+            'isTest' => true, // only marks as test on HG side — live hotels will still charge you
             'groupBooking' => false,
         ];
+
 
         $response = Http::withHeaders($this->headers)
             ->acceptJson()
             ->timeout(30)
             ->post('https://book-api.hyperguest.com/2.0/booking/create', $payload);
-        if ($response->failed()) {
+        
+            if ($response->failed()) {
             throw new HotelException(
                 'Hyperguest booking failed: ' . $response->status() . ' ' . $response->body(),
                 $response->status()
