@@ -19,7 +19,9 @@ use Modules\Flight\Http\Requests\PrebookFlightRequest;
 use Modules\Flight\Http\Requests\SearchFlightRequest;
 use Modules\Flight\Providers\Duffel\DuffelProvider;
 use Modules\Flight\Providers\TravolyoB2BXmlAgency\TravolyoB2BXmlAgencyProvider;
+use Modules\Flight\Providers\FlightProviderInterface;
 use Modules\Flight\Resources\FlightOfferResource;
+use Modules\Flight\Resources\FlightOrderResource;
 
 class FlightController extends Controller
 {
@@ -216,11 +218,52 @@ class FlightController extends Controller
 
     public function order(string $orderId): JsonResponse
     {
-        //
+        try {
+            $order = $this->resolveOrderProvider($orderId)->getOrder($orderId);
+
+            return response()->json([
+                'success' => true,
+                'data'    => new FlightOrderResource($order),
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 404);
+        }
     }
 
     public function cancel(string $orderId): JsonResponse
     {
-        //
+        try {
+            $this->resolveOrderProvider($orderId)->cancelOrder($orderId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Flight booking cancelled successfully.',
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function resolveOrderProvider(string $orderId): FlightProviderInterface
+    {
+       
+        $source = Booking::query()
+            ->where('code', $orderId)
+            ->where('object_model', BookingObjectModelEnum::Flight->value)
+            ->value('source');
+
+        return match ($source) {
+            FlightProviderEnum::Duffel->value               => new DuffelProvider(),
+            FlightProviderEnum::TravolyoB2BXmlAgency->value => new TravolyoB2BXmlAgencyProvider(),
+            default => throw new \RuntimeException("Unknown flight provider for order: {$orderId}"),
+        };
     }
 }
