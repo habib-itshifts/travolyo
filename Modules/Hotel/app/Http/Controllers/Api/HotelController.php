@@ -23,9 +23,7 @@ use Modules\Hotel\Http\Requests\CheckoutHotelRequest;
 use Modules\Hotel\Http\Requests\PrebookHotelRequest;
 use Modules\Hotel\Http\Requests\SearchHotelRequest;
 use Modules\Hotel\Providers\HotelProviderInterface;
-use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
-use Modules\Hotel\Providers\Local\LocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
+use Modules\Hotel\Services\HotelRoomService;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
 
@@ -105,15 +103,8 @@ class HotelController extends Controller
         ]);
 
         try {
-            $providerEnum = HotelProviderEnum::from($request->input('provider'));
-
-            $provider = match ($providerEnum) {
-                HotelProviderEnum::Local       => new LocalHotelProvider(),
-                HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
-                HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
-            };
-
-            $rooms = $provider->getRooms(
+            $rooms = app(HotelRoomService::class)->getRooms(
+                provider: $request->input('provider'),
                 offerId:  $request->input('offer_id'),
                 cityCode: $request->input('city_code', ''),
                 checkIn:  $request->input('check_in'),
@@ -312,11 +303,7 @@ class HotelController extends Controller
             ->where('object_model', 'hotel')
             ->value('source');
 
-        return match ($source) {
-            HotelProviderEnum::TravolyoB2B->value => new TravolyoB2BHotelProvider(),
-            HotelProviderEnum::Hyperguest->value  => new HyperguestHotelProvider(),
-            default                               => new LocalHotelProvider(),
-        };
+        return app(HotelRoomService::class)->resolveProviderBySource($source);
     }
 
     private function storeSearchCache($store, string $cacheKey, array $offers): void

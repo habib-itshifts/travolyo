@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Modules\Hotel\Enums\HotelProviderEnum;
-use Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider;
-use Modules\Hotel\Providers\Local\LocalHotelProvider;
-use Modules\Hotel\Providers\TravolyoB2B\TravolyoB2BHotelProvider;
+use Modules\Hotel\Services\HotelRoomService;
 
 class HotelController extends Controller
 {
@@ -128,16 +126,9 @@ class HotelController extends Controller
             'currency'  => 'nullable|string|size:3',
         ]);
 
-        $providerEnum = HotelProviderEnum::tryFrom($request->input('provider'));
-        if (! $providerEnum) {
+        if (! HotelProviderEnum::tryFrom($request->input('provider'))) {
             return redirect()->route('hotels.index');
         }
-
-        $providerInstance = match ($providerEnum) {
-            HotelProviderEnum::Local       => new LocalHotelProvider(),
-            HotelProviderEnum::TravolyoB2B => new TravolyoB2BHotelProvider(),
-            HotelProviderEnum::Hyperguest  => new HyperguestHotelProvider(),
-        };
 
         // Session takes priority over URL param so the currency switcher (redirect()->back()) works.
         // This is the convertedCurrency — baseCurrency is resolved per-hotel inside the provider.
@@ -146,7 +137,8 @@ class HotelController extends Controller
         try {
             \Log::info('HG showRooms params', $request->only(['offer_id', 'provider', 'city', 'check_in', 'check_out', 'adults', 'children']));
 
-            $rooms = $providerInstance->getRooms(
+            $rooms = app(HotelRoomService::class)->getRooms(
+                provider: $request->input('provider'),
                 offerId:  $request->input('offer_id'),
                 cityCode: $request->input('city', ''),
                 checkIn:  $request->input('check_in'),
