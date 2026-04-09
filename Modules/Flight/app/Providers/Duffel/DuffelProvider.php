@@ -3,6 +3,7 @@
 namespace Modules\Flight\Providers\Duffel;
 
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 use Modules\Flight\DTOs\CheckoutFlightDto;
 use Modules\Flight\DTOs\FlightOfferDto;
 use Modules\Flight\DTOs\FlightOrderDto;
@@ -16,6 +17,7 @@ use Modules\Flight\Providers\FlightProviderInterface;
 
 class DuffelProvider implements FlightProviderInterface
 {
+    private const REQUEST_TIMEOUT = 300;
     private string $baseUrl;
     private string $token;
     private string $apiVersion;
@@ -28,7 +30,7 @@ class DuffelProvider implements FlightProviderInterface
         $this->baseUrl    = rtrim((string) config('duffel.base_url', 'https://api.duffel.com'), '/');
         $this->token      = (string) config('duffel.token', '');
         $this->apiVersion = (string) config('duffel.api_version', 'v2');
-        $this->timeout    = (int)    config('duffel.timeout', 20);
+        $this->timeout    = (int)    config('duffel.timeout', 300);
         $this->limit      = (int)    config('duffel.default_limit', 20);
         $this->mapper     = new DuffelMapper();
     }
@@ -45,7 +47,7 @@ class DuffelProvider implements FlightProviderInterface
                 'Duffel-Version' => $this->apiVersion,
                 'Accept'         => 'application/json',
             ])
-            ->timeout($this->timeout)
+            ->timeout(self::REQUEST_TIMEOUT)
             ->post("{$this->baseUrl}/air/offer_requests?return_offers=true", $this->buildSearchPayload($dto));
 
         if (! $response->successful()) {
@@ -85,29 +87,53 @@ class DuffelProvider implements FlightProviderInterface
 
     public function pay(PayFlightDto $dto): FlightOrderDto
     {
-        $passengers = array_map(function ($pax, $idx) {
-            return [
-                'id'          => (string) $idx,
-                'title'       => 'mr',
-                'gender'      => strtolower($pax->gender) === 'f' ? 'f' : 'm',
-                'given_name'  => strtoupper($pax->firstName),
-                'family_name' => strtoupper($pax->lastName),
-                'born_on'     => $pax->dateOfBirth,
-                'email'       => $pax->email,
-                'phone_number'=> preg_replace('/[^0-9+]/', '', $pax->phone),
-                'passport_number'         => $pax->passportNumber,
-                'passport_expiry_date'    => $pax->passportExpiry,
-                'passport_issuance_country' => strtoupper($pax->passportCountry ?? 'AE'),
-                'nationality'             => strtoupper($pax->nationality ?? 'AE'),
+        $offer = $this->prebook(new PrebookFlightDto(
+            offerId: $dto->offerId,
+            provider: FlightProviderEnum::Duffel,
+        ));
+
+        $rawOfferResponse = $this->get("/air/offers/{$dto->offerId}");
+        $rawPassengers = (array) ($rawOfferResponse->json('data.passengers') ?? []);
+
+        $duffelPassengerIds = array_values(array_filter(array_map(
+            fn (array $pax) => (string) ($pax['id'] ?? ''),
+            $rawPassengers
+        )));
+
+        if (empty($duffelPassengerIds)) {
+            throw FlightException::providerError('Duffel', 'Offer passenger IDs are missing. Please search again and try booking from a fresh offer.');
+        }
+
+        $passengers = array_map(function ($pax, $index) use ($dto, $duffelPassengerIds) {
+            $bornOn = $this->normalizeBirthDate($pax->dateOfBirth, $pax->type ?? 'adult');
+            $phone = $this->normalizePhoneNumber($pax->phone ?: $dto->contactPhone);
+
+            $data = [
+                'id'                        => $duffelPassengerIds[$index] ?? null,
+                'title'                     => strtolower((string) ($pax->title ?? 'mr')),
+                'given_name'                => $pax->firstName,
+                'family_name'               => $pax->lastName,
+                'email'                     => $pax->email,
+                'phone_number'              => $phone,
+                'born_on'                   => $bornOn,
+                'gender'                    => strtolower((string) ($pax->gender ?? 'm')),
+                'passport_number'           => $pax->passportNumber,
+                'passport_expiry_date'      => $pax->passportExpiry,
+                'passport_issuance_country' => strtoupper($pax->passportCountry ?: $pax->nationality ?: 'AE'),
+                'nationality'               => strtoupper($pax->nationality ?? 'AE'),
             ];
+
+            return array_filter($data, fn ($v) => $v !== null && $v !== '');
         }, $dto->passengers, array_keys($dto->passengers));
+
+        $amount = number_format((float) $offer->totalAmount, 2, '.', '');
 
         $response = Http::withToken($this->token)
             ->withHeaders([
                 'Duffel-Version' => $this->apiVersion,
                 'Accept'         => 'application/json',
             ])
-            ->timeout($this->timeout)
+            ->timeout(self::REQUEST_TIMEOUT)
             ->post("{$this->baseUrl}/air/orders", [
                 'data' => [
                     'type'              => 'instant',
@@ -115,8 +141,8 @@ class DuffelProvider implements FlightProviderInterface
                     'passengers'        => $passengers,
                     'payments'          => [[
                         'type'     => 'balance',
-                        'amount'   => '0',
-                        'currency' => 'USD',
+                        'amount'   => $amount,
+                        'currency' => $offer->currency,
                     ]],
                 ],
             ]);
@@ -141,7 +167,7 @@ class DuffelProvider implements FlightProviderInterface
                 'Duffel-Version' => $this->apiVersion,
                 'Accept'         => 'application/json',
             ])
-            ->timeout($this->timeout)
+            ->timeout(self::REQUEST_TIMEOUT)
             ->post("{$this->baseUrl}/air/order_cancellations", [
                 'data' => ['order_id' => $orderId],
             ]);
@@ -154,7 +180,7 @@ class DuffelProvider implements FlightProviderInterface
         $cancellationId = $response->json('data.id');
         Http::withToken($this->token)
             ->withHeaders(['Duffel-Version' => $this->apiVersion, 'Accept' => 'application/json'])
-            ->timeout($this->timeout)
+            ->timeout(self::REQUEST_TIMEOUT)
             ->post("{$this->baseUrl}/air/order_cancellations/{$cancellationId}/actions/confirm");
 
         return true;
@@ -178,9 +204,29 @@ class DuffelProvider implements FlightProviderInterface
             ];
         }
 
-        $passengers = array_fill(0, max(1, $dto->adults), ['type' => 'adult']);
-        for ($i = 0; $i < $dto->children; $i++) { $passengers[] = ['type' => 'child']; }
-        for ($i = 0; $i < $dto->infants;  $i++) { $passengers[] = ['type' => 'infant_without_seat']; }
+        $passengers = [];
+        $passengerIndex = 0;
+
+        for ($i = 0; $i < max(1, $dto->adults); $i++) {
+            $passengers[] = [
+                'id'   => 'passenger_' . $passengerIndex++,
+                'type' => 'adult',
+            ];
+        }
+
+        for ($i = 0; $i < $dto->children; $i++) {
+            $passengers[] = [
+                'id'   => 'passenger_' . $passengerIndex++,
+                'type' => 'child',
+            ];
+        }
+
+        for ($i = 0; $i < $dto->infants; $i++) {
+            $passengers[] = [
+                'id'   => 'passenger_' . $passengerIndex++,
+                'type' => 'infant_without_seat',
+            ];
+        }
 
         return [
             'data' => [
@@ -205,7 +251,8 @@ class DuffelProvider implements FlightProviderInterface
     {
         $slices   = (array) ($data['slices'] ?? []);
         $first    = (array) ($slices[0]['segments'][0] ?? []);
-        $lastSeg  = (array) (end($slices[0]['segments'] ?? [[] ]) ?: []);
+        $segments = (array) ($slices[0]['segments'] ?? []);
+        $lastSeg  = $segments ? (array) end($segments) : [];
 
         return new FlightOrderDto(
             orderId:           (string) ($data['id'] ?? ''),
@@ -223,6 +270,42 @@ class DuffelProvider implements FlightProviderInterface
         );
     }
 
+    private function normalizeBirthDate(string $value, string $type = 'adult'): string
+    {
+        $today = Carbon::today();
+        $fallback = match (strtolower($type)) {
+            'child' => $today->copy()->subYears(10),
+            'infant', 'infant_without_seat' => $today->copy()->subMonths(6),
+            default => $today->copy()->subYears(30),
+        };
+
+        try {
+            $date = Carbon::parse(trim($value));
+            if ($date->isFuture() || $date->greaterThan($today)) {
+                return $fallback->toDateString();
+            }
+
+            return $date->toDateString();
+        } catch (\Throwable) {
+            return $fallback->toDateString();
+        }
+    }
+
+    private function normalizePhoneNumber(string $value): string
+    {
+        $phone = preg_replace('/[^0-9+]/', '', trim($value));
+
+        if ($phone === '') {
+            return '+971000000000';
+        }
+
+        if (! str_starts_with($phone, '+')) {
+            $phone = '+' . ltrim($phone, '+');
+        }
+
+        return $phone;
+    }
+
     private function get(string $path): \Illuminate\Http\Client\Response
     {
         $response = Http::withToken($this->token)
@@ -230,7 +313,7 @@ class DuffelProvider implements FlightProviderInterface
                 'Duffel-Version' => $this->apiVersion,
                 'Accept'         => 'application/json',
             ])
-            ->timeout($this->timeout)
+            ->timeout(self::REQUEST_TIMEOUT)
             ->get("{$this->baseUrl}{$path}");
 
         if (! $response->successful()) {

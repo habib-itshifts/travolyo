@@ -84,6 +84,7 @@ class DuffelMapper
             flightNumber:      $leg['flight_number'],
             cabinClass:        strtoupper((string) ($offer['slices'][0]['segments'][0]['passengers'][0]['cabin_class_marketing_name'] ?? 'ECONOMY')),
             segments:          $leg['segments'],
+            passengers:        $this->mapPassengers($offer['passengers'] ?? []),
             rawFlightDetails:  $rawFlightDetails,
             returnDepartureAt: $retLeg ? $retLeg['dep_date'] . ' ' . $retLeg['dep_time'] : null,
             returnArrivalAt:   $retLeg ? $retLeg['arr_date'] . ' ' . $retLeg['arr_time'] : null,
@@ -114,6 +115,16 @@ class DuffelMapper
             'baggage'       => (string) (int) $checked,
             'cabin_class'   => strtoupper((string) ($segment['passengers'][0]['cabin_class_marketing_name'] ?? 'ECONOMY')),
         ];
+    }
+
+    private function mapPassengers(array $passengers): array
+    {
+        return array_values(array_map(function (array $pax, int $index) {
+            return [
+                'id' => (string) ($pax['id'] ?? ('passenger_' . $index)),
+                'type' => (string) ($pax['type'] ?? 'adult'),
+            ];
+        }, $passengers, array_keys($passengers)));
     }
 
     private function parseDateTime(string $value): ?Carbon

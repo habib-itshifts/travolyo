@@ -10,6 +10,11 @@ use Modules\Activity\Actions\SearchActivityAction;
 use Modules\Activity\DTOs\SearchActivityDto;
 use Modules\Hotel\Actions\SearchHotelAction;
 use Modules\Hotel\DTOs\SearchHotelDto;
+use Modules\Flight\DTOs\FlightPassengerDto;
+use Modules\Flight\DTOs\PayFlightDto;
+use Modules\Flight\Enums\FlightProviderEnum;
+use Modules\Flight\Providers\Duffel\DuffelProvider;
+use Modules\Flight\Providers\TravolyoB2BXmlAgency\TravolyoB2BXmlAgencyProvider;
 
 class BookingController extends Controller
 {
@@ -35,6 +40,10 @@ class BookingController extends Controller
             $offers = (new SearchHotelAction())->handle($dto);
             $passengers = $booking->getJsonMeta('flight_passengers') ?: [];
             $orderRef = $booking->getMeta('flight_pnr') ?: '';
+
+            $this->createFlightOrderIfMissing($booking, $data, $passengers);
+            $booking->refresh();
+            $orderRef = $booking->getMeta('flight_pnr') ?: $orderRef;
 
             return view('flight::flights.confirmation', compact(
                 'booking',
@@ -184,5 +193,63 @@ class BookingController extends Controller
         $guests = max(1, (int) ($flightData['adults'] ?? 1) + (int) ($flightData['children'] ?? 0));
 
         return (int) ceil($guests / 2);
+    }
+
+    private function createFlightOrderIfMissing(Booking $booking, array $flightDetails, array $passengers): void
+    {
+        if ($booking->getMeta('flight_order')) {
+            return;
+        }
+
+        $providerEnum = FlightProviderEnum::tryFrom((string) ($flightDetails['provider'] ?? '')) ?? FlightProviderEnum::Duffel;
+        $provider = match ($providerEnum) {
+            FlightProviderEnum::Duffel => new DuffelProvider(),
+            FlightProviderEnum::TravolyoB2BXmlAgency => new TravolyoB2BXmlAgencyProvider(),
+        };
+
+        $flightPassengers = array_map(function (array $pax) use ($booking) {
+            $dob = (string) ($pax['dob'] ?? '');
+            if ($dob === '' || Carbon::parse($dob)->isFuture()) {
+                $dob = now()->subYears(30)->toDateString();
+            }
+
+            return new FlightPassengerDto(
+                id: (string) ($pax['id'] ?? ''),
+                title: strtolower((string) ($pax['title'] ?? 'mr')),
+                type: (string) ($pax['type'] ?? 'adult'),
+                firstName: (string) ($pax['first_name'] ?? $booking->first_name ?? ''),
+                lastName: (string) ($pax['last_name'] ?? $booking->last_name ?? ''),
+                dateOfBirth: $dob,
+                gender: strtolower((string) ($pax['gender'] ?? 'M')),
+                email: (string) ($booking->email ?? ''),
+                phone: (string) ($booking->phone ?? ''),
+                passportNumber: (string) ($pax['passport'] ?? ''),
+                passportExpiry: (string) ($pax['passport_expiry'] ?? ''),
+                passportCountry: strtoupper((string) ($pax['passport_country'] ?? $pax['nationality'] ?? 'AE')),
+                nationality: (string) ($pax['nationality'] ?? 'AE'),
+            );
+        }, $passengers);
+
+        $offerId = (string) ($flightDetails['offer_id'] ?? '');
+        if ($offerId === '' || empty($flightPassengers)) {
+            return;
+        }
+
+        $paidOrder = $provider->pay(new PayFlightDto(
+            offerId: $offerId,
+            provider: $providerEnum,
+            passengers: $flightPassengers,
+            contactEmail: (string) ($booking->email ?? ''),
+            contactPhone: (string) ($booking->phone ?? ''),
+        ));
+
+        $booking->addMeta('flight_order', [
+            'order_id' => $paidOrder->orderId,
+            'provider' => $paidOrder->provider->value,
+            'status' => $paidOrder->status->value,
+            'booking_reference' => $paidOrder->bookingReference,
+            'ticketing_deadline' => $paidOrder->ticketingDeadline,
+        ]);
+        $booking->updateMeta('flight_pnr', $paidOrder->bookingReference ?: $paidOrder->orderId);
     }
 }

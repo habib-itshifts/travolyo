@@ -34,6 +34,7 @@ class FlightOfferDto
 
         // Segments – each leg's raw detail rows (for expanded card)
         public readonly array          $segments,
+        public readonly array          $passengers = [],
 
         // All legs (departure + optional return) for multi-leg display
         public readonly array          $rawFlightDetails,

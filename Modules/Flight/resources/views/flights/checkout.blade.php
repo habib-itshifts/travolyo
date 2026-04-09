@@ -73,6 +73,7 @@
     outline: none; border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(23,195,206,.12);
 }
+.form-control-co.is-invalid { border-color: #dc3545; }
 .form-select-co {
     border: 1px solid var(--border); border-radius: .5rem;
     padding: .6rem .9rem; font-size: .9rem; color: var(--text-dark);
@@ -84,6 +85,8 @@
     outline: none; border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(23,195,206,.12);
 }
+.form-select-co.is-invalid { border-color: #dc3545; }
+.field-error { font-size: .75rem; color: #dc3545; margin-top: .25rem; display: block; min-height: 1rem; }
 
 /* Passenger label */
 .passenger-label {
@@ -150,8 +153,10 @@
     font-size: 1rem; font-weight: 700; width: 100%;
     transition: background .15s, transform .15s;
     display: flex; align-items: center; justify-content: center; gap: .5rem;
+    cursor: pointer;
 }
-.btn-pay:hover { background: var(--primary-dark); transform: translateY(-1px); color: #fff; }
+.btn-pay:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-1px); color: #fff; }
+.btn-pay:disabled { opacity: .7; cursor: not-allowed; }
 
 .baggage-notice {
     background: #fffbeb; border: 1px solid #fcd34d;
@@ -219,12 +224,14 @@
                         <label class="form-label-sm">Email Address *</label>
                         <input type="email" class="form-control-co" id="contactEmail"
                                placeholder="your@email.com" value="{{ auth()->user()?->email }}" />
+                        <span class="field-error" id="err-contact-email"></span>
                     </div>
                     <div class="col-12 col-sm-6">
                         <label class="form-label-sm">Phone Number *</label>
                         <input type="tel" class="form-control-co" id="contactPhone"
                                placeholder="+971501234567" />
                         <small class="text-muted" style="font-size:.75rem;">Include country code, e.g. +971501234567</small>
+                        <span class="field-error" id="err-contact-phone"></span>
                     </div>
                 </div>
             </div>
@@ -253,28 +260,46 @@
                     <i class="bi bi-person-circle"></i>
                     Passenger {{ $pax['index'] }} — {{ $pax['type'] }}
                 </div>
-                <div class="row g-3 mb-4 js-pax-block" data-index="{{ $pax['index'] - 1 }}">
+
+                <div class="row g-3 mb-4 js-pax-block"
+                     data-index="{{ $pax['index'] - 1 }}"
+                     data-type="{{ strtolower($pax['type']) }}">
+
+                    {{-- Title --}}
                     <div class="col-6 col-sm-2">
                         <label class="form-label-sm">Title *</label>
                         <select class="form-select-co" data-field="title">
-                            <option value="Mr">Mr</option>
-                            <option value="Mrs">Mrs</option>
-                            <option value="Ms">Ms</option>
-                            <option value="Dr">Dr</option>
+                            <option value="">--</option>
+                            <option value="mr">Mr</option>
+                            <option value="mrs">Mrs</option>
+                            <option value="ms">Ms</option>
+                            <option value="dr">Dr</option>
                         </select>
+                        <span class="field-error" data-error-for="title"></span>
                     </div>
+
+                    {{-- First Name --}}
                     <div class="col-12 col-sm-5">
                         <label class="form-label-sm">First Name *</label>
                         <input type="text" class="form-control-co" data-field="first_name" placeholder="First name" />
+                        <span class="field-error" data-error-for="first_name"></span>
                     </div>
+
+                    {{-- Last Name --}}
                     <div class="col-12 col-sm-5">
                         <label class="form-label-sm">Last Name *</label>
                         <input type="text" class="form-control-co" data-field="last_name" placeholder="Last name" />
+                        <span class="field-error" data-error-for="last_name"></span>
                     </div>
+
+                    {{-- Date of Birth --}}
                     <div class="col-12 col-sm-4">
                         <label class="form-label-sm">Date of Birth *</label>
                         <input type="date" class="form-control-co" data-field="dob" />
+                        <span class="field-error" data-error-for="dob"></span>
                     </div>
+
+                    {{-- Nationality --}}
                     <div class="col-12 col-sm-4">
                         <label class="form-label-sm">Nationality *</label>
                         <select class="form-select-co" data-field="nationality">
@@ -290,22 +315,53 @@
                             <option value="CA">Canada</option>
                             <option value="AU">Australia</option>
                         </select>
+                        <span class="field-error" data-error-for="nationality"></span>
                     </div>
+
+                    {{-- Gender --}}
                     <div class="col-12 col-sm-4">
                         <label class="form-label-sm">Gender *</label>
                         <select class="form-select-co" data-field="gender">
-                            <option value="M">Male</option>
-                            <option value="F">Female</option>
+                            <option value="">Select</option>
+                            <option value="m">Male</option>
+                            <option value="f">Female</option>
                         </select>
+                        <span class="field-error" data-error-for="gender"></span>
                     </div>
+
+                    {{-- Passport Number --}}
                     <div class="col-12 col-sm-6">
                         <label class="form-label-sm">Passport Number *</label>
                         <input type="text" class="form-control-co" data-field="passport" placeholder="e.g. AA1234567" />
+                        <span class="field-error" data-error-for="passport"></span>
                     </div>
+
+                    {{-- Passport Expiry --}}
                     <div class="col-12 col-sm-6">
                         <label class="form-label-sm">Passport Expiry Date *</label>
                         <input type="date" class="form-control-co" data-field="passport_expiry" />
+                        <span class="field-error" data-error-for="passport_expiry"></span>
                     </div>
+
+                    {{-- Passport Country --}}
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-sm">Passport Issuing Country *</label>
+                        <select class="form-select-co" data-field="passport_country">
+                            <option value="">Select country</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="AE">UAE</option>
+                            <option value="PK">Pakistan</option>
+                            <option value="IN">India</option>
+                            <option value="DE">Germany</option>
+                            <option value="FR">France</option>
+                            <option value="SA">Saudi Arabia</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                        </select>
+                        <span class="field-error" data-error-for="passport_country"></span>
+                    </div>
+
                 </div>
                 @endforeach
 
@@ -364,7 +420,7 @@
                     <input class="form-check-input" type="checkbox" id="termsCheck" />
                     <label class="form-check-label" for="termsCheck">
                         I have read and agree to the
-                        <a href="#">Terms & Conditions</a> and
+                        <a href="#">Terms &amp; Conditions</a> and
                         <a href="#">Privacy Policy</a>.
                         I understand this booking is subject to the airline's
                         <a href="#">fare rules and cancellation policy</a>.
@@ -405,7 +461,7 @@
                         <span>{{ $fc['arr_iata'] ?? '—' }}</span>
                     </div>
                     <div class="fsr-meta">
-                        {{ $fc['dep_date'] ?? '' }} · {{ $fc['trip_type'] === 'round_trip' ? 'Round Trip' : 'One Way' }}
+                        {{ $fc['dep_date'] ?? '' }} · {{ ($fc['trip_type'] ?? '') === 'round_trip' ? 'Round Trip' : 'One Way' }}
                     </div>
                 </div>
                 <div class="flight-summary-body">
@@ -439,7 +495,7 @@
                             <div class="fsd-label">Airline</div>
                             <div class="fsd-value d-flex align-items-center gap-2">
                                 @if(!empty($fc['airline_logo']))
-                                    <img src="{{ $fc['airline_logo'] }}" alt="{{ $fc['airline_name'] }}" style="height:20px;object-fit:contain;">
+                                    <img src="{{ $fc['airline_logo'] }}" alt="{{ $fc['airline_name'] ?? '' }}" style="height:20px;object-fit:contain;">
                                 @endif
                                 {{ $fc['airline_name'] ?? '—' }}
                             </div>
@@ -469,7 +525,7 @@
                         <span>{{ $symbol }}{{ number_format($price, 2) }}</span>
                     </div>
                     <div class="price-row">
-                        <span>Taxes & fees</span>
+                        <span>Taxes &amp; fees</span>
                         <span>Included</span>
                     </div>
                     <div class="price-row total">
@@ -507,75 +563,199 @@ function togglePayment(method) {
     document.getElementById(method === 'stripe' ? 'optStripe' : 'optNgenius').classList.add('selected');
 }
 
-document.getElementById('btnPay').addEventListener('click', function () {
-    const terms = document.getElementById('termsCheck');
-    const err   = document.getElementById('payError');
+document.addEventListener('DOMContentLoaded', function () {
+    const btnPay   = document.getElementById('btnPay');
+    const err      = document.getElementById('payError');
+    const btnLabel = document.getElementById('btnPayLabel');
 
-    if (!terms.checked) {
-        err.textContent = 'Please accept the Terms & Conditions to proceed.';
-        err.classList.remove('d-none');
-        return;
-    }
+    if (!btnPay) return;
 
-    // Build passengers array from form fields
-    const passengers = [];
-    document.querySelectorAll('.js-pax-block').forEach(block => {
-        const get = field => block.querySelector(`[data-field="${field}"]`)?.value ?? '';
-        passengers.push({
-            title:          get('title'),
-            first_name:     get('first_name'),
-            last_name:      get('last_name'),
-            dob:            get('dob'),
-            nationality:    get('nationality'),
-            gender:         get('gender'),
-            passport:       get('passport'),
-            passport_expiry: get('passport_expiry'),
-        });
-    });
+    btnPay.addEventListener('click', function () {
 
-    const body = {
-        checkout_token:   '{{ $checkout_token }}',
-        contact_email:    document.getElementById('contactEmail').value,
-        contact_phone:    document.getElementById('contactPhone').value,
-        payment_gateway:  document.querySelector('input[name="payment_gateway"]:checked')?.value ?? 'stripe',
-        passengers,
-    };
+        const terms = document.getElementById('termsCheck');
 
-    const btn   = this;
-    const label = document.getElementById('btnPayLabel');
-    btn.disabled = true;
-    label.textContent = 'Redirecting to payment…';
-    err.classList.add('d-none');
+        // Clear all previous errors
+        const clearAllErrors = () => {
+            document.querySelectorAll('[data-error-for]').forEach(el => el.textContent = '');
+            document.querySelectorAll('.field-error[id]').forEach(el => el.textContent = '');
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            err.classList.add('d-none');
+            err.textContent = '';
+        };
 
-    fetch('{{ route('flights.checkout.submit') }}', {
-        method:  'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
-            'Accept':       'application/json',
-        },
-        body: JSON.stringify(body),
-    })
-    .then(res => res.json().then(data => ({ ok: res.ok, data })))
-    .then(({ ok, data }) => {
-        if (ok && (data.url || data.redirect)) {
-            window.location.href = data.url ?? data.redirect;
+        const setFieldError = (block, field, message) => {
+            const span = block.querySelector(`[data-error-for="${field}"]`);
+            const input = block.querySelector(`[data-field="${field}"]`);
+            if (span) span.textContent = message;
+            if (input) input.classList.add('is-invalid');
+        };
+
+        const normalizePhone = (value) => {
+            let phone = String(value ?? '').trim().replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
+            if (phone === '') return '+971000000000';
+            if (!phone.startsWith('+')) phone = '+' + phone;
+            return phone;
+        };
+
+        clearAllErrors();
+
+        // Terms check
+        if (!terms.checked) {
+            err.textContent = 'Please accept the Terms & Conditions to proceed.';
+            err.classList.remove('d-none');
             return;
         }
-        const msg = data.message
-            ?? (data.errors ? Object.values(data.errors).flat().join(' ') : null)
-            ?? 'Payment could not be initiated. Please try again.';
-        err.textContent = msg;
-        err.classList.remove('d-none');
-        btn.disabled    = false;
-        label.textContent = 'Confirm & Pay';
-    })
-    .catch(() => {
-        err.textContent = 'Network error. Please check your connection and try again.';
-        err.classList.remove('d-none');
-        btn.disabled    = false;
-        label.textContent = 'Confirm & Pay';
-    });
-});
+
+        // Contact validation
+        const contactEmailEl = document.getElementById('contactEmail');
+        const contactPhoneEl = document.getElementById('contactPhone');
+        const contactEmail   = String(contactEmailEl?.value ?? '').trim();
+        const contactPhone   = normalizePhone(contactPhoneEl?.value);
+        let hasError = false;
+
+        if (!contactEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+            document.getElementById('err-contact-email').textContent = 'Valid email address is required.';
+            contactEmailEl?.classList.add('is-invalid');
+            hasError = true;
+        }
+
+        // Passenger validation
+        const passengers = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        document.querySelectorAll('.js-pax-block').forEach((block, blockIndex) => {
+            const get  = field => (block.querySelector(`[data-field="${field}"]`)?.value ?? '').trim();
+            const type = String(block.dataset.type ?? 'adult').toLowerCase();
+
+            const title          = get('title');
+            const firstName      = get('first_name');
+            const lastName       = get('last_name');
+            const dob            = get('dob');
+            const nationality    = get('nationality');
+            const gender         = get('gender');
+            const passport       = get('passport');
+            const passportExpiry = get('passport_expiry');
+            const passportCountry = get('passport_country');
+
+            if (!title) {
+                setFieldError(block, 'title', 'Title is required.');
+                hasError = true;
+            }
+            if (!firstName) {
+                setFieldError(block, 'first_name', 'First name is required.');
+                hasError = true;
+            }
+            if (!lastName) {
+                setFieldError(block, 'last_name', 'Last name is required.');
+                hasError = true;
+            }
+            if (!dob) {
+                setFieldError(block, 'dob', 'Date of birth is required.');
+                hasError = true;
+            } else {
+                const dobDate = new Date(dob + 'T00:00:00');
+                if (Number.isNaN(dobDate.getTime()) || dobDate >= today) {
+                    setFieldError(block, 'dob', 'Date of birth must be a past date.');
+                    hasError = true;
+                }
+            }
+            if (!nationality) {
+                setFieldError(block, 'nationality', 'Nationality is required.');
+                hasError = true;
+            }
+            if (!gender) {
+                setFieldError(block, 'gender', 'Gender is required.');
+                hasError = true;
+            }
+            if (!passport) {
+                setFieldError(block, 'passport', 'Passport number is required.');
+                hasError = true;
+            }
+            if (!passportExpiry) {
+                setFieldError(block, 'passport_expiry', 'Passport expiry is required.');
+                hasError = true;
+            } else {
+                const expiryDate = new Date(passportExpiry + 'T00:00:00');
+                if (Number.isNaN(expiryDate.getTime()) || expiryDate <= today) {
+                    setFieldError(block, 'passport_expiry', 'Passport expiry must be a future date.');
+                    hasError = true;
+                }
+            }
+            if (!passportCountry) {
+                setFieldError(block, 'passport_country', 'Passport issuing country is required.');
+                hasError = true;
+            }
+
+            passengers.push({
+                type,
+                title,
+                first_name:       firstName,
+                last_name:        lastName,
+                dob,
+                nationality,
+                gender,
+                passport,
+                passport_expiry:  passportExpiry,
+                passport_country: passportCountry,
+            });
+        });
+
+        if (hasError) {
+            err.textContent = 'Please fix the highlighted fields above.';
+            err.classList.remove('d-none');
+            // Scroll to first error
+            const firstError = document.querySelector('.is-invalid, [data-error-for]:not(:empty)');
+            if (firstError) {
+                firstError.closest('.checkout-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            return;
+        }
+
+        // Build payload
+        const body = {
+            checkout_token:  '{{ $checkout_token }}',
+            contact_email:   contactEmail,
+            contact_phone:   contactPhone,
+            payment_gateway: document.querySelector('input[name="payment_gateway"]:checked')?.value ?? 'stripe',
+            passengers,
+        };
+
+        // Disable button & show loading
+        btnPay.disabled      = true;
+        btnLabel.textContent = 'Redirecting to payment…';
+
+        fetch('{{ route('flights.checkout.submit') }}', {
+            method:  'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                'Accept':       'application/json',
+            },
+            body: JSON.stringify(body),
+        })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && (data.url || data.redirect)) {
+                window.location.href = data.url ?? data.redirect;
+                return;
+            }
+            const msg = data.message
+                ?? (data.errors ? Object.values(data.errors).flat().join(' ') : null)
+                ?? 'Payment could not be initiated. Please try again.';
+            err.textContent = msg;
+            err.classList.remove('d-none');
+            btnPay.disabled      = false;
+            btnLabel.textContent = 'Confirm & Pay';
+        })
+        .catch(() => {
+            err.textContent = 'Network error. Please check your connection and try again.';
+            err.classList.remove('d-none');
+            btnPay.disabled      = false;
+            btnLabel.textContent = 'Confirm & Pay';
+        });
+
+    }); // end btnPay click
+}); // end DOMContentLoaded
 </script>
 @endpush

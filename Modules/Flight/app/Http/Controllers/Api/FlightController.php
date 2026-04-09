@@ -158,6 +158,7 @@ class FlightController extends Controller
     public function checkout(CheckoutFlightRequest $request): JsonResponse
     {
         $validated = $request->validated();
+        $contactPhone = $this->normalizePhoneNumber((string) ($validated['contact_phone'] ?? ''));
 
         // Retrieve the prebook data from cache using the token passed by the checkout page
         $flight = Cache::get('flight_checkout_' . $validated['checkout_token']);
@@ -181,14 +182,21 @@ class FlightController extends Controller
                 'first_name'   => $validated['passengers'][0]['first_name'],
                 'last_name'    => $validated['passengers'][0]['last_name'],
                 'email'        => $validated['contact_email'],
-                'phone'        => $validated['contact_phone'],
+                'phone'        => $contactPhone,
                 'source'       => $flight['provider'] ?? null,
                 'platform'     => Booking::detectPlatform(),
             ]);
 
             // Store flight details and passengers in booking meta
             $booking->addMeta('flight_details', $flight);
-            $booking->addMeta('flight_passengers', $validated['passengers']);
+            $flightPassengers = [];
+            foreach ($validated['passengers'] as $idx => $pax) {
+                $flightPassengers[] = array_merge($pax, [
+                    'id' => (string) ($flight['passengers'][$idx]['id'] ?? ('passenger_' . $idx)),
+                    'type' => (string) ($pax['type'] ?? $flight['passengers'][$idx]['type'] ?? 'adult'),
+                ]);
+            }
+            $booking->addMeta('flight_passengers', $flightPassengers);
             $booking->addMeta('payment_gateway', $validated['payment_gateway']);
 
             $result = PaymentService::gateway($validated['payment_gateway'])->initiate($booking);
@@ -222,5 +230,13 @@ class FlightController extends Controller
     public function cancel(string $orderId): JsonResponse
     {
         //
+    }
+
+    private function normalizePhoneNumber(string $value): string
+    {
+        $phone = preg_replace('/[^0-9+]/', '', trim($value));
+        $phone = preg_replace('/(?!^)\+/', '', $phone);
+
+        return $phone !== '' ? $phone : '+971000000000';
     }
 }
