@@ -740,11 +740,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = data.url ?? data.redirect;
                 return;
             }
-            const msg = data.message
-                ?? (data.errors ? Object.values(data.errors).flat().join(' ') : null)
-                ?? 'Payment could not be initiated. Please try again.';
-            err.textContent = msg;
-            err.classList.remove('d-none');
+            if (data.errors) {
+                Object.entries(data.errors).forEach(([key, messages]) => {
+                    const message = Array.isArray(messages) ? messages[0] : String(messages);
+
+                    if (key.startsWith('passengers.')) {
+                        const parts = key.split('.');
+                        const index = Number(parts[1]);
+                        const field = parts[2];
+                        const block = document.querySelectorAll('.js-pax-block')[index];
+
+                        if (block && field) {
+                            const span = block.querySelector(`[data-error-for="${field}"]`);
+                            const input = block.querySelector(`[data-field="${field}"]`);
+                            if (span) span.textContent = message;
+                            if (input) input.classList.add('is-invalid');
+                        }
+                        return;
+                    }
+
+                    if (key === 'contact_email') {
+                        document.getElementById('err-contact-email').textContent = message;
+                        document.getElementById('contactEmail')?.classList.add('is-invalid');
+                        return;
+                    }
+
+                    if (key === 'contact_phone') {
+                        document.getElementById('err-contact-phone').textContent = message;
+                        document.getElementById('contactPhone')?.classList.add('is-invalid');
+                        return;
+                    }
+
+                    err.textContent = message;
+                });
+                err.classList.remove('d-none');
+            } else {
+                err.textContent = data.message ?? 'Payment could not be initiated. Please try again.';
+                err.classList.remove('d-none');
+            }
             btnPay.disabled      = false;
             btnLabel.textContent = 'Confirm & Pay';
         })

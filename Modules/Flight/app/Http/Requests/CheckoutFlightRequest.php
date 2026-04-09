@@ -62,4 +62,5 @@ class CheckoutFlightRequest extends FormRequest
             ], 422)
         );
     }
+
 }
