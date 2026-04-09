@@ -51,6 +51,7 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
                 'check_out' => $dto->checkOut,
                 'adults' => $dto->adults,
                 'children' => $dto->children,
+                'child_ages' => $dto->childAges,
                 'rooms' => $dto->rooms,
                 'nationality' => 'AE',
                 'currency' => $dto->currency,

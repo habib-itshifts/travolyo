@@ -30,6 +30,7 @@ class SearchHotelAction
                     checkOut:   $dto->checkOut,
                     adults:     $dto->adults,
                     children:   $dto->children,
+                    childAges:  $dto->childAges,
                     rooms:      $dto->rooms,
                     starRating: $dto->starRating,
                     priceMin:   $dto->priceMin,

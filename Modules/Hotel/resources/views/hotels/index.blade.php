@@ -430,6 +430,10 @@
         }
 
         try {
+            const childAges = Array.isArray(params.child_ages)
+                ? params.child_ages.map(Number).filter(v => Number.isFinite(v) && v >= 0)
+                : [];
+
             const res  = await fetch(searchUrl, {
                 method:  'POST',
                 headers: {
@@ -443,6 +447,7 @@
                     check_out:        params.check_out,
                     adults:           parseInt(params.adults ?? 1, 10),
                     children:         parseInt(params.children ?? 0, 10),
+                    child_ages:       childAges,
                     page:             page,
                     currency: document.querySelector('meta[name="currency"]')?.content ?? 'USD',
                 }),
@@ -616,6 +621,9 @@
         url.searchParams.set('check_in_time',      hotel.check_in_time ?? '');
         url.searchParams.set('check_out_time',     hotel.check_out_time ?? '');
         url.searchParams.set('hotel_description',  hotel.description ?? '');
+        (params.child_ages ?? []).forEach(age => {
+            url.searchParams.append('child_ages[]', age);
+        });
 
         window.location.href = url.toString();
     });
