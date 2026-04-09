@@ -4,7 +4,6 @@ namespace Modules\Hotel\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Modules\Hotel\DTOs\HotelOfferDto;
-use Modules\Hotel\DTOs\HotelRoomOfferDto;
 
 /** @mixin HotelOfferDto */
 class HotelOfferResource extends JsonResource
@@ -55,33 +54,7 @@ class HotelOfferResource extends JsonResource
             'is_discounted'               => $this->isDiscounted(),
 
             // Rooms
-            'rooms'             => collect($this->rooms)->map(fn (HotelRoomOfferDto $r) => [
-                'id'                => $r->roomId,
-                'name'              => $r->name,
-                'room_type'         => $r->roomType,
-                'bed_configuration' => $r->bedConfiguration,
-                'max_adults'        => $r->maxAdults,
-                'max_children'      => $r->maxChildren,
-                'base_original_price'      => $r->baseOriginalPrice,
-                'converted_original_price' => $r->convertedOriginalPrice,
-                'base_current_price'       => $r->baseCurrentPrice,
-                'converted_current_price'  => $r->convertedCurrentPrice,
-                'is_discounted'            => $r->convertedOriginalPrice > $r->convertedCurrentPrice,
-                'base_total_price'         => $r->baseTotalPrice,
-                'converted_total_price'    => $r->convertedTotalPrice,
-                'nights'            => $r->nights,
-                'base_currency'     => $r->baseCurrency,
-                'converted_currency'=> $r->convertedCurrency,
-                'is_available'      => $r->isAvailable,
-                'amenities'         => $r->amenityNames,
-                'size_sqm'          => $r->sizeSqm,
-                'view_type'         => $r->viewType,
-                'description'       => $r->description,
-                'images'            => $r->images,
-                'deal_id'           => $r->dealId,           // non-null = price came from a deal
-                'is_discounted'     => $r->isDiscounted(),
-
-            ])->values(),
+            'rooms'             => HotelRoomOfferResource::collection($this->rooms),
 
             'badge'             => $this->badge,
             'api_source'        => $this->apiSource,

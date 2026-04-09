@@ -114,6 +114,7 @@ class HotelController extends Controller
      */
     public function showRooms(Request $request): View|RedirectResponse
     {
+        
         $request->validate([
             'offer_id'  => 'required|string',
             'provider'  => 'required|string',
@@ -130,10 +131,6 @@ class HotelController extends Controller
             return redirect()->route('hotels.index');
         }
 
-        // Session takes priority over URL param so the currency switcher (redirect()->back()) works.
-        // This is the convertedCurrency — baseCurrency is resolved per-hotel inside the provider.
-        $convertedCurrency = (string) session('currency', $request->input('currency', config('currency.default', 'USD')));
-
         try {
             \Log::info('HG showRooms params', $request->only(['offer_id', 'provider', 'city', 'check_in', 'check_out', 'adults', 'children']));
 
@@ -145,8 +142,9 @@ class HotelController extends Controller
                 checkOut: $request->input('check_out'),
                 adults:   (int) $request->input('adults', 1),
                 children: (int) $request->input('children', 0),
-                currency: $convertedCurrency,
+                currency: $request->input('currency'),
             );
+
 
         } catch (\Throwable $e) {
             $rooms = [];
@@ -161,7 +159,7 @@ class HotelController extends Controller
             'check_out'         => $request->input('check_out'),
             'adults'            => (int) $request->input('adults', 1),
             'children'          => (int) $request->input('children', 0),
-            'currency'          => $convertedCurrency,
+            'currency'          => $request->input('currency','USD'),
             'hotel_name'        => $request->input('hotel_name', ''),
             'hotel_stars'       => (int) $request->input('hotel_stars', 0),
             'check_in_time'     => $request->input('check_in_time', ''),
