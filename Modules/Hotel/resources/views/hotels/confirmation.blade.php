@@ -284,7 +284,7 @@
                                 <div class="activity-card__bottom">
                                     <div class="activity-card__price">
                                         from
-                                        <strong>{{ $activity->currency }} {{ number_format((float) $activity->pricePerPerson, 2) }}</strong>
+                                        <strong>{{ $activity->convertedCurrency ?: $activity->baseCurrency ?: 'AED' }} {{ number_format((float) $activity->convertedPricePerPerson, 2) }}</strong>
                                     </div>
                                     <span class="activity-card__cta">Book Now</span>
                                 </div>

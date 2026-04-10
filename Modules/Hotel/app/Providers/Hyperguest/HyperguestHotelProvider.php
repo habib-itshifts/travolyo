@@ -234,7 +234,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
 
     public function getOrder(string $orderId): HotelOrderDto
     {
-        $booking = \App\Models\Booking::with('meta')
+        $booking = \App\Models\Booking::with('metaItems')
             ->where('code', $orderId)
             ->where('object_model', 'hotel')
             ->firstOrFail();

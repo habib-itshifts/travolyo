@@ -340,7 +340,7 @@
 @section('content')
 @php
     $unitPrice = (float) ($activity->price_per_person ?: 0);
-    $currency = strtoupper((string) ($activity->currency ?: 'AED'));
+    $currency = strtoupper((string) ($activity->convertedCurrency ?: $activity->baseCurrency ?: 'AED'));
     $activityImage = $activity->image_url ?: asset('assets/images/favicon/favicon1.png');
     $participantsValue = (int) old('participants', $participants);
     $todayDate = now()->toDateString();

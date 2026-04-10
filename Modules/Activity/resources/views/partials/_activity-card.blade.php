@@ -36,7 +36,7 @@
             <div class="hotel-card__price">
                 <span class="price-per-night">Per person</span>
                 <div class="d-flex align-items-baseline gap-2">
-                    <span class="price-current">{{ $activity->currency ?: 'AED' }} {{ number_format((float) ($activity->price_per_person ?: 0), 2) }}</span>
+                    <span class="price-current">{{ $activity->convertedCurrency ?: $activity->baseCurrency ?: 'AED' }} {{ number_format((float) ($activity->price_per_person ?: 0), 2) }}</span>
                 </div>
             </div>
             <a href="{{ route('activities.checkout', ['activity' => $activity, 'city' => request('city'), 'date' => request('activity_date', now()->format('Y-m-d')), 'participants' => max(1, (int) request('participants', 1))]) }}"

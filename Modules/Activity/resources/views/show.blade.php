@@ -116,7 +116,7 @@
                                 </p>
                             </div>
                             <div class="text-xl-end">
-                                <div class="h4 fw-bold text-dark mb-1">{{ $activity->currency ?: 'AED' }} {{ number_format((float) ($activity->price_per_person ?: 0), 2) }}</div>
+                                <div class="h4 fw-bold text-dark mb-1">{{ $activity->convertedCurrency ?: $activity->baseCurrency ?: 'AED' }} {{ number_format((float) ($activity->price_per_person ?: 0), 2) }}</div>
                                 <div class="text-muted">per person</div>
                             </div>
                         </div>
