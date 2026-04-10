@@ -186,8 +186,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'roomCode' => $keys['room_code'],
                 'rateCode' => $keys['rate_code'],
                 'expectedPrice' => [
-                    'amount' => (float) $checkoutData['total_price'],
-                    'currency' => $checkoutData['currency'],
+                    'amount' => (float) $keys['price'],
+                    'currency' => $keys['currency'],
                 ],
                 'guests' => [[
                     'birthDate' => $guest['birth_date'] ?? '1990-01-01',
@@ -212,7 +212,6 @@ class HyperguestHotelProvider implements HotelProviderInterface
             ->acceptJson()
             ->timeout(30)
             ->post(config('hotel.hyperguest.base_url') . '/booking/create', $payload);
-        dd($response->json());
         
             if ($response->failed()) {
             Log::error("[HyperguestBooking] Failed for booking {$booking->code}: {$response->status()} {$response->body()}");
@@ -224,12 +223,13 @@ class HyperguestHotelProvider implements HotelProviderInterface
         }
 
         $hgBooking = $response->json();
+        $content = $hgBooking['content'] ?? [];
 
         $booking->addMeta('hyperguest_booking', $hgBooking);
-        $booking->addMeta('hyperguest_booking_id', $hgBooking['bookingId'] ?? null);
-        $booking->addMeta('hyperguest_status', $hgBooking['content']['status'] ?? 'unknown');
-        $booking->addMeta('hyperguest_cancellation_policy', $hgBooking['rooms'][0]['cancellationPolicy'] ?? []);
-        $booking->addMeta('hyperguest_remarks', $hgBooking['rooms'][0]['remarks'] ?? []);
+        $booking->addMeta('hyperguest_booking_id', $content['bookingId'] ?? null);
+        $booking->addMeta('hyperguest_status', $content['status'] ?? 'unknown');
+        $booking->addMeta('hyperguest_cancellation_policy', $content['rooms'][0]['cancellationPolicy'] ?? []);
+        $booking->addMeta('hyperguest_remarks', $content['rooms'][0]['remarks'] ?? []);
     }
 
     public function getOrder(string $orderId): HotelOrderDto

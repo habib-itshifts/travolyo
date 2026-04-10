@@ -226,6 +226,7 @@ class Booking extends Model
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error("[HotelBooking] {$this->source} booking failed for {$this->code}: " . $e->getMessage());
             $this->addMeta('booking_error', $e->getMessage());
+            $this->update(['status' => self::BOOKING_FAILED]);
         }
     }
 
