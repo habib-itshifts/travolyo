@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Modules\Hotel\Enums\HotelProviderEnum;
-use Modules\Hotel\Services\HotelRoomService;
+use Modules\Hotel\Actions\GetHotelRoomsAction;
 
 class HotelController extends Controller
 {
@@ -115,6 +115,7 @@ class HotelController extends Controller
     public function showRooms(Request $request): View|RedirectResponse
     {
         
+        
         $request->validate([
             'offer_id'  => 'required|string',
             'provider'  => 'required|string',
@@ -134,8 +135,8 @@ class HotelController extends Controller
         try {
             \Log::info('HG showRooms params', $request->only(['offer_id', 'provider', 'city', 'check_in', 'check_out', 'adults', 'children']));
 
-            $rooms = app(HotelRoomService::class)->getRooms(
-                provider: $request->input('provider'),
+            $rooms = (new GetHotelRoomsAction)->handle(
+                provider: HotelProviderEnum::from($request->input('provider')),
                 offerId:  $request->input('offer_id'),
                 cityCode: $request->input('city', ''),
                 checkIn:  $request->input('check_in'),

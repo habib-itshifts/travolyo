@@ -2,10 +2,13 @@
 
 namespace Modules\Hotel\Providers\Local;
 
+use App\Models\Booking;
+use Carbon\Carbon;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
 use Modules\Hotel\DTOs\SearchHotelDto;
+use Modules\Hotel\Enums\BookingRoomStatusEnum;
 use Modules\Hotel\Enums\HotelProviderEnum;
 use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Models\BookingRoom;
@@ -114,6 +117,35 @@ class LocalHotelProvider implements HotelProviderInterface
         return $this->mapper->toOfferDto(
             $room->hotel, $nights, $dto->currency, $dto->adults, $dto->checkIn, $dto->checkOut
         );
+    }
+
+    public function book(Booking $booking, array $checkoutData, array $guest): void
+    {
+        $room = HotelRoom::find((int) ($checkoutData['room_id'] ?? 0));
+
+        if (! $room) {
+            return;
+        }
+
+        $checkIn  = Carbon::parse($checkoutData['check_in']);
+        $checkOut = Carbon::parse($checkoutData['check_out']);
+        $nights   = max(1, (int) $checkIn->diffInDays($checkOut));
+
+        BookingRoom::create([
+            'booking_id'       => $booking->id,
+            'hotel_room_id'    => $room->id,
+            'hotel_deal_id'    => $checkoutData['deal_id'] ?? null,
+            'check_in'         => $checkIn->toDateString(),
+            'check_out'        => $checkOut->toDateString(),
+            'nights'           => $nights,
+            'adults'           => $checkoutData['adults'] ?? 1,
+            'children'         => $checkoutData['children'] ?? 0,
+            'unit_price'       => $checkoutData['unit_price'] ?? 0,
+            'total_price'      => $checkoutData['total_price'] ?? 0,
+            'extra_services'   => $checkoutData['extra_services'] ?? null,
+            'special_requests' => $booking->customer_notes,
+            'status'           => BookingRoomStatusEnum::Pending->value,
+        ]);
     }
 
    public function getOrder(string $orderId): HotelOrderDto

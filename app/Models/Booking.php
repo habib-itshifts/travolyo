@@ -193,9 +193,9 @@ class Booking extends Model
             ->where('status', 'pending')
             ->update(['status' => 'confirmed', 'updated_at' => now()]);
 
-        // Hyperguest: create the reservation only after payment is confirmed
-        if ($this->source === 'hyperguest') {
-            $this->createHyperguestBooking();
+        // Call provider book() to create the actual reservation (external API or local BookingRoom)
+        if ($this->object_model === BookingObjectModelEnum::Hotel->value) {
+            $this->createHotelBooking();
         }
     }
 
@@ -205,30 +205,27 @@ class Booking extends Model
         $this->save();
     }
 
-    private function createHyperguestBooking(): void
+    private function createHotelBooking(): void
     {
         $hotel = $this->getJsonMeta('hotel_details');
         $guest = $hotel['guest_details'] ?? [];
 
-        if (empty($hotel) || empty($guest)) {
-            \Illuminate\Support\Facades\Log::error("[HyperguestBooking] Missing hotel/guest meta for booking {$this->code}");
+        if (empty($hotel)) {
+            \Illuminate\Support\Facades\Log::error("[HotelBooking] Missing hotel_details meta for booking {$this->code}");
             return;
         }
 
         try {
-            $hgBooking = (new \Modules\Hotel\Providers\Hyperguest\HyperguestHotelProvider())->book(
+            $provider = \Modules\Hotel\Providers\HotelProviderFactory::fromSource($this->source);
+
+            $provider->book(
+                booking: $this,
                 checkoutData: array_merge($hotel, ['special_requests' => $this->customer_notes]),
                 guest: $guest,
             );
-
-            $this->addMeta('hyperguest_booking', $hgBooking);
-            $this->addMeta('hyperguest_booking_id', $hgBooking['bookingId'] ?? null);
-            $this->addMeta('hyperguest_status', $hgBooking['content']['status'] ?? 'unknown');
-            $this->addMeta('hyperguest_cancellation_policy', $hgBooking['rooms'][0]['cancellationPolicy'] ?? []);
-            $this->addMeta('hyperguest_remarks', $hgBooking['rooms'][0]['remarks'] ?? []);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error("[HyperguestBooking] Failed for booking {$this->code}: " . $e->getMessage());
-            $this->addMeta('hyperguest_booking_error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("[HotelBooking] {$this->source} booking failed for {$this->code}: " . $e->getMessage());
+            $this->addMeta('booking_error', $e->getMessage());
         }
     }
 

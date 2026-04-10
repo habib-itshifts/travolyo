@@ -2,9 +2,11 @@
 
 namespace Modules\Hotel\Providers\Hyperguest;
 
+use App\Models\Booking;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
@@ -24,7 +26,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $this->headers = [
             'Accept-Encoding' => 'gzip, deflate',
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer 720c616825804c4498f1f21a1d128d4f',
+            'Authorization' => 'Bearer ' . config('hotel.hyperguest.api_key'),
         ];
     }
 
@@ -58,9 +60,9 @@ class HyperguestHotelProvider implements HotelProviderInterface
         int $children,
         string $currency = 'USD',
     ): array {
-
+       
+        
         $hotel = $this->findHotel($offerId, $checkIn, $checkOut, $adults, $children, $currency);
-
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
 
         return collect($hotel['rooms'] ?? [])
@@ -82,7 +84,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                     'to' => $dto->checkOut,
                 ],
                 'propertyId' => $dto->offerId,
-                'nationality' => 'AE',
+                'nationality' => config('hotel.default_nationality', 'AE'),
                 'pax' => [
                     [
                         'adults' => $dto->adults,
@@ -107,7 +109,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         $response = Http::withHeaders($this->headers)
             ->acceptJson()
             ->timeout(30)
-            ->post('https://book-api.hyperguest.com/2.0/booking/pre-book', $payload);
+            ->post(config('hotel.hyperguest.base_url') . '/booking/pre-book', $payload);
         if ($response->failed()) {
             throw new HotelException(
                 'Hyperguest pre-book failed: ' . $response->status() . ' ' . $response->body(),
@@ -134,7 +136,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
         );
     }
 
-    public function book(array $checkoutData, array $guest): array
+    public function book(Booking $booking, array $checkoutData, array $guest): void
     {
         $keys = $this->mapper->decodeBookingKey($checkoutData['room_id']);
         $payload = [
@@ -148,7 +150,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
                 'contact' => [
                     'address' => $guest['address'] ?? 'N/A',
                     'city' => $guest['city'] ?? 'N/A',
-                    'country' => 'AE',
+                    'country' => config('hotel.default_nationality', 'AE'),
                     'email' => $guest['email'],
                     'phone' => $guest['phone'],
                     'state' => $guest['state'] ?? 'N/A',
@@ -195,30 +197,39 @@ class HyperguestHotelProvider implements HotelProviderInterface
                     ],
                     'title' => $guest['title'] ?? 'MR',
                 ]],
-                'specialRequests' => $checkoutData['special_requests']
+                'specialRequests' => ! empty($checkoutData['special_requests'])
                     ? [$checkoutData['special_requests']]
                     : [],
             ]],
             'meta' => [
                 ['key' => 'Source', 'value' => 'Travolyo'],
             ],
-            'isTest' => true, // only marks as test on HG side — live hotels will still charge you
+            'isTest' => config('hotel.hyperguest.is_test', true),
             'groupBooking' => false,
         ];
-
 
         $response = Http::withHeaders($this->headers)
             ->acceptJson()
             ->timeout(30)
-            ->post('https://book-api.hyperguest.com/2.0/booking/create', $payload);
+            ->post(config('hotel.hyperguest.base_url') . '/booking/create', $payload);
+        dd($response->json());
+        
             if ($response->failed()) {
+            Log::error("[HyperguestBooking] Failed for booking {$booking->code}: {$response->status()} {$response->body()}");
+            $booking->addMeta('hyperguest_booking_error', $response->body());
             throw new HotelException(
                 'Hyperguest booking failed: ' . $response->status() . ' ' . $response->body(),
                 $response->status()
             );
         }
 
-        return $response->json();
+        $hgBooking = $response->json();
+
+        $booking->addMeta('hyperguest_booking', $hgBooking);
+        $booking->addMeta('hyperguest_booking_id', $hgBooking['bookingId'] ?? null);
+        $booking->addMeta('hyperguest_status', $hgBooking['content']['status'] ?? 'unknown');
+        $booking->addMeta('hyperguest_cancellation_policy', $hgBooking['rooms'][0]['cancellationPolicy'] ?? []);
+        $booking->addMeta('hyperguest_remarks', $hgBooking['rooms'][0]['remarks'] ?? []);
     }
 
     public function getOrder(string $orderId): HotelOrderDto
@@ -264,7 +275,7 @@ class HyperguestHotelProvider implements HotelProviderInterface
     }
 
     // Fetch live room availability from Hyperguest API
-    private function searchHotelsByIds(
+    private function   searchHotelsByIds(
         array $hotelIds,
         string $checkIn,
         string $checkOut,
@@ -273,6 +284,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
         string $currency,
         string $nationality
     ): array {
+
+    
         $nights = max((int) Carbon::parse($checkIn)->diffInDays($checkOut), 1);
         $guests = max($adults + $children, 1);
 
@@ -312,6 +325,8 @@ class HyperguestHotelProvider implements HotelProviderInterface
         int $children,
         string $currency
     ): array {
+
+    
         $results = $this->searchHotelsByIds(
             [(string) $offerId],
             $checkIn,
@@ -344,19 +359,6 @@ class HyperguestHotelProvider implements HotelProviderInterface
         }
 
         return $payload;
-    }
-
-    private function matchesPriceFilter(HotelOfferDto $offer, SearchHotelDto $dto): bool
-    {
-        if ($dto->priceMin !== null && $offer->convertedLowestPrice < $dto->priceMin) {
-            return false;
-        }
-
-        if ($dto->priceMax !== null && $offer->convertedLowestPrice > $dto->priceMax) {
-            return false;
-        }
-
-        return true;
     }
 
 }

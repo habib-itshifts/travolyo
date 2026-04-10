@@ -52,7 +52,7 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
                 'adults' => $dto->adults,
                 'children' => $dto->children,
                 'rooms' => $dto->rooms,
-                'nationality' => 'AE',
+                'nationality' => $dto->nationality ?? config('hotel.default_nationality', 'AE'),
                 'currency' => $dto->currency,
             ], $this->searchTimeout);
 
@@ -160,7 +160,7 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
             'adults' => $dto->adults,
             'children' => $dto->children,
             'rooms' => 1,
-            'nationality' => 'AE',
+            'nationality' => config('hotel.default_nationality', 'AE'),
             'search_number' => (string) ($roomKeys['search_number'] ?? ''),
             'token_id' => (string) ($roomKeys['token_id'] ?? ''),
             'rate_key' => (string) ($roomKeys['rate_key'] ?? ''),
@@ -222,7 +222,7 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
         }
     }
 
-    public function book(array $checkoutData, array $guest): array
+    public function book(Booking $booking, array $checkoutData, array $guest): void
     {
         try {
             $roomKeys = $this->mapper->decodeBookingKey((string) ($checkoutData['room_id'] ?? ''));
@@ -238,7 +238,7 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
             'agreement_price' => (string) ($roomKeys['agreement_price'] ?? $checkoutData['total_price'] ?? ''),
             'check_in' => (string) ($checkoutData['check_in'] ?? ''),
             'check_out' => (string) ($checkoutData['check_out'] ?? ''),
-            'guest_name' => trim((string) ($guest['first_name'] ?? '') . ' ' . (string) ($guest['last_name'] ?? '')),
+            'guest_name' => trim(($guest['first_name'] ?? '') . ' ' . ($guest['last_name'] ?? '')),
             'guest_email' => (string) ($guest['email'] ?? ''),
             'guest_phone' => (string) ($guest['phone'] ?? ''),
             'search_number' => (string) ($roomKeys['search_number'] ?? ''),
@@ -251,49 +251,45 @@ class TravolyoB2BHotelProvider implements HotelProviderInterface
             'children' => (int) ($checkoutData['children'] ?? 0),
             'rooms' => 1,
             'occupancy' => (int) ($roomKeys['occupancy'] ?? 0),
-            'nationality' => (string) ($guest['nationality'] ?? $checkoutData['nationality'] ?? 'AE'),
+            'nationality' => (string) ($guest['nationality'] ?? $checkoutData['nationality'] ?? config('hotel.default_nationality', 'AE')),
             'special_requests' => (string) ($checkoutData['special_requests'] ?? ''),
         ];
 
         $attempt = $this->postBookWithRetry($payload);
 
         if (! $this->bookSucceeded($attempt)) {
+            Log::error("[TravolyoB2B] Booking failed for {$booking->code}", $attempt);
             throw new \RuntimeException($attempt['message'] ?: 'B2B hotel booking failed.');
         }
 
-        $attempt['supplier_status'] = (string) $this->firstFilled($attempt['data'], [
-            'status',
-            'booking_status',
-            'data.status',
-            'data.booking_status',
+        $supplierStatus = (string) $this->firstFilled($attempt['data'], [
+            'status', 'booking_status', 'data.status', 'data.booking_status',
         ], 'confirmed');
-        $attempt['supplier_reference'] = (string) $this->firstFilled($attempt['data'], [
-            'reference',
-            'booking_reference',
-            'reference_no',
-            'reference_number',
-            'confirmation_number',
-            'data.reference',
-            'data.booking_reference',
+
+        $supplierReference = (string) $this->firstFilled($attempt['data'], [
+            'reference', 'booking_reference', 'reference_no', 'reference_number',
+            'confirmation_number', 'data.reference', 'data.booking_reference',
             'data.confirmation_number',
         ], $payload['agreement_code']);
-        $attempt['supplier_booking_code'] = (string) $this->firstFilled($attempt['data'], [
-            'booking_code',
-            'booking_id',
-            'reservation_id',
-            'reservation_code',
-            'data.booking_code',
-            'data.booking_id',
-            'data.reservation_id',
-        ], $attempt['supplier_reference']);
-        $attempt['confirmed_total_price'] = (float) $this->firstFilled($attempt['data'], [
-            'agreement_price',
-            'total_price',
-            'data.agreement_price',
-            'data.total_price',
+
+        $supplierBookingCode = (string) $this->firstFilled($attempt['data'], [
+            'booking_code', 'booking_id', 'reservation_id', 'reservation_code',
+            'data.booking_code', 'data.booking_id', 'data.reservation_id',
+        ], $supplierReference);
+
+        $confirmedPrice = (float) $this->firstFilled($attempt['data'], [
+            'agreement_price', 'total_price', 'data.agreement_price', 'data.total_price',
         ], (float) ($checkoutData['total_price'] ?? 0));
 
-        return $attempt;
+        // Save supplier data on the booking
+        $booking->addMeta('travolyo_b2b_booking', $attempt);
+        $booking->addMeta('travolyo_b2b_supplier_reference', $supplierReference);
+        $booking->addMeta('travolyo_b2b_supplier_booking_code', $supplierBookingCode);
+        $booking->addMeta('travolyo_b2b_status', $supplierStatus);
+
+        if ($confirmedPrice > 0 && $confirmedPrice !== (float) $booking->total) {
+            $booking->update(['total' => $confirmedPrice, 'pay_now' => $confirmedPrice]);
+        }
     }
 
     public function getOrder(string $orderId): HotelOrderDto

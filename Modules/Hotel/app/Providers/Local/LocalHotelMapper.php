@@ -137,17 +137,9 @@ class LocalHotelMapper
             $originalPrice = 0.0;
         }
 
-        // Step 4: Last resort hotel-level pricing
+        // Last resort: hotel-level pricing
         if ($currentPrice <= 0) {
             $currentPrice = (float) ($room->hotel?->sale_price ?: $room->hotel?->base_price ?: 0);
-            $originalPrice = 0.0;
-            $dealId = null;
-        }
-
-        // Step 5: Last resort hotel-level pricing
-        if ($currentPrice <= 0) {
-            $fallbackPrice = (float) ($room->hotel?->sale_price ?: $room->hotel?->base_price ?: 0);
-            $currentPrice = $fallbackPrice;
             $originalPrice = 0.0;
             $dealId = null;
         }
@@ -229,35 +221,34 @@ class LocalHotelMapper
             ->get();
 
         // // Filter out deals that fail runtime checks (blackout, booking window, release period)
-        // $applicable = $deals->filter(function (HotelDeal $deal) use ($checkIn, $today, $checkInDate) {
-        //     // Blackout check — if check-in falls on a blacked-out date, skip this deal
-        //     if ($deal->isBlackedOut($checkIn)) {
-        //         return false;
-        //     }
+        // Filter out deals that fail runtime checks (blackout, booking window, release period)
+        $applicable = $deals->filter(function (HotelDeal $deal) use ($checkIn, $today, $checkInDate) {
+            // Blackout check — if check-in falls on a blacked-out date, skip this deal
+            if ($deal->isBlackedOut($checkIn)) {
+                return false;
+            }
 
-        //     // Booking window — if set, today must be on or before the window deadline
-        //     if ($deal->booking_window && $today->gt($deal->booking_window)) {
-        //         return false;
-        //     }
+            // Booking window — if set, today must be on or before the window deadline
+            if ($deal->booking_window && $today->gt($deal->booking_window)) {
+                return false;
+            }
 
-        //     // Release period — must book at least N days before check-in
-        //     if ($deal->release_period && $deal->release_period > 0) {
-        //         $daysUntilCheckIn = $today->diffInDays($checkInDate, false);
-        //         if ($daysUntilCheckIn < $deal->release_period) {
-        //             return false;
-        //         }
-        //     }
+            // Release period — must book at least N days before check-in
+            if ($deal->release_period && $deal->release_period > 0) {
+                $daysUntilCheckIn = $today->diffInDays($checkInDate, false);
+                if ($daysUntilCheckIn < $deal->release_period) {
+                    return false;
+                }
+            }
 
-        //     return true;
-        // });
-
-        return $deals->first();
+            return true;
+        });
 
         if ($applicable->isEmpty()) {
             return null;
         }
 
         // If multiple deals match, pick the one with the lowest double price (best value)
-        // return $applicable->sortBy(fn (HotelDeal $d) => (float) ($d->price_dbl_bb ?: $d->price_sgl_bb ?: PHP_FLOAT_MAX))->first();
+        return $applicable->sortBy(fn (HotelDeal $d) => (float) ($d->price_dbl_bb ?: $d->price_sgl_bb ?: PHP_FLOAT_MAX))->first();
     }
 }

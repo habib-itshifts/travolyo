@@ -2,6 +2,7 @@
 
 namespace Modules\Hotel\Providers;
 
+use App\Models\Booking;
 use Modules\Hotel\DTOs\HotelOfferDto;
 use Modules\Hotel\DTOs\HotelOrderDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
@@ -29,8 +30,15 @@ interface HotelProviderInterface
         string $currency = 'USD',
     ): array;
 
-    /** Lock a room before payment. */
+    /** Lock a room before payment. Confirms price and availability. */
     public function prebook(PrebookHotelDto $dto): HotelOfferDto;
+
+    /**
+     * Create the actual reservation after payment succeeds.
+     * Called from Booking::markAsPaid(). Local provider creates BookingRoom,
+     * external providers call their booking API and save meta on the Booking.
+     */
+    public function book(Booking $booking, array $checkoutData, array $guest): void;
 
     /** Retrieve an existing hotel order/booking. */
     public function getOrder(string $orderId): HotelOrderDto;

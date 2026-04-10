@@ -15,17 +15,17 @@ use Modules\Hotel\Actions\PrebookHotelAction;
 use Modules\Hotel\Actions\SearchHotelAction;
 use Modules\Hotel\DTOs\CheckoutHotelDto;
 use Modules\Hotel\DTOs\PrebookHotelDto;
-use Modules\Hotel\Resources\HotelRoomOfferResource;
 use Modules\Hotel\DTOs\SearchHotelDto;
 use Modules\Hotel\Enums\HotelProviderEnum;
 use Modules\Hotel\Exceptions\HotelException;
 use Modules\Hotel\Http\Requests\CheckoutHotelRequest;
 use Modules\Hotel\Http\Requests\PrebookHotelRequest;
 use Modules\Hotel\Http\Requests\SearchHotelRequest;
-use Modules\Hotel\Providers\HotelProviderInterface;
-use Modules\Hotel\Services\HotelRoomService;
+use Modules\Hotel\Providers\HotelProviderFactory;
 use Modules\Hotel\Resources\HotelOfferResource;
 use Modules\Hotel\Resources\HotelOrderResource;
+use Modules\Hotel\Resources\HotelRoomOfferResource;
+use Modules\Hotel\Actions\GetHotelRoomsAction;
 
 class HotelController extends Controller
 {
@@ -103,8 +103,8 @@ class HotelController extends Controller
         ]);
 
         try {
-            $rooms = app(HotelRoomService::class)->getRooms(
-                provider: $request->input('provider'),
+            $rooms = (new GetHotelRoomsAction)->handle(
+                provider: HotelProviderEnum::from($request->input('provider')),
                 offerId:  $request->input('offer_id'),
                 cityCode: $request->input('city_code', ''),
                 checkIn:  $request->input('check_in'),
@@ -155,9 +155,9 @@ class HotelController extends Controller
                 $room = collect($offer->rooms)->first();
             }
 
-            if (! $room instanceof HotelRoomOfferDto) {
-                throw HotelException::roomUnavailable();
-            }
+            // if (! $room instanceof HotelRoomOfferDto) {
+            //     throw HotelException::roomUnavailable();
+            // }
 
             $checkoutData = [
                 'offer_id'    => $validated['offer_id'],
@@ -203,6 +203,7 @@ class HotelController extends Controller
 
     public function checkout(CheckoutHotelRequest $request): JsonResponse
     {
+        
         try {
             $validated = $request->validated();
 
@@ -243,7 +244,8 @@ class HotelController extends Controller
     public function order(string $orderId): JsonResponse
     {
         try {
-            $order = $this->resolveOrderProvider($orderId)->getOrder($orderId);
+            $provider = $this->resolveOrderProvider($orderId);
+            $order    = $provider->getOrder($orderId);
 
             return response()->json([
                 'success' => true,
@@ -276,14 +278,14 @@ class HotelController extends Controller
         }
     }
 
-    private function resolveOrderProvider(string $orderId): HotelProviderInterface
+    private function resolveOrderProvider(string $orderId): \Modules\Hotel\Providers\HotelProviderInterface
     {
         $source = Booking::query()
             ->where('code', $orderId)
             ->where('object_model', 'hotel')
             ->value('source');
 
-        return app(HotelRoomService::class)->resolveProviderBySource($source);
+        return HotelProviderFactory::fromSource($source);
     }
 
     private function storeSearchCache($store, string $cacheKey, array $offers): void
