@@ -33,6 +33,8 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
+      dd($request->all());
+      
       
         try {
             $dto = SearchHotelDto::fromArray($request->validated());

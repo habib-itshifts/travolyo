@@ -28,12 +28,14 @@ class NGeniusGateway implements PaymentGatewayInterface
 
     public function initiate(Booking $booking): array
     {
+        
         $token    = $this->requestAccessToken();
         $currency = $booking->currency;
         $pay_now   = (int) round($booking->pay_now * 100); // minor units
 
         //ngenius only accept AED 
         $amount = currency($pay_now, $currency, 'AED', false);
+      
         $redirectUrl = $this->buildCallbackUrl(route('payments.ngenius.return', [], false), [
             'c' => $booking->code,
         ]);
@@ -46,7 +48,7 @@ class NGeniusGateway implements PaymentGatewayInterface
             'action' => 'SALE',
             'amount' => [
                 'currencyCode' => 'AED',
-                'value'        => $amount,
+                'value'        => $pay_now,
             ],
             'merchantOrderReference' => $booking->code,
             'emailAddress'           => $booking->email ?? '',
@@ -55,6 +57,7 @@ class NGeniusGateway implements PaymentGatewayInterface
                 'cancelUrl'   => $cancelUrl,
             ],
         ];
+        
 
         $response = Http::timeout(30)
             ->withToken($token)
@@ -63,6 +66,8 @@ class NGeniusGateway implements PaymentGatewayInterface
                 'Content-Type' => 'application/vnd.ni-payment.v2+json',
             ])
             ->post("{$this->baseUrl}/transactions/outlets/{$this->outletRef}/orders", $payload);
+
+            dd($response->json());
 
         if (! $response->successful()) {
             Log::warning('N-Genius: create order failed', [

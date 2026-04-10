@@ -1250,7 +1250,6 @@
                                 <button type="button" class="btn-add-room" id="addRoomBtn" style="display:none;">+ Add Room</button>
                             </div>
                         </div>
-                        <div id="guestsHiddenFields"></div>
                     </div>
                 </div>
 
@@ -1277,6 +1276,8 @@
                         <button type="button" class="trav-search-link" data-tab-jump="flights">+ Add a flight</button>
                     </div>
                 @endif
+
+                <div id="guestsHiddenFields"></div>
 
                 <div class="trav-search-form__actions">
                     <button type="submit" class="btn btn-search">
@@ -1845,6 +1846,7 @@
         const roomsContainer = document.getElementById('roomsContainer');
         const addRoomBtn = document.getElementById('addRoomBtn');
         const guestsHiddenFields = document.getElementById('guestsHiddenFields');
+        const hotelSearchFormEl = document.getElementById('hotelSearchForm');
         const isHeroGuestsPicker = guestsPicker ? guestsPicker.closest('.trav-search-widget--hero') !== null : false;
         const initialAdults = {{ $initialHotelAdults }};
         const initialChildren = {{ $initialHotelChildren }};
@@ -1929,19 +1931,48 @@
             roomsContainer.innerHTML = rooms.map(roomMarkup).join('');
             updateGuestsSummary();
 
-            if (guestsHiddenFields) {
-                guestsHiddenFields.innerHTML = rooms.map((room) => {
-                    const childAges = (room.childAges || [])
-                        .map((age, ageIndex) => `<input type="hidden" name="child_ages[${ageIndex}]" value="${age}">`)
-                        .join('');
+            if (guestsHiddenFields && hotelSearchFormEl) {
+                guestsHiddenFields.innerHTML = '';
+                hotelSearchFormEl.querySelectorAll('input[name="child_ages[]"]').forEach((el) => el.remove());
+                hotelSearchFormEl.querySelectorAll('input[name="child_ages_json"]').forEach((el) => el.remove());
+                hotelSearchFormEl.querySelectorAll('[data-hidden-guest-field="1"]').forEach((el) => el.remove());
 
-                    return `
-                        <input type="hidden" name="adults" value="${room.adults}">
-                        <input type="hidden" name="children" value="${room.children}">
-                        <input type="hidden" name="unit" value="${room.unit}">
-                        ${childAges}
-                    `;
-                }).join('');
+                const fragment = document.createDocumentFragment();
+                const childAgesSnapshot = [];
+                rooms.forEach((room) => {
+                    const addHidden = (name, value) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        input.value = String(value);
+                        input.setAttribute('data-hidden-guest-field', '1');
+                        fragment.appendChild(input);
+                    };
+
+                    addHidden('adults', room.adults);
+                    addHidden('children', room.children);
+                    addHidden('unit', room.unit);
+
+                    childAgesSnapshot.push([...(room.childAges || [])]);
+
+                    (room.childAges || []).forEach((age) => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'child_ages[]';
+                        input.value = String(Number(age) || 0);
+                        input.setAttribute('data-hidden-guest-field', '1');
+                        fragment.appendChild(input);
+                    });
+                });
+
+                const childAgesJson = document.createElement('input');
+                childAgesJson.type = 'hidden';
+                childAgesJson.name = 'child_ages_json';
+                childAgesJson.value = JSON.stringify(childAgesSnapshot.map((ages) => ages.map((age) => Number(age) || 0)));
+                childAgesJson.setAttribute('data-hidden-guest-field', '1');
+                fragment.appendChild(childAgesJson);
+
+                hotelSearchFormEl.appendChild(fragment);
             }
 
             if (guestsPicker.classList.contains('is-open')) {
@@ -2008,14 +2039,12 @@
 
         roomsContainer.addEventListener('click', (e) => {
             e.stopPropagation();
-            const roomEl = e.target.closest('.room-card');
-            if (!roomEl) return;
 
-            const roomIndex = Number(roomEl.dataset.roomIndex);
-            if (Number.isNaN(roomIndex)) return;
-
-            if (e.target.matches('[data-remove-room]')) {
-                if (rooms.length > 1) {
+            const removeBtn = e.target.closest('[data-remove-room]');
+            if (removeBtn) {
+                const roomEl = removeBtn.closest('.room-card');
+                const roomIndex = Number(roomEl?.dataset.roomIndex);
+                if (!Number.isNaN(roomIndex) && rooms.length > 1) {
                     rooms.splice(roomIndex, 1);
                     renderRooms();
                 }
@@ -2025,6 +2054,10 @@
             const counterBtn = e.target.closest('.counter-btn');
             if (!counterBtn) return;
 
+            const roomEl = counterBtn.closest('.room-card');
+            const roomIndex = Number(roomEl?.dataset.roomIndex);
+            if (Number.isNaN(roomIndex)) return;
+
             const field = counterBtn.dataset.counter;
             const delta = Number(counterBtn.dataset.delta || '0');
             if (!field || !delta) return;
@@ -2032,8 +2065,10 @@
             if (field === 'childAge') {
                 const childIndex = Number(counterBtn.dataset.childIndex);
                 if (Number.isNaN(childIndex)) return;
-                const currentAge = rooms[roomIndex].childAges[childIndex] ?? 0;
-                rooms[roomIndex].childAges[childIndex] = Math.max(0, Math.min(17, currentAge + delta));
+                const currentAge = rooms[roomIndex]?.childAges?.[childIndex] ?? 0;
+                const nextAge = Math.max(0, Math.min(17, currentAge + delta));
+                rooms[roomIndex].childAges = [...(rooms[roomIndex].childAges || [])];
+                rooms[roomIndex].childAges[childIndex] = nextAge;
                 renderRooms();
                 return;
             }
@@ -2046,6 +2081,7 @@
 
             if (field === 'children') {
                 const room = rooms[roomIndex];
+                room.childAges = [...(room.childAges || [])];
                 if (delta > 0) room.childAges.push(0);
                 else room.childAges = room.childAges.slice(0, room.children);
             }

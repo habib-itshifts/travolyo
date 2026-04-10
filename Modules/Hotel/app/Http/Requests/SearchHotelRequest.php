@@ -20,6 +20,8 @@ class SearchHotelRequest extends FormRequest
             'check_out'   => ['required', 'date', 'after:check_in'],
             'adults'      => ['required', 'integer', 'min:1', 'max:20'],
             'children'    => ['nullable', 'integer', 'min:0', 'max:10'],
+            'child_ages'  => ['nullable', 'array'],
+            'child_ages.*'=> ['nullable', 'integer', 'min:0', 'max:17'],
             'rooms'       => ['nullable', 'integer', 'min:1', 'max:10'],
             'star_rating' => ['nullable', 'integer', 'between:1,5'],
             'price_min'   => ['nullable', 'numeric', 'min:0'],

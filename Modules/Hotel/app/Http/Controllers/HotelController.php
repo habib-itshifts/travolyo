@@ -51,6 +51,7 @@ class HotelController extends Controller
             'check_out' => (string) $request->query('check_out', now()->addDays(8)->toDateString()),
             'adults' => max(1, (int) $request->query('adults', 1)),
             'children' => max(0, (int) $request->query('children', 0)),
+            'child_ages' => array_map('intval', array_filter((array) request('child_ages', []))),
             'rooms' => max(1, (int) $request->query('rooms', 1)),
             'provider' => (string) $request->query('provider', ''),
         ];

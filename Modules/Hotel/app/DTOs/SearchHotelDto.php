@@ -13,6 +13,7 @@ class SearchHotelDto
         public readonly string             $checkOut,
         public readonly int                $adults,
         public readonly int                $children   = 0,
+        public readonly ?array             $childAges  = null,
         public readonly int                $rooms      = 1,
         public readonly ?int               $starRating = null,
         public readonly ?float             $priceMin   = null,
@@ -34,6 +35,9 @@ class SearchHotelDto
             checkOut:   $data['check_out'],
             adults:     (int) $data['adults'],
             children:   (int) ($data['children'] ?? 0),
+             childAges:  isset($data['child_ages']) && is_array($data['child_ages'])
+                ? array_values(array_map('intval', $data['child_ages']))
+                : null,
             rooms:      (int) ($data['rooms'] ?? 1),
             starRating: isset($data['star_rating']) ? (int) $data['star_rating'] : null,
             priceMin:   isset($data['price_min']) ? (float) $data['price_min'] : null,
