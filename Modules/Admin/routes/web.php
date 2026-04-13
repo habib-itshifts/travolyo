@@ -7,7 +7,7 @@ use Modules\Admin\Http\Controllers\BlogController;
 use Modules\Admin\Http\Controllers\BlogCategoryController;
 use Modules\Admin\Http\Controllers\BlogTagController;
 use Modules\Admin\Http\Controllers\CurrencyController;
-use Modules\Admin\Http\Controllers\DashboardController;
+use Modules\Admin\Http\Controllers\AdminDashboardController;
 use Modules\Admin\Http\Controllers\HotelController;
 use Modules\Admin\Http\Controllers\HotelRoomController;
 use Modules\Admin\Http\Controllers\HotelScrapingController;
@@ -28,7 +28,7 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', 'admin'])
     ->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
