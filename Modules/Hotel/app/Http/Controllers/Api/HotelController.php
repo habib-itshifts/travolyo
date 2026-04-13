@@ -179,12 +179,20 @@ class HotelController extends Controller
             $token = Str::uuid()->toString();
             Cache::put('hotel_checkout_' . $token, $checkoutData, now()->addMinutes(30));
 
+            $baseCurrency = $checkoutData['currency'];
+            $userCurrency = currency()->getUserCurrency();
+            $convertedPrice = ($userCurrency !== $baseCurrency)
+                ? currency($checkoutData['total_price'], $baseCurrency, $userCurrency, false)
+                : $checkoutData['total_price'];
+
             return response()->json([
-                'success'      => true,
-                'total_price'  => $checkoutData['total_price'],
-                'currency'     => $checkoutData['currency'],
-                'checkout_url' => url('/hotels/checkout?token=' . $token),
-                'checkout_token' => $token,
+                'success'           => true,
+                'total_price'       => $checkoutData['total_price'],
+                'currency'          => $baseCurrency,
+                'converted_price'     => $convertedPrice,
+                'converted_currency'  => $userCurrency,
+                'checkout_url'      => url('/hotels/checkout?token=' . $token),
+                'checkout_token'    => $token,
             ]);
 
         } catch (HotelException $e) {
