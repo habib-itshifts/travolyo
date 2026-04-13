@@ -87,7 +87,7 @@
         </div>
     </div>
 
-    <div class="row dash-metric-grid row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-6 g-2 mb-4">
+    <div class="row dash-metric-grid row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-2 mb-4">
         <div class="col">
             <div class="dash-metric-card h-100">
                 <div class="dash-topbar" style="background:#3b82f6;"></div>
@@ -203,22 +203,42 @@
                             </div>
                         </div>
                     </div>
-                    <div class="dash-metric-card__subtext">Gateway errors</div>
                 </div>
             </div>
         </div>
+
+        <div class="col">
+            <div class="dash-metric-card h-100">
+                <div class="dash-topbar" style="background:#1e293b;"></div>
+                <div class="dash-metric-card__body">
+                    <div class="dash-metric-card__head">
+                        <div class="dash-metric-card__left">
+                            <div class="dash-metric-card__icon" style="background:rgba(30,41,59,0.10);color:#1e293b;">
+                                <span style="font-size:12px;line-height:1;">▲</span>
+                            </div>
+                            <div>
+                                <div class="dash-metric-card__label">Active Vendors</div>
+                                <div class="dash-metric-card__value">{{ number_format($stats['total_vendors'] ?? 0) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dash-metric-card__subtext">{{ number_format($stats['pending_vendors'] ?? 0) }} pending approval</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="mb-4">
         <div class="d-flex align-items-end justify-content-between mb-3">
             <div>
                 <h3 class="fw-bold text-dark mb-1" style="font-size:1.05rem;">Revenue Breakdown</h3>
-                <p class="text-muted mb-0" style="font-size:12px;">Completed bookings only · All converted to {{ $stats['currency'] ?? 'USD' }}</p>
+                <p class="text-muted mb-0" style="font-size:12px;">Excluding cancelled bookings · All converted to {{ $stats['currency'] ?? 'AED' }}</p>
             </div>
         </div>
 
         <div class="row row-cols-1 row-cols-sm-2 row-cols-xl-4 g-3">
-            @foreach (['hotel','activity','flight','profit'] as $key)
+            @foreach (['hotel', 'activity', 'flight', 'profit'] as $key)
                 @php
                     $item = $revenueBreakdown[$key] ?? null;
                     if (! $item) continue;
@@ -233,26 +253,18 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="dash-breakdown-card__icon" style="background:{{ $topColor }}15;color:{{ $topColor }};">
                                         @if ($icon === 'hotel')
-                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 21V7a2 2 0 012-2h12a2 2 0 012 2v14M8 9h.01M8 13h.01M12 9h.01M12 13h.01M16 9h.01M16 13h.01M7 21v-4h10v4"/>
-                                            </svg>
+                                            <span style="font-size:15px;line-height:1;">🏨</span>
                                         @elseif ($icon === 'activity')
-                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5v14"/>
-                                            </svg>
+                                            <span style="font-size:15px;line-height:1;">🎢</span>
                                         @elseif ($icon === 'flight')
-                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 16l20-5-20-5 5 5-5 5z"/>
-                                            </svg>
+                                            <span style="font-size:15px;line-height:1;">✈</span>
                                         @else
-                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
+                                            <span style="font-size:15px;line-height:1;">◆</span>
                                         @endif
                                     </div>
                                     <div>
                                         <div class="dash-breakdown-card__label">{{ $item['label'] }}</div>
-                                        <div class="dash-breakdown-card__value">{{ $stats['currency'] ?? 'USD' }} {{ number_format($item['amount'] ?? 0, 0) }}</div>
+                                        <div class="dash-breakdown-card__value">{{ $stats['currency'] ?? 'AED' }} {{ number_format($item['amount'] ?? 0, 0) }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -277,103 +289,96 @@
         </div>
     </div>
 
-    <div class="mb-4">
-        <div class="d-flex align-items-end justify-content-between mb-3">
+    <!-- 6-Month Trends Section -->
+    <div class="mb-5">
+        <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
-                <h3 class="fw-bold text-dark mb-1" style="font-size:1.05rem;">Booking Pipeline &amp; Payments</h3>
-                <p class="text-muted mb-0" style="font-size:12px;">Booking status breakdown and payment gateways</p>
+                <h3 class="fw-bold text-dark mb-1" style="font-size: 1.1rem;">6-Month Trends</h3>
+                <p class="text-muted mb-0" style="font-size: 11px;">{{ $monthlyTrendsLabels[0] ?? '' }} – {{ end($monthlyTrendsLabels) ?? '' }}</p>
             </div>
         </div>
 
-        <div class="row g-3">
+        <div class="row g-4">
+            {{-- Chart 1: Booking Volume --}}
             <div class="col-12 col-xl-6">
-                <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
+                <div class="card border-0 rounded-4 shadow-sm h-100">
                     <div class="card-body p-4">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <h3 class="fw-bold text-dark mb-0" style="font-size:1rem;">Booking Status Breakdown</h3>
-                            <span class="badge rounded-pill px-3 py-2" style="background:#d9f0fb;color:#0ea5e9;">{{ number_format($stats['bookings'] ?? 0) }} total</span>
+                        <div class="d-flex align-items-start justify-content-between mb-4">
+                            <div>
+                                <h4 class="fw-bold mb-0" style="font-size: 1rem;">Booking Volume</h4>
+                                <p class="text-muted mb-0" style="font-size: 11px;">Hotel, activity & flight monthly counts</p>
+                            </div>
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-3 py-1" style="font-size: 10px;">Live</span>
                         </div>
-
-                        <div class="table-responsive">
-                            <table class="table align-middle mb-0">
-                                <thead>
-                                    <tr style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">
-                                        <th class="border-0 ps-0">Service</th>
-                                        <th class="border-0 text-center">Pending</th>
-                                        <th class="border-0 text-center">Confirmed</th>
-                                        <th class="border-0 text-center">Cancelled</th>
-                                        <th class="border-0 text-center pe-0">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($bookingStatusBreakdown ?? [] as $row)
-                                        <tr>
-                                            <td class="ps-0 fw-semibold text-dark">
-                                                <span class="me-2" style="color:{{ $row['color'] }};">{{ match ($row['icon']) {
-                                                    'hotel' => '🏨',
-                                                    'activity' => '🎢',
-                                                    'flight' => '✈',
-                                                    default => '•',
-                                                } }}</span>
-                                                {{ $row['label'] }}
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge rounded-pill px-3 py-2" style="background:#fef3c7;color:#92400e;">{{ number_format($row['pending']) }}</span>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge rounded-pill px-3 py-2" style="background:#d1fae5;color:#065f46;">{{ number_format($row['confirmed']) }}</span>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge rounded-pill px-3 py-2" style="background:#fee2e2;color:#991b1b;">{{ number_format($row['cancelled']) }}</span>
-                                            </td>
-                                            <td class="text-center pe-0">
-                                                <span class="badge rounded-pill px-3 py-2" style="background:#f3f4f6;color:#111827;">{{ number_format($row['total']) }}</span>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-muted py-4">No booking data available.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="bookingVolumeChart"></canvas>
+                        </div>
+                        <div class="row g-2 mt-4">
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 9px;">Total Bookings</div>
+                                    <div class="fw-bold text-dark" style="font-size: 1.1rem;">{{ number_format($stats['bookings'] ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 9px;">Pending</div>
+                                    <div class="fw-bold text-dark" style="font-size: 1.1rem;">{{ number_format($stats['pending_bookings'] ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 9px;">Active Inventory</div>
+                                    <div class="fw-bold text-dark" style="font-size: 1.1rem;">{{ number_format($summary['total_items'] ?? 0) }}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            {{-- Chart 2: Revenue Trend --}}
             <div class="col-12 col-xl-6">
-                <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
+                <div class="card border-0 rounded-4 shadow-sm h-100">
                     <div class="card-body p-4">
-                        <div class="d-flex align-items-center justify-content-between mb-4">
-                            <h3 class="fw-bold text-dark mb-0" style="font-size:1rem;">Payment Methods</h3>
-                            <span class="badge rounded-pill px-3 py-2" style="background:#dff4fb;color:#0891b2;">{{ number_format(array_sum(array_column($paymentMethods ?? [], 'count'))) }} transactions</span>
+                        <div class="d-flex align-items-start justify-content-between mb-4">
+                            <div>
+                                <h4 class="fw-bold mb-0" style="font-size: 1rem;">Revenue Trend</h4>
+                                <p class="text-muted mb-0" style="font-size: 11px;">Combined hotel, activity & flight revenue ({{ $stats['currency'] }})</p>
+                            </div>
+                            <span class="badge rounded-pill bg-info bg-opacity-10 text-info px-3 py-1" style="font-size: 10px;">Live</span>
                         </div>
-
-                        @foreach ($paymentMethods ?? [] as $method)
-                            <div class="mb-4">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width:10px;height:10px;background:{{ $method['color'] }};"></span>
-                                        <div class="fw-semibold text-dark">{{ $method['label'] }}</div>
-                                    </div>
-                                    <div class="text-muted">{{ number_format($method['count']) }}</div>
-                                </div>
-                                <div class="progress" style="height:10px;background:#eef2f7;">
-                                    <div class="progress-bar" role="progressbar" style="width: {{ min(100, max(0, (float) ($method['share'] ?? 0))) }}%; background: {{ $method['color'] }};"></div>
-                                </div>
-                                <div class="d-flex justify-content-end mt-2 text-muted" style="font-size:12px;">
-                                    {{ number_format($method['share'] ?? 0, 1) }}%
+                        <div style="height: 220px; position: relative;">
+                            <canvas id="revenueTrendChart"></canvas>
+                        </div>
+                        <div class="row g-2 mt-4">
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 9px;">Total Revenue</div>
+                                    <div class="fw-bold text-dark" style="font-size: 1rem;">{{ $stats['currency'] }} {{ number_format($stats['revenue'] ?? 0, 0) }}</div>
                                 </div>
                             </div>
-                        @endforeach
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 9px;">Total Profit</div>
+                                    <div class="fw-bold text-dark" style="font-size: 1rem;">{{ $stats['currency'] }} {{ number_format($stats['profit'] ?? 0, 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded-3">
+                                    <div class="text-muted text-uppercase fw-bold mb-1" style="font-size: 9px;">Margin</div>
+                                    <div class="fw-bold text-dark" style="font-size: 1.1rem;">{{ number_format($stats['profit_margin'] ?? 0, 1) }}%</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
+    <!-- Earnings & Recent Bookings Row -->
+    <div class="row g-4 mb-4">
         <div class="col-12 col-xl-7">
             <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
                 <div class="card-body p-4">
@@ -421,8 +426,19 @@
                             </div>
                             <div class="text-end">
                                 <p class="fw-bold text-dark mb-0" style="font-size:12px;">{{ $booking['currency'] ?? ($stats['currency'] ?? 'USD') }} {{ $booking['total'] }}</p>
-                                <span class="fw-semibold" style="font-size:10px;color:#14b8a6;">
-                                    ✓ {{ __('admin.status_completed') }}
+                                @php
+                                    $rawStatus = strtolower($booking['status']);
+                                    $statusColor = match($rawStatus) {
+                                        'completed', 'paid', 'confirmed' => '#14b8a6',
+                                        'pending', 'processing', 'draft' => '#f59e0b',
+                                        'cancelled', 'failed' => '#ef4444',
+                                        default => '#6b7280'
+                                    };
+                                    // Draft ko bhi Pending dikhana hai
+                                    $statusLabel = ($rawStatus == 'draft') ? 'Pending' : ucfirst($booking['status']);
+                                @endphp
+                                <span class="fw-semibold" style="font-size:10px; color: {{ $statusColor }};">
+                                    {{ strtolower($booking['status']) == 'completed' ? '✓' : '●' }} {{ $statusLabel }}
                                 </span>
                             </div>
                         </div>
@@ -434,10 +450,143 @@
         </div>
     </div>
 
+    <!-- Booking Status & Payment Methods (At the very end) -->
+    <div class="mb-5">
+        <div class="row g-4">
+            <div class="col-12 col-xl-7">
+                <div class="card border-0 rounded-4 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h3 class="fw-bold text-dark mb-0" style="font-size:1rem;">Booking Status Breakdown</h3>
+                            <span class="badge rounded-pill px-3 py-2" style="background:#e0f2fe;color:#0369a1;font-size:11px;">{{ number_format($stats['bookings'] ?? 0) }} total</span>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;border-bottom:1px solid #f1f5f9;">
+                                        <th class="border-0 ps-0 py-3">Service</th>
+                                        <th class="border-0 text-center py-3">Pending</th>
+                                        <th class="border-0 text-center py-3">Confirmed</th>
+                                        <th class="border-0 text-center py-3">Cancelled</th>
+                                        <th class="border-0 text-center pe-0 py-3">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($bookingStatusBreakdown ?? [] as $row)
+                                        <tr>
+                                            <td class="ps-0 py-3 fw-semibold text-dark" style="font-size:13px;">
+                                                <span class="me-2">{{ match ($row['icon']) {
+                                                    'hotel' => '🏨',
+                                                    'activity' => '🎢',
+                                                    'flight' => '✈',
+                                                    default => '•',
+                                                } }}</span>
+                                                {{ $row['label'] }}
+                                            </td>
+                                            <td class="text-center py-3">
+                                                <span class="badge rounded-pill px-2 py-1" style="background:#fef3c7;color:#92400e;font-size:11px;">{{ number_format($row['pending']) }}</span>
+                                            </td>
+                                            <td class="text-center py-3">
+                                                <span class="badge rounded-pill px-2 py-1" style="background:#d1fae5;color:#065f46;font-size:11px;">{{ number_format($row['confirmed']) }}</span>
+                                            </td>
+                                            <td class="text-center py-3">
+                                                <span class="badge rounded-pill px-2 py-1" style="background:#fee2e2;color:#991b1b;font-size:11px;">{{ number_format($row['cancelled']) }}</span>
+                                            </td>
+                                            <td class="text-center pe-0 py-3">
+                                                <span class="badge rounded-pill px-2 py-1" style="background:#f1f5f9;color:#475569;font-size:11px;">{{ number_format($row['total']) }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="5" class="text-muted py-4 text-center">No service data.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-5">
+                <div class="card border-0 rounded-4 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <h3 class="fw-bold text-dark mb-0" style="font-size:1rem;">Payment Methods</h3>
+                            <span class="badge rounded-pill px-3 py-2" style="background:#f1f5f9;color:#475569;font-size:11px;">Gateways</span>
+                        </div>
+
+                        @foreach ($paymentMethods ?? [] as $method)
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="rounded-circle" style="width:8px;height:8px;background:{{ $method['color'] }};"></span>
+                                        <div class="fw-semibold text-dark" style="font-size:13px;">{{ $method['label'] }}</div>
+                                    </div>
+                                    <div class="fw-bold text-dark" style="font-size:13px;">{{ number_format($method['share'] ?? 0, 1) }}%</div>
+                                </div>
+                                <div class="progress" style="height:6px;background:#f1f5f9;border-radius:10px;">
+                                    <div class="progress-bar" role="progressbar" style="width:{{ $method['share'] }}%;background:{{ $method['color'] }};border-radius:10px;"></div>
+                                </div>
+                                <div class="mt-1 text-muted" style="font-size:11px;">{{ number_format($method['count']) }} transactions</div>
+                            </div>
+@endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         <script>
             const dashboardCurrency = @json($stats['currency'] ?? 'USD');
+            const trendsLabels = @json($monthlyTrendsLabels);
+
+            // Chart 1: Booking Volume (Stacked Bar)
+            new Chart(document.getElementById('bookingVolumeChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: trendsLabels,
+                    datasets: [
+                        { label: 'Hotels', data: @json($monthlyBookingVolume['hotel']), backgroundColor: '#0ea5e9', borderRadius: 4 },
+                        { label: 'Activities', data: @json($monthlyBookingVolume['activity']), backgroundColor: '#334155', borderRadius: 4 },
+                        { label: 'Flights', data: @json($monthlyBookingVolume['flight']), backgroundColor: '#f59e0b', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Chart 2: Revenue Trend (Grouped Bar)
+            new Chart(document.getElementById('revenueTrendChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: trendsLabels,
+                    datasets: [
+                        { label: 'Hotel', data: @json($monthlyRevenueTrend['hotel']), backgroundColor: '#0ea5e9', borderRadius: 4 },
+                        { label: 'Activity', data: @json($monthlyRevenueTrend['activity']), backgroundColor: '#14b8a6', borderRadius: 4 },
+                        { label: 'Flight', data: @json($monthlyRevenueTrend['flight']), backgroundColor: '#f59e0b', borderRadius: 4 },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 8, font: { size: 10 } } } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // Chart 3: Earnings Chart (Last 7 Days)
             new Chart(document.getElementById('earningsChart').getContext('2d'), {
                 type: 'bar',
                 data: {
@@ -469,7 +618,7 @@
                         },
                         tooltip: {
                             callbacks: {
-                                label: (context) => `${dashboardCurrency} ${Number(context.parsed.y || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                                label: (context) => `${dashboardCurrency} ${Number(context.parsed.y || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
                             },
                         },
                     },
