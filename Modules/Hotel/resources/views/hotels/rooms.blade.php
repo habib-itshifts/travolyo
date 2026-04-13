@@ -9,8 +9,9 @@
     }
     $nights   = max(1, (int) $nights);
     $currency = $params['currency'] ?? 'USD';
-    $adults   = (int) ($params['adults'] ?? 1);
-    $children = (int) ($params['children'] ?? 0);
+    $adults    = (int) ($params['adults'] ?? 1);
+    $children  = (int) ($params['children'] ?? 0);
+    $childAges = $params['child_ages'] ?? [];
 @endphp
 
 @push('styles')
@@ -114,6 +115,11 @@
                     {{ $adults }} Adult{{ $adults !== 1 ? 's' : '' }}
                     @if($children > 0), {{ $children }} Child{{ $children !== 1 ? 'ren' : '' }}@endif
                 </div>
+                @if(!empty($childAges))
+                    <div style="font-size:.75rem;color:#6c757d;margin-top:2px">
+                        Ages: {{ implode(', ', array_map(fn($a) => (int)$a === 0 ? '< 1' : (int)$a, $childAges)) }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>

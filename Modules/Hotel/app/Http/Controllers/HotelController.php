@@ -167,6 +167,7 @@ class HotelController extends Controller
             'check_in_time'     => $request->input('check_in_time', ''),
             'check_out_time'    => $request->input('check_out_time', ''),
             'hotel_description' => $request->input('hotel_description', ''),
+            'child_ages'        => array_map('intval', array_filter((array) $request->input('child_ages', []))),
         ];
 
         return view('hotel::hotels.rooms', compact('rooms', 'params'));

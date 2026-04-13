@@ -46,8 +46,8 @@ class LocalHotelProvider implements HotelProviderInterface
             $query->where('star_rating', $dto->starRating);
         }
 
-        if ($dto->amenityIds) {
-            $query->whereHas('amenities', fn ($q) => $q->whereIn('amenities.id', $dto->amenityIds));
+        if ($dto->amenities) {
+            $query->whereHas('amenities', fn ($q) => $q->whereIn('amenities.name', $dto->amenities));
         }
 
         $hotels = $query->get();

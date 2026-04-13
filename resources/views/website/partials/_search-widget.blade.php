@@ -28,6 +28,12 @@
     $initialHotelAdults = max(1, (int) request('adults', 1));
     $initialHotelChildren = max(0, (int) request('children', 0));
     $initialHotelUnits = max(1, (int) request('unit', request('rooms', 1)));
+
+    $rawChildAgesJson = request('child_ages_json', '');
+    $parsedChildAgesJson = $rawChildAgesJson ? json_decode($rawChildAgesJson, true) : null;
+    $initialChildAges = is_array($parsedChildAgesJson) && !empty($parsedChildAgesJson)
+        ? $parsedChildAgesJson[0]
+        : (is_array(request('child_ages')) ? request('child_ages') : []);
 @endphp
 
 @push('styles')
@@ -700,6 +706,7 @@
     border-radius: 20px;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
     display: none;
+    position: absolute;
     left: 0;
     right: 0;
     top: calc(100% + 12px);
@@ -707,6 +714,19 @@
     z-index: 100;
     max-height: 380px;
     overflow-y: auto;
+}
+
+.guests-picker.open-up .guests-menu {
+    top: auto;
+    bottom: calc(100% + 12px);
+}
+
+.trav-search-widget--hero #sw-hotels-form:has(.guests-picker.is-open),
+.trav-search-widget--hero #sw-flights-form-container:has(.guests-picker.is-open),
+.trav-search-widget--hero #sw-flights-form-container:has(.flight-passenger-picker.is-open),
+.trav-search-widget--hero #sw-hotels-form:has(.hotel-destination-suggest-list:not(.d-none)),
+.trav-search-widget--hero #sw-flights-form-container:has(.airport-suggest-list:not(.d-none)) {
+    z-index: 11;
 }
 
 .guests-menu::before, .guests-menu::after,
@@ -843,14 +863,36 @@
 }
 
 .child-age-row {
-    background: #fafcff;
-    border-radius: 12px;
-    padding: 6px 10px;
-    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
 }
 
-.child-age-row .guest-label { 
-    font-size: 0.7rem; 
+.child-age-row .guest-label {
+    color: #2c4a6e;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.child-age-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238ba0ae'/%3E%3C/svg%3E") no-repeat right 10px center;
+    border: 1px solid #dce5ed;
+    border-radius: 10px;
+    color: #2c4a6e;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    min-width: 80px;
+    padding: 6px 28px 6px 12px;
+    transition: border-color 0.2s ease;
+}
+
+.child-age-select:focus {
+    border-color: #2c7da0;
+    outline: none;
 }
 
 .btn-add-room {
@@ -1361,6 +1403,7 @@
                                             <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
                                         </div>
                                     </div>
+                                    <div class="flight-child-ages-container"></div>
                                     <input type="hidden" name="adults" value="{{ max(1, (int) request('adults', 1)) }}">
                                     <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}">
                                     <input type="hidden" name="infants" value="{{ max(0, (int) request('infants', 0)) }}">
@@ -1457,6 +1500,7 @@
                                             <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
                                         </div>
                                     </div>
+                                    <div class="flight-child-ages-container"></div>
                                     <input type="hidden" name="adults" value="{{ max(1, (int) request('adults', 1)) }}">
                                     <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}">
                                     <input type="hidden" name="infants" value="{{ max(0, (int) request('infants', 0)) }}">
@@ -1847,11 +1891,14 @@
         const addRoomBtn = document.getElementById('addRoomBtn');
         const guestsHiddenFields = document.getElementById('guestsHiddenFields');
         const hotelSearchFormEl = document.getElementById('hotelSearchForm');
-        const isHeroGuestsPicker = guestsPicker ? guestsPicker.closest('.trav-search-widget--hero') !== null : false;
         const initialAdults = {{ $initialHotelAdults }};
         const initialChildren = {{ $initialHotelChildren }};
         const initialUnits = {{ $initialHotelUnits }};
-        let rooms = [{ adults: initialAdults, children: initialChildren, unit: initialUnits, childAges: Array(initialChildren).fill(0) }];
+        const initialChildAges = @json(array_map('intval', $initialChildAges));
+        const childAges = initialChildren > 0
+            ? Array.from({ length: initialChildren }, (_, i) => i < initialChildAges.length ? initialChildAges[i] : null)
+            : [];
+        let rooms = [{ adults: initialAdults, children: initialChildren, unit: initialUnits, childAges }];
 
         if (!guestsPicker || !guestsTrigger || !roomsContainer || !guestsSummary) return;
 
@@ -1867,17 +1914,17 @@
         };
 
         const roomMarkup = (room, index) => {
+            const ageOptions = Array.from({ length: 18 }, (_, i) => i);
             const childAgesMarkup = room.children > 0
                 ? `
                 <div class="room-divider"></div>
                 ${room.childAges.map((age, childIndex) => `
-                    <div class="guest-row child-age-row">
-                        <div><div class="guest-label">Child ${childIndex + 1} Age</div></div>
-                        <div class="counter-wrap">
-                            <button type="button" class="counter-btn" data-counter="childAge" data-child-index="${childIndex}" data-delta="-1">-</button>
-                            <span class="counter-val">${age}</span>
-                            <button type="button" class="counter-btn" data-counter="childAge" data-child-index="${childIndex}" data-delta="1">+</button>
-                        </div>
+                    <div class="child-age-row">
+                        <div class="guest-label">Child's age</div>
+                        <select class="child-age-select" data-child-age-select data-child-index="${childIndex}">
+                            <option value="" disabled ${age === null ? 'selected' : ''}>Age</option>
+                            ${ageOptions.map(a => `<option value="${a}" ${age === a ? 'selected' : ''}>${a === 0 ? '< 1' : a}</option>`).join('')}
+                        </select>
                     </div>
                 `).join('')}
             `
@@ -1928,7 +1975,9 @@
         };
 
         const renderRooms = () => {
+            const scrollTop = guestsMenu ? guestsMenu.scrollTop : 0;
             roomsContainer.innerHTML = rooms.map(roomMarkup).join('');
+            if (guestsMenu) guestsMenu.scrollTop = scrollTop;
             updateGuestsSummary();
 
             if (guestsHiddenFields && hotelSearchFormEl) {
@@ -1993,27 +2042,22 @@
             if (!guestsMenu || !guestsPicker.classList.contains('is-open')) return;
 
             guestsPicker.classList.remove('open-up');
+            guestsMenu.style.maxHeight = 'none';
+
+            const menuHeight = guestsMenu.scrollHeight || 0;
+
             guestsMenu.style.maxHeight = '';
 
-            const pickerRect = guestsPicker.getBoundingClientRect();
-            const menuRect = guestsMenu.getBoundingClientRect();
+            const triggerEl = guestsPicker.querySelector('.trav-field__surface');
+            const triggerRect = triggerEl ? triggerEl.getBoundingClientRect() : guestsPicker.getBoundingClientRect();
             const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-            const spaceBelow = viewportHeight - pickerRect.bottom - 16;
-            const spaceAbove = pickerRect.top - 16;
-            const menuHeight = menuRect.height || guestsMenu.scrollHeight || 0;
-            const preferOpenUp = isHeroGuestsPicker && window.innerWidth >= 768;
-
-            if (preferOpenUp && spaceAbove > 120) {
+            const spaceBelow = viewportHeight - triggerRect.bottom - 16;
+            const spaceAbove = triggerRect.top - 16;
+            if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
                 guestsPicker.classList.add('open-up');
-                const available = Math.max(120, Math.min(spaceAbove, menuHeight || spaceAbove));
-                guestsMenu.style.maxHeight = `${available}px`;
-            } else if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
-                guestsPicker.classList.add('open-up');
-                const available = Math.max(120, Math.min(spaceAbove, menuHeight || spaceAbove));
-                guestsMenu.style.maxHeight = `${available}px`;
-            } else if (spaceBelow > 0) {
-                const available = Math.max(120, Math.min(spaceBelow, menuHeight || spaceBelow));
-                guestsMenu.style.maxHeight = `${available}px`;
+                guestsMenu.style.maxHeight = `${Math.max(120, Math.min(spaceAbove, menuHeight))}px`;
+            } else {
+                guestsMenu.style.maxHeight = `${Math.max(120, Math.min(spaceBelow, menuHeight))}px`;
             }
         };
 
@@ -2035,6 +2079,18 @@
                 e.preventDefault();
                 guestsTrigger.click();
             }
+        });
+
+        roomsContainer.addEventListener('change', (e) => {
+            const select = e.target.closest('[data-child-age-select]');
+            if (!select) return;
+            const roomEl = select.closest('.room-card');
+            const roomIndex = Number(roomEl?.dataset.roomIndex);
+            const childIndex = Number(select.dataset.childIndex);
+            if (Number.isNaN(roomIndex) || Number.isNaN(childIndex)) return;
+            rooms[roomIndex].childAges = [...(rooms[roomIndex].childAges || [])];
+            rooms[roomIndex].childAges[childIndex] = Number(select.value);
+            renderRooms();
         });
 
         roomsContainer.addEventListener('click', (e) => {
@@ -2062,17 +2118,6 @@
             const delta = Number(counterBtn.dataset.delta || '0');
             if (!field || !delta) return;
 
-            if (field === 'childAge') {
-                const childIndex = Number(counterBtn.dataset.childIndex);
-                if (Number.isNaN(childIndex)) return;
-                const currentAge = rooms[roomIndex]?.childAges?.[childIndex] ?? 0;
-                const nextAge = Math.max(0, Math.min(17, currentAge + delta));
-                rooms[roomIndex].childAges = [...(rooms[roomIndex].childAges || [])];
-                rooms[roomIndex].childAges[childIndex] = nextAge;
-                renderRooms();
-                return;
-            }
-
             const mins = { adults: 1, children: 0, unit: 1 };
             const maxs = { adults: 20, children: 20, unit: 20 };
             const current = rooms[roomIndex][field];
@@ -2082,7 +2127,7 @@
             if (field === 'children') {
                 const room = rooms[roomIndex];
                 room.childAges = [...(room.childAges || [])];
-                if (delta > 0) room.childAges.push(0);
+                if (delta > 0) room.childAges.push(null);
                 else room.childAges = room.childAges.slice(0, room.children);
             }
 

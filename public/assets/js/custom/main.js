@@ -176,6 +176,34 @@
         summary.value = `${adults} Adult ${children} Child ${infants} Infant`;
     };
 
+    const renderFlightChildAges = (picker, count) => {
+        const container = picker.querySelector(".flight-child-ages-container");
+        if (!container) return;
+
+        const ageOptions = Array.from({ length: 18 }, (_, i) => i);
+        const prevSelects = container.querySelectorAll("[data-flight-child-age]");
+        const prevValues = [];
+        prevSelects.forEach((sel) => prevValues.push(sel.value));
+
+        if (count === 0) {
+            container.innerHTML = "";
+            return;
+        }
+
+        let html = '<div class="room-divider"></div>';
+        for (let i = 0; i < count; i++) {
+            const prevVal = i < prevValues.length ? prevValues[i] : "";
+            html += `<div class="child-age-row">
+                <div class="guest-label">Child's age</div>
+                <select class="child-age-select" data-flight-child-age data-child-index="${i}">
+                    <option value="" disabled ${prevVal === "" ? "selected" : ""}>Age</option>
+                    ${ageOptions.map((a) => `<option value="${a}" ${String(a) === prevVal ? "selected" : ""}>${a === 0 ? "< 1" : a}</option>`).join("")}
+                </select>
+            </div>`;
+        }
+        container.innerHTML = html;
+    };
+
     flightPaxPickers.forEach((picker) => {
         const trigger = picker.querySelector(".flight-passenger-trigger");
         const menu = picker.querySelector(".flight-passenger-menu");
@@ -201,10 +229,19 @@
                     const next = Math.max(min, Math.min(max, current + delta));
                     valueNode.textContent = String(next);
                     if (hidden) hidden.value = String(next);
+                    if (type === "children") {
+                        renderFlightChildAges(picker, next);
+                    }
                     updateFlightPaxSummary(picker);
                 });
             });
         });
+
+        const initialChildren = parseInt(
+            (picker.querySelector('input[name="children"]') || {}).value || "0",
+            10
+        );
+        if (initialChildren > 0) renderFlightChildAges(picker, initialChildren);
 
         trigger.addEventListener("click", (e) => {
             e.stopPropagation();

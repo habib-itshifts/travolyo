@@ -18,7 +18,7 @@ class SearchHotelDto
         public readonly ?int               $starRating = null,
         public readonly ?float             $priceMin   = null,
         public readonly ?float             $priceMax   = null,
-        public readonly ?array             $amenityIds = null,
+        public readonly ?array             $amenities  = null,
         public readonly string             $currency     = 'USD',
         public readonly ?string            $nationality   = null,       
         public readonly string             $sortBy     = 'price_asc', // price_asc|price_desc|rating_desc|featured
@@ -42,7 +42,7 @@ class SearchHotelDto
             starRating: isset($data['star_rating']) ? (int) $data['star_rating'] : null,
             priceMin:   isset($data['price_min']) ? (float) $data['price_min'] : null,
             priceMax:   isset($data['price_max']) ? (float) $data['price_max'] : null,
-            amenityIds: $data['amenity_ids'] ?? null,
+            amenities:  $data['amenities'] ?? null,
             currency:     $data['currency'] ?? 'USD',
             nationality: $data['nationality'] ?? config('hotel.default_nationality', 'AE'),
             sortBy:     $data['sort_by'] ?? 'price_asc',

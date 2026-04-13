@@ -33,9 +33,6 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
-      dd($request->all());
-      
-      
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
              
@@ -45,9 +42,9 @@ class HotelController extends Controller
 
             $cacheKey = 'hotel_search_' . md5(json_encode([
                 $dto->destination, $dto->checkIn, $dto->checkOut,
-                $dto->adults, $dto->children, $dto->rooms,
+                $dto->adults, $dto->children, $dto->childAges, $dto->rooms,
                 $dto->starRating, $dto->priceMin, $dto->priceMax,
-                $dto->amenityIds, $dto->currency, $dto->sortBy,
+                $dto->amenities, $dto->currency, $dto->sortBy,
                 $dto->provider?->value,
             ]));
 
