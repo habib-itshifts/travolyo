@@ -13,6 +13,7 @@ use Modules\Vendor\Http\Controllers\HotelDealSupplementController;
 use Modules\Vendor\Http\Controllers\PromoCodeController;
 use Modules\Vendor\Http\Controllers\RoomTypeController;
 use Modules\Vendor\Http\Controllers\ProfileController;
+use Modules\Vendor\Http\Controllers\SpaceController;
 use Modules\Vendor\Http\Controllers\VendorDocumentController;
 
 Route::prefix('vendor')
@@ -54,6 +55,14 @@ Route::prefix('vendor')
 
         // Hotel Deal Supplements (scoped to vendor's own deals)
         Route::resource('hotel-deal-supplements', HotelDealSupplementController::class)->except(['show']);
+
+        // ─── Spaces ─────────────────────────────────────────────────────────
+        // Vendor CRUD for spaces. Scoped to spaces owned by the authenticated
+        // vendor (author_id = auth()->id()). Status is always forced to "draft"
+        // by SaveSpaceAction — admin must approve before a space goes live.
+        Route::resource('spaces', SpaceController::class);
+        Route::get('spaces/{id}/availability', [SpaceController::class, 'availability'])->name('spaces.availability');
+        Route::post('spaces/{id}/availability', [SpaceController::class, 'updateAvailability'])->name('spaces.availability.update');
 
         // ─── Activities ───────────────────────────────────────────────────────
         // Vendor CRUD for activities. Scoped to activities owned by the authenticated

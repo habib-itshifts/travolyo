@@ -22,6 +22,7 @@ use Modules\Admin\Http\Controllers\HotelDealController;
 use Modules\Admin\Http\Controllers\HotelDealSupplementController;
 use Modules\Admin\Http\Controllers\PromoCodeController;
 use Modules\Admin\Http\Controllers\RoomTypeController;
+use Modules\Admin\Http\Controllers\SpaceController;
 use Modules\Admin\Http\Controllers\VendorRequestController;
 
 Route::prefix('admin')
@@ -94,6 +95,12 @@ Route::prefix('admin')
 
         // Bookings
         Route::get('bookings', [BookingController::class, 'index'])->name('bookings.index');
+
+        // ─── Spaces ──────────────────────────────────────────────────────────
+        Route::resource('spaces', SpaceController::class);
+        Route::post('spaces/{id}/restore', [SpaceController::class, 'restore'])->name('spaces.restore');
+        Route::get('spaces/{id}/availability', [SpaceController::class, 'availability'])->name('spaces.availability');
+        Route::post('spaces/{id}/availability', [SpaceController::class, 'updateAvailability'])->name('spaces.availability.update');
 
         Route::resource('activities', ActivityController::class)->except(['show']);
         Route::resource('blogs', BlogController::class)->except(['show']);
