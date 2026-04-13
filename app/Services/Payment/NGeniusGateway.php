@@ -67,7 +67,6 @@ class NGeniusGateway implements PaymentGatewayInterface
             ])
             ->post("{$this->baseUrl}/transactions/outlets/{$this->outletRef}/orders", $payload);
 
-            dd($response->json());
 
         if (! $response->successful()) {
             Log::warning('N-Genius: create order failed', [
