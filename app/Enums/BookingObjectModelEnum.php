@@ -4,9 +4,10 @@ namespace App\Enums;
 
 enum BookingObjectModelEnum: string
 {
-    case Flight = 'flight';
-    case Hotel  = 'hotel';
+    case Flight   = 'flight';
+    case Hotel    = 'hotel';
     case Activity = 'activity';
-    case Tour   = 'tour';
-    case Car    = 'car';
+    case Space    = 'space';
+    case Tour     = 'tour';
+    case Car      = 'car';
 }

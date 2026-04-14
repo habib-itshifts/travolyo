@@ -4,5 +4,6 @@
     "Customer": true,
     "Flight": true,
     "Hotel": true,
-    "Activity": true
+    "Activity": true,
+    "Space": true
 }

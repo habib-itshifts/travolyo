@@ -190,6 +190,10 @@
             updateSelectedState();
         }
 
+        const mediaRouteBase = '{{ request()->routeIs('vendor.*') && Route::has('vendor.media.browser') ? route('vendor.media.browser') : route('admin.media.browser') }}';
+        const mediaUploadRoute = '{{ request()->routeIs('vendor.*') && Route::has('vendor.media.upload') ? route('vendor.media.upload') : route('admin.media.upload') }}';
+        const mediaFolderRoute = '{{ request()->routeIs('vendor.*') && Route::has('vendor.media.folder') ? route('vendor.media.folder') : route('admin.media.folder') }}';
+
         async function loadBrowser(path = state.currentPath, search = state.search) {
             clearError();
             state.currentPath = path || '';
@@ -200,7 +204,7 @@
                 search: state.search,
             });
 
-            const response = await fetch(`{{ route('admin.media.browser') }}?${query.toString()}`, {
+            const response = await fetch(`${mediaRouteBase}?${query.toString()}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
             });
 
@@ -362,7 +366,7 @@
             const name = window.prompt('Folder name');
             if (!name) return;
 
-            const response = await fetch(`{{ route('admin.media.folder') }}`, {
+            const response = await fetch(mediaFolderRoute, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -388,7 +392,7 @@
             formData.append('path', state.currentPath);
             Array.from(this.files).forEach((file) => formData.append('files[]', file));
 
-            const response = await fetch(`{{ route('admin.media.upload') }}`, {
+            const response = await fetch(mediaUploadRoute, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken(),

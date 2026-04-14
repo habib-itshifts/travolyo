@@ -157,6 +157,7 @@ class FlightController extends Controller
 
     public function checkout(CheckoutFlightRequest $request): JsonResponse
     {
+        
         $validated = $request->validated();
 
         // Retrieve the prebook data from cache using the token passed by the checkout page

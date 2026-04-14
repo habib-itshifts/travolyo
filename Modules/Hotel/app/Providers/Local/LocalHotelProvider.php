@@ -46,8 +46,8 @@ class LocalHotelProvider implements HotelProviderInterface
             $query->where('star_rating', $dto->starRating);
         }
 
-        if ($dto->amenityIds) {
-            $query->whereHas('amenities', fn ($q) => $q->whereIn('amenities.id', $dto->amenityIds));
+        if ($dto->amenities) {
+            $query->whereHas('amenities', fn ($q) => $q->whereIn('amenities.name', $dto->amenities));
         }
 
         $hotels = $query->get();
@@ -190,7 +190,7 @@ class LocalHotelProvider implements HotelProviderInterface
             children:       (int) ($bookingRoom->children ?? 0),
             totalPrice:     (float) $bookingRoom->total_price,
             currency:       (string) ($booking->currency ?? ($hotelDetails['currency'] ?? 'USD')),
-            status:         (string) ($bookingRoom->status ?? 'pending'),
+            status:         (string) ($booking->status ?? ''),
             guestFirstName: (string) ($booking->first_name ?? ''),
             guestLastName:  (string) ($booking->last_name ?? ''),
             guestEmail:     (string) ($booking->email ?? ''),

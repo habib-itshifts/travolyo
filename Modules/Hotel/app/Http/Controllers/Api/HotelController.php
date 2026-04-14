@@ -33,7 +33,6 @@ class HotelController extends Controller
 
     public function search(SearchHotelRequest $request): JsonResponse
     {
-      
         try {
             $dto = SearchHotelDto::fromArray($request->validated());
              
@@ -43,9 +42,9 @@ class HotelController extends Controller
 
             $cacheKey = 'hotel_search_' . md5(json_encode([
                 $dto->destination, $dto->checkIn, $dto->checkOut,
-                $dto->adults, $dto->children, $dto->rooms,
+                $dto->adults, $dto->children, $dto->childAges, $dto->rooms,
                 $dto->starRating, $dto->priceMin, $dto->priceMax,
-                $dto->amenityIds, $dto->currency, $dto->sortBy,
+                $dto->amenities, $dto->currency, $dto->sortBy,
                 $dto->provider?->value,
             ]));
 
@@ -180,12 +179,20 @@ class HotelController extends Controller
             $token = Str::uuid()->toString();
             Cache::put('hotel_checkout_' . $token, $checkoutData, now()->addMinutes(30));
 
+            $baseCurrency = $checkoutData['currency'];
+            $userCurrency = currency()->getUserCurrency();
+            $convertedPrice = ($userCurrency !== $baseCurrency)
+                ? currency($checkoutData['total_price'], $baseCurrency, $userCurrency, false)
+                : $checkoutData['total_price'];
+
             return response()->json([
-                'success'      => true,
-                'total_price'  => $checkoutData['total_price'],
-                'currency'     => $checkoutData['currency'],
-                'checkout_url' => url('/hotels/checkout?token=' . $token),
-                'checkout_token' => $token,
+                'success'           => true,
+                'total_price'       => $checkoutData['total_price'],
+                'currency'          => $baseCurrency,
+                'converted_price'     => $convertedPrice,
+                'converted_currency'  => $userCurrency,
+                'checkout_url'      => url('/hotels/checkout?token=' . $token),
+                'checkout_token'    => $token,
             ]);
 
         } catch (HotelException $e) {
