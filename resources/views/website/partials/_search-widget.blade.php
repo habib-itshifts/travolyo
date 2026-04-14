@@ -1330,9 +1330,9 @@
                                     </div>
                                 </div>
                                 <div class="flight-child-ages-container"></div>
-                                <input type="hidden" name="adults" value="1" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
-                                <input type="hidden" name="children" value="0" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
-                                <input type="hidden" name="infants" value="0" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
+                                <input type="hidden" name="adults" value="{{ max(1, (int) request('adults', 1)) }}" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
+                                <input type="hidden" name="children" value="{{ max(0, (int) request('children', 0)) }}" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
+                                <input type="hidden" name="infants" value="{{ max(0, (int) request('infants', 0)) }}" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
                             </div>
                         </div>
                     </div>
@@ -1992,7 +1992,8 @@
 
         const roomMarkup = (room, index) => {
             const ageOptions = Array.from({ length: 18 }, (_, i) => i);
-            const childAgesMarkup = room.children > 0
+            const showChildAges = activeTopTab !== 'homes';
+            const childAgesMarkup = showChildAges && room.children > 0
                 ? `
                 <div class="room-divider"></div>
                 ${room.childAges.map((age, childIndex) => `

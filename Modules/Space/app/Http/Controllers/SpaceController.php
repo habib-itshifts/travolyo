@@ -20,6 +20,7 @@ class SpaceController extends Controller
     {
         $adults   = max(1, (int) $request->query('adults', 1));
         $children = max(0, (int) $request->query('children', 0));
+        $infants  = max(0, (int) $request->query('infants', 0));
 
         $params = [
             'destination' => (string) $request->query('destination', ''),
@@ -28,7 +29,9 @@ class SpaceController extends Controller
             'check_out'   => (string) $request->query('check_out', now()->addDays(8)->toDateString()),
             'adults'      => $adults,
             'children'    => $children,
-            'guests'      => $adults + $children,
+            'infants'     => $infants,
+            'guests'      => $adults + $children + $infants,
+            'currency'    => (string) $request->query('currency', 'USD'),
         ];
 
         return view('space::homes.index', compact('params'));

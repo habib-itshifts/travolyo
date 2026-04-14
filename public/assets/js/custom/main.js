@@ -180,6 +180,12 @@
         const container = picker.querySelector(".flight-child-ages-container");
         if (!container) return;
 
+        const isHomesPicker = picker.id === 'homesGuestsPicker';
+        if (isHomesPicker) {
+            container.innerHTML = "";
+            return;
+        }
+
         const ageOptions = Array.from({ length: 18 }, (_, i) => i);
         const prevSelects = container.querySelectorAll("[data-flight-child-age]");
         const prevValues = [];

@@ -85,7 +85,7 @@
                     @endif
                 </div>
             </div>
-            <a href="{{ url()->previous(route('homes.index')) }}" class="text-white text-decoration-none small opacity-75">
+            <a href="{{ route('homes.index', request()->only(['city','destination','country','country_code','location','region','check_in','check_out','adults','children','infants','currency'])) }}" class="text-white text-decoration-none small opacity-75">
                 <i class="bi bi-arrow-left me-1"></i>Back to results
             </a>
         </div>

@@ -23,7 +23,7 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-semibold" style="font-size:13px;">Select Dates</label>
-                        <input type="text" id="date-range-picker" class="form-control form-control-sm" placeholder="Click to select dates..." readonly>
+                        <input type="text" id="date-range-picker" name="date_range" class="form-control form-control-sm" placeholder="Select date range" readonly>
                         <div id="selected-dates-container" class="mt-2 d-flex flex-wrap gap-1"></div>
                     </div>
                     <div class="col-md-2">
@@ -98,48 +98,76 @@
         </div>
     </div>
 
+    @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    @endpush
+
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Simple multi-date picker using native date inputs
         document.addEventListener('DOMContentLoaded', function() {
             const container = document.getElementById('selected-dates-container');
             const picker = document.getElementById('date-range-picker');
-            const dates = new Set();
 
-            // Replace readonly input with a date input on click
-            picker.addEventListener('click', function() {
-                const input = document.createElement('input');
-                input.type = 'date';
-                input.className = 'form-control form-control-sm';
-                input.min = new Date().toISOString().split('T')[0];
-                input.addEventListener('change', function() {
-                    if (this.value && !dates.has(this.value)) {
-                        dates.add(this.value);
-                        renderDates();
-                    }
-                    picker.value = dates.size + ' date(s) selected';
-                });
-                input.click();
-            });
+            function toDateString(date) {
+                const year = date.getUTCFullYear();
+                const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const day = String(date.getUTCDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
 
-            function renderDates() {
+            function buildRange(startDate, endDate) {
+                const dates = [];
+                const current = new Date(startDate);
+                const end = new Date(endDate);
+                while (current <= end) {
+                    dates.push(toDateString(current));
+                    current.setUTCDate(current.getUTCDate() + 1);
+                }
+                return dates;
+            }
+
+            function renderDates(dates) {
                 container.innerHTML = '';
-                const sorted = Array.from(dates).sort();
-                sorted.forEach(date => {
+                dates.forEach((date) => {
                     const badge = document.createElement('span');
                     badge.className = 'badge bg-light text-dark border d-inline-flex align-items-center gap-1';
                     badge.innerHTML = `
                         <input type="hidden" name="dates[]" value="${date}">
                         ${date}
-                        <button type="button" class="btn-close" style="font-size:8px;" onclick="this.parentElement.remove()"></button>
+                        <button type="button" class="btn-close" style="font-size:8px; line-height:1;" aria-label="Remove"></button>
                     `;
                     badge.querySelector('.btn-close').addEventListener('click', () => {
-                        dates.delete(date);
-                        picker.value = dates.size ? dates.size + ' date(s) selected' : '';
+                        badge.remove();
+                        const remaining = Array.from(container.querySelectorAll('input[name="dates[]"]')).map((input) => input.value);
+                        if (remaining.length === 0) {
+                            picker.value = '';
+                        }
                     });
                     container.appendChild(badge);
                 });
             }
+
+            flatpickr(picker, {
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                allowInput: false,
+                minDate: 'today',
+                onChange: function(selectedDates, dateStr) {
+                    container.innerHTML = '';
+                    if (selectedDates.length === 2) {
+                        const rangeDates = buildRange(selectedDates[0], selectedDates[1]);
+                        picker.value = `${dateStr}`;
+                        renderDates(rangeDates);
+                    } else if (selectedDates.length === 1) {
+                        const singleDate = toDateString(selectedDates[0]);
+                        picker.value = singleDate;
+                        renderDates([singleDate]);
+                    } else {
+                        picker.value = '';
+                    }
+                },
+            });
         });
     </script>
     @endpush
