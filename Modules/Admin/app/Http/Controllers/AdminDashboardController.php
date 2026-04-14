@@ -43,6 +43,7 @@ class AdminDashboardController extends Controller
             'profit' => $profit,
             'profit_margin' => $revenue > 0 ? round(($profit / $revenue) * 100, 1) : 0.0,
             'bookings' => Booking::query()->count(),
+            'completed_bookings' => Booking::query()->whereIn('status', $completedStatuses)->count(),
             'pending_bookings' => Booking::query()->whereIn('status', $pendingStatuses)->count(),
             'in_progress_payments' => Booking::query()
                 ->whereNotIn('status', array_merge($completedStatuses, $failedStatuses))
@@ -189,8 +190,73 @@ class AdminDashboardController extends Controller
             );
         }
 
+        $recentHotelBookings = Booking::query()
+            ->where('object_model', BookingObjectModelEnum::Hotel->value)
+            ->latest()
+            ->take(5)
+            ->get(['id', 'code', 'currency', 'total', 'status', 'created_at'])
+            ->map(function (Booking $booking) use ($selectedCurrency) {
+                $sourceCurrency = strtoupper((string) ($booking->currency ?: $selectedCurrency));
+                $amount = (float) $booking->total;
+
+                if ($sourceCurrency !== $selectedCurrency && $amount > 0) {
+                    $amount = (float) currency($amount, $sourceCurrency, $selectedCurrency, false);
+                }
+
+                return [
+                    'reference' => $booking->code ?? 'N/A',
+                    'total' => number_format($amount, 0),
+                    'currency' => $selectedCurrency,
+                    'status' => $booking->status,
+                    'date' => optional($booking->created_at)->format('d M Y'),
+                ];
+            });
+
+        $recentActivityBookings = Booking::query()
+            ->where('object_model', BookingObjectModelEnum::Activity->value)
+            ->latest()
+            ->take(5)
+            ->get(['id', 'code', 'currency', 'total', 'status', 'created_at'])
+            ->map(function (Booking $booking) use ($selectedCurrency) {
+                $sourceCurrency = strtoupper((string) ($booking->currency ?: $selectedCurrency));
+                $amount = (float) $booking->total;
+
+                if ($sourceCurrency !== $selectedCurrency && $amount > 0) {
+                    $amount = (float) currency($amount, $sourceCurrency, $selectedCurrency, false);
+                }
+
+                return [
+                    'reference' => $booking->code ?? 'N/A',
+                    'total' => number_format($amount, 0),
+                    'currency' => $selectedCurrency,
+                    'status' => $booking->status,
+                    'date' => optional($booking->created_at)->format('d M Y'),
+                ];
+            });
+
+        $recentFlightBookings = Booking::query()
+            ->where('object_model', BookingObjectModelEnum::Flight->value)
+            ->latest()
+            ->take(5)
+            ->get(['id', 'code', 'currency', 'total', 'status', 'created_at'])
+            ->map(function (Booking $booking) use ($selectedCurrency) {
+                $sourceCurrency = strtoupper((string) ($booking->currency ?: $selectedCurrency));
+                $amount = (float) $booking->total;
+
+                if ($sourceCurrency !== $selectedCurrency && $amount > 0) {
+                    $amount = (float) currency($amount, $sourceCurrency, $selectedCurrency, false);
+                }
+
+                return [
+                    'reference' => $booking->code ?? 'N/A',
+                    'total' => number_format($amount, 0),
+                    'currency' => $selectedCurrency,
+                    'status' => $booking->status,
+                    'date' => optional($booking->created_at)->format('d M Y'),
+                ];
+            });
+
         $recentBookings = Booking::query()
-            ->with(['customer', 'vendor'])
             ->latest()
             ->take(5)
             ->get(['id', 'code', 'object_model', 'currency', 'total', 'status', 'created_at'])
@@ -308,11 +374,41 @@ class AdminDashboardController extends Controller
         }
         unset($method);
 
+        $topHotelVendors = User::query()
+            ->where('user_type', UserType::Vendor->value)
+            ->whereIn('vendor_status', [
+                \App\Enums\VendorStatusEnum::Verified->value,
+                \App\Enums\VendorStatusEnum::Approved->value,
+            ])
+            ->withCount([
+                'bookingsAsVendor as hotel_bookings_count' => function ($query) {
+                    $query->where('object_model', BookingObjectModelEnum::Hotel->value);
+                },
+            ])
+            ->orderByDesc('hotel_bookings_count')
+            ->take(5)
+            ->get(['id', 'name', 'business_name', 'email', 'phone', 'vendor_status', 'created_at']);
+
+        $recentVendorRegistrations = User::query()
+            ->whereNotNull('vendor_status')
+            ->withCount([
+                'bookingsAsVendor as hotel_bookings_count' => function ($query) {
+                    $query->where('object_model', BookingObjectModelEnum::Hotel->value);
+                },
+            ])
+            ->orderByRaw("CASE WHEN vendor_status = ? THEN 0 ELSE 1 END", [\App\Enums\VendorStatusEnum::Pending->value])
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get(['id', 'name', 'business_name', 'email', 'phone', 'vendor_status', 'created_at']);
+
         return view('admin::dashboard', compact(
             'stats',
             'chartLabels',
             'chartRevenue',
             'chartEarnings',
+            'recentHotelBookings',
+            'recentActivityBookings',
+            'recentFlightBookings',
             'recentBookings',
             'summary',
             'revenueBreakdown',
@@ -320,7 +416,10 @@ class AdminDashboardController extends Controller
             'bookingStatusBreakdown',
             'monthlyTrendsLabels',
             'monthlyBookingVolume',
-            'monthlyRevenueTrend'
+            'monthlyRevenueTrend',
+            'paymentMethodTotal',
+            'topHotelVendors',
+            'recentVendorRegistrations'
         ));
     }
 

@@ -91,7 +91,18 @@
         ],
     ];
 
+    $vendorRequestCount = \App\Models\User::query()
+        ->where('vendor_status', \App\Enums\VendorStatusEnum::Pending->value)
+        ->orWhere('vendor_status', \App\Enums\VendorStatusEnum::DocsSubmitted->value)
+        ->count();
+
     $nav = [
+        [
+            'route'   => 'admin.crm-dashboard',
+            'label'   => 'CRM Overview',
+            'has_sub' => false,
+            'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 19V5m0 14h16M8 17v-6m4 6V9m4 8V7"/>',
+        ],
         [
             'route'   => 'admin.dashboard',
             'label'   => __('admin.nav_dashboard'),
@@ -148,6 +159,7 @@
             'label'   => 'Vendor Requests',
             'has_sub' => false,
             'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
+            'badge'   => $vendorRequestCount,
         ],
 
         ['section' => 'USERS'],
@@ -282,6 +294,12 @@
                     </svg>
                     <span>{{ $item['label'] }}</span>
                 </span>
+                @if (!empty($item['badge']))
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                          style="width:18px;height:18px;background:#2dd4bf;color:#fff;font-size:10px;line-height:1;font-weight:700;">
+                        {{ min(99, (int) $item['badge']) }}
+                    </span>
+                @endif
                 @if ($item['has_sub'])
                     <svg style="width:12px;height:12px;color:{{ $active ? 'var(--clr-primary)' : 'var(--clr-sidebar-disabled)' }};"
                          fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -33,6 +33,53 @@
             .dash-metric-card__subtext,
             .dash-breakdown-card__footer { margin-top: .3rem; font-size: 11px; line-height: 1.15; color: #6b7280; }
             .dash-breakdown-card__progress { height: 4px; background: #eef2f7; }
+            .dash-status-table {
+                border-collapse: separate;
+                border-spacing: 0;
+            }
+            .dash-status-table thead th {
+                font-size: 11px;
+                letter-spacing: .05em;
+                text-transform: uppercase;
+                color: #94a3b8;
+                font-weight: 700;
+                padding-top: .85rem;
+                padding-bottom: .85rem;
+            }
+            .dash-status-table tbody td {
+                padding-top: .8rem;
+                padding-bottom: .8rem;
+                border-top: 1px solid #f1f5f9;
+            }
+            .dash-status-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 92px;
+                height: 28px;
+                padding: 0 .75rem;
+                border-radius: .45rem;
+                font-size: 12px;
+                font-weight: 700;
+                line-height: 1;
+            }
+            .dash-status-badge--pending { background: #fef3c7; color: #92400e; }
+            .dash-status-badge--confirmed { background: #d1fae5; color: #065f46; }
+            .dash-status-badge--cancelled { background: #fee2e2; color: #991b1b; }
+            .dash-status-badge--total { background: #f3f4f6; color: #111827; }
+            .dash-status-service {
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+                white-space: nowrap;
+            }
+            .dash-status-service__icon {
+                font-size: 1rem;
+                line-height: 1;
+                width: 20px;
+                text-align: center;
+                flex-shrink: 0;
+            }
 
             @media (max-width: 1199.98px) {
                 .dash-metric-card { min-height: 108px; }
@@ -65,7 +112,7 @@
 
         <div class="position-relative">
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span aria-hidden="true" style="font-size:1.4rem;">👋</span>
+                <span aria-hidden="true" style="font-size:1.4rem;">ðŸ‘‹</span>
                 <h2 class="fw-bold mb-0" style="font-size:1.1rem;">
                     {{ __('admin.welcome_title', ['email' => auth()->user()->email]) }}
                 </h2>
@@ -95,7 +142,7 @@
                     <div class="dash-metric-card__head">
                         <div class="dash-metric-card__left">
                             <div class="dash-metric-card__icon" style="background:rgba(59,130,246,0.10);color:#3b82f6;">
-                                <span style="font-size:16px;line-height:1;">▥</span>
+                                <span style="font-size:16px;line-height:1;">¥</span>
                             </div>
                             <div>
                                 <div class="dash-metric-card__label">Revenue</div>
@@ -135,7 +182,7 @@
                     <div class="dash-metric-card__head">
                         <div class="dash-metric-card__left">
                             <div class="dash-metric-card__icon" style="background:rgba(139,92,246,0.10);color:#8b5cf6;">
-                                <span style="font-size:16px;line-height:1;">▣</span>
+                                <span style="font-size:16px;line-height:1;">□</span>
                             </div>
                             <div>
                                 <div class="dash-metric-card__label">Bookings</div>
@@ -144,6 +191,46 @@
                         </div>
                     </div>
                     <div class="dash-metric-card__subtext">{{ number_format($stats['pending_bookings'] ?? 0) }} pending</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="dash-metric-card h-100">
+                <div class="dash-topbar" style="background:#14b8a6;"></div>
+                <div class="dash-metric-card__body">
+                    <div class="dash-metric-card__head">
+                        <div class="dash-metric-card__left">
+                            <div class="dash-metric-card__icon" style="background:rgba(20,184,166,0.10);color:#14b8a6;">
+                                <span style="font-size:16px;line-height:1;">✓</span>
+                            </div>
+                            <div>
+                                <div class="dash-metric-card__label">Completed Bookings</div>
+                                <div class="dash-metric-card__value">{{ number_format($stats['completed_bookings'] ?? 0) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dash-metric-card__subtext">Completed and paid bookings</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="dash-metric-card h-100">
+                <div class="dash-topbar" style="background:#1e293b;"></div>
+                <div class="dash-metric-card__body">
+                    <div class="dash-metric-card__head">
+                        <div class="dash-metric-card__left">
+                            <div class="dash-metric-card__icon" style="background:rgba(30,41,59,0.10);color:#1e293b;">
+                                <span style="font-size:12px;line-height:1;">▲</span>
+                            </div>
+                            <div>
+                                <div class="dash-metric-card__label">Active Vendors</div>
+                                <div class="dash-metric-card__value">{{ number_format($stats['total_vendors'] ?? 0) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dash-metric-card__subtext">{{ number_format($stats['pending_vendors'] ?? 0) }} pending approval</div>
                 </div>
             </div>
         </div>
@@ -207,33 +294,13 @@
             </div>
         </div>
 
-        <div class="col">
-            <div class="dash-metric-card h-100">
-                <div class="dash-topbar" style="background:#1e293b;"></div>
-                <div class="dash-metric-card__body">
-                    <div class="dash-metric-card__head">
-                        <div class="dash-metric-card__left">
-                            <div class="dash-metric-card__icon" style="background:rgba(30,41,59,0.10);color:#1e293b;">
-                                <span style="font-size:12px;line-height:1;">▲</span>
-                            </div>
-                            <div>
-                                <div class="dash-metric-card__label">Active Vendors</div>
-                                <div class="dash-metric-card__value">{{ number_format($stats['total_vendors'] ?? 0) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="dash-metric-card__subtext">{{ number_format($stats['pending_vendors'] ?? 0) }} pending approval</div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <div class="mb-4">
         <div class="d-flex align-items-end justify-content-between mb-3">
             <div>
                 <h3 class="fw-bold text-dark mb-1" style="font-size:1.05rem;">Revenue Breakdown</h3>
-                <p class="text-muted mb-0" style="font-size:12px;">Excluding cancelled bookings · All converted to {{ $stats['currency'] ?? 'AED' }}</p>
+                <p class="text-muted mb-0" style="font-size:12px;">Excluding cancelled bookings Â· All converted to {{ $stats['currency'] ?? 'AED' }}</p>
             </div>
         </div>
 
@@ -253,13 +320,13 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="dash-breakdown-card__icon" style="background:{{ $topColor }}15;color:{{ $topColor }};">
                                         @if ($icon === 'hotel')
-                                            <span style="font-size:15px;line-height:1;">🏨</span>
+                                            <span style="font-size:15px;line-height:1;">⌂</span>
                                         @elseif ($icon === 'activity')
-                                            <span style="font-size:15px;line-height:1;">🎢</span>
+                                            <span style="font-size:15px;line-height:1;">✦</span>
                                         @elseif ($icon === 'flight')
                                             <span style="font-size:15px;line-height:1;">✈</span>
                                         @else
-                                            <span style="font-size:15px;line-height:1;">◆</span>
+                                            <span style="font-size:15px;line-height:1;">＋</span>
                                         @endif
                                     </div>
                                     <div>
@@ -277,7 +344,7 @@
 
                             <div class="dash-breakdown-card__footer">
                                 @if ($key !== 'profit')
-                                    <span>{{ number_format($item['count'] ?? 0) }} bookings · {{ number_format($item['share'] ?? 0, 1) }}% of total</span>
+                                    <span>{{ number_format($item['count'] ?? 0) }} bookings Â· {{ number_format($item['share'] ?? 0, 1) }}% of total</span>
                                 @else
                                     <span>{{ $item['meta'] ?? ('Margin ' . number_format($item['share'] ?? 0, 1) . '%') }}</span>
                                 @endif
@@ -294,7 +361,7 @@
         <div class="d-flex align-items-center justify-content-between mb-3">
             <div>
                 <h3 class="fw-bold text-dark mb-1" style="font-size: 1.1rem;">6-Month Trends</h3>
-                <p class="text-muted mb-0" style="font-size: 11px;">{{ $monthlyTrendsLabels[0] ?? '' }} – {{ end($monthlyTrendsLabels) ?? '' }}</p>
+                <p class="text-muted mb-0" style="font-size: 11px;">{{ $monthlyTrendsLabels[0] ?? '' }} â€“ {{ end($monthlyTrendsLabels) ?? '' }}</p>
             </div>
         </div>
 
@@ -377,7 +444,6 @@
         </div>
     </div>
 
-    <!-- Earnings & Recent Bookings Row -->
     <div class="row g-4 mb-4">
         <div class="col-12 col-xl-7">
             <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
@@ -406,45 +472,47 @@
                             <h3 class="fw-bold text-dark mb-1" style="font-size:14px;">{{ __('admin.recent_bookings') }}</h3>
                             <p class="text-muted mb-0" style="font-size:12px;">{{ __('admin.recent_bookings_subtitle') }}</p>
                         </div>
-                        <a href="{{ route('admin.bookings.index') }}" class="fw-semibold text-decoration-none" style="color:var(--clr-primary);font-size:12px;">
+                        <a href="{{ route('admin.bookings.index', ['type' => 'all']) }}" class="fw-semibold text-decoration-none" style="color:var(--clr-primary);font-size:12px;">
                             {{ __('admin.view_all') }} &rarr;
                         </a>
                     </div>
 
-                    @forelse ($recentBookings as $booking)
-                        <div class="d-flex align-items-center justify-content-between py-2 {{ !$loop->last ? 'border-bottom' : '' }}" style="border-color:#f9fafb!important;">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0" style="width:36px;height:36px;background:rgba(20,184,166,0.1);">
-                                    <svg style="width:16px;height:16px;color:#14b8a6;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="fw-semibold text-dark mb-0" style="font-size:12px;">{{ $booking['item'] }}</p>
-                                    <p class="text-muted mb-0" style="font-size:10px;">#{{ $booking['id'] }} · {{ $booking['date'] }}</p>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <p class="fw-bold text-dark mb-0" style="font-size:12px;">{{ $booking['currency'] ?? ($stats['currency'] ?? 'USD') }} {{ $booking['total'] }}</p>
-                                @php
-                                    $rawStatus = strtolower($booking['status']);
-                                    $statusColor = match($rawStatus) {
-                                        'completed', 'paid', 'confirmed' => '#14b8a6',
-                                        'pending', 'processing', 'draft' => '#f59e0b',
-                                        'cancelled', 'failed' => '#ef4444',
-                                        default => '#6b7280'
-                                    };
-                                    // Draft ko bhi Pending dikhana hai
-                                    $statusLabel = ($rawStatus == 'draft') ? 'Pending' : ucfirst($booking['status']);
-                                @endphp
-                                <span class="fw-semibold" style="font-size:10px; color: {{ $statusColor }};">
-                                    {{ strtolower($booking['status']) == 'completed' ? '✓' : '●' }} {{ $statusLabel }}
-                                </span>
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-muted mb-0">No bookings found.</p>
-                    @endforelse
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;">
+                                    <th class="border-0 ps-0">Reference</th>
+                                    <th class="border-0 text-center">Total</th>
+                                    <th class="border-0 text-center">Status</th>
+                                    <th class="border-0 pe-0 text-end">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($recentBookings ?? [] as $booking)
+                                    @php
+                                        $rawStatus = strtolower($booking['status']);
+                                        $statusColor = match($rawStatus) {
+                                            'completed', 'paid', 'confirmed' => '#14b8a6',
+                                            'pending', 'processing', 'draft' => '#f59e0b',
+                                            'cancelled', 'failed' => '#ef4444',
+                                            default => '•'
+                                        };
+                                        $statusLabel = ($rawStatus == 'draft') ? 'Pending' : ucfirst($booking['status']);
+                                    @endphp
+                                    <tr>
+                                        <td class="ps-0 py-3 fw-semibold text-dark" style="font-size:12px;">{{ $booking['item'] }}</td>
+                                        <td class="text-center py-3 fw-bold text-dark" style="font-size:12px;">{{ $booking['currency'] ?? ($stats['currency'] ?? 'USD') }} {{ $booking['total'] }}</td>
+                                        <td class="text-center py-3">
+                                            <span class="fw-semibold" style="font-size:10px; color: {{ $statusColor }};">{{ ucfirst($statusLabel) }}</span>
+                                        </td>
+                                        <td class="pe-0 py-3 text-end text-muted" style="font-size:11px;">{{ $booking['date'] }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-muted py-4 text-center">No bookings found.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -458,11 +526,11 @@
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center justify-content-between mb-4">
                             <h3 class="fw-bold text-dark mb-0" style="font-size:1rem;">Booking Status Breakdown</h3>
-                            <span class="badge rounded-pill px-3 py-2" style="background:#e0f2fe;color:#0369a1;font-size:11px;">{{ number_format($stats['bookings'] ?? 0) }} total</span>
+                            <span class="badge px-3 py-2" style="background:#e0f2fe;color:#0369a1;font-size:11px;border-radius:.6rem;">{{ number_format($stats['bookings'] ?? 0) }} total</span>
                         </div>
 
                         <div class="table-responsive">
-                            <table class="table align-middle mb-0">
+                            <table class="table align-middle mb-0 dash-status-table">
                                 <thead>
                                     <tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;border-bottom:1px solid #f1f5f9;">
                                         <th class="border-0 ps-0 py-3">Service</th>
@@ -474,8 +542,8 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($bookingStatusBreakdown ?? [] as $row)
-                                        <tr>
-                                            <td class="ps-0 py-3 fw-semibold text-dark" style="font-size:13px;">
+                                        <tr style="border-bottom:1px solid #f8fafc;">
+                                            <td class="ps-0 fw-semibold text-dark" style="font-size:13px;">
                                                 <span class="me-2">{{ match ($row['icon']) {
                                                     'hotel' => '🏨',
                                                     'activity' => '🎢',
@@ -484,17 +552,17 @@
                                                 } }}</span>
                                                 {{ $row['label'] }}
                                             </td>
-                                            <td class="text-center py-3">
-                                                <span class="badge rounded-pill px-2 py-1" style="background:#fef3c7;color:#92400e;font-size:11px;">{{ number_format($row['pending']) }}</span>
+                                            <td class="text-center">
+                                                <span class="dash-status-badge dash-status-badge--pending">{{ number_format($row['pending']) }}</span>
                                             </td>
-                                            <td class="text-center py-3">
-                                                <span class="badge rounded-pill px-2 py-1" style="background:#d1fae5;color:#065f46;font-size:11px;">{{ number_format($row['confirmed']) }}</span>
+                                            <td class="text-center">
+                                                <span class="dash-status-badge dash-status-badge--confirmed">{{ number_format($row['confirmed']) }}</span>
                                             </td>
-                                            <td class="text-center py-3">
-                                                <span class="badge rounded-pill px-2 py-1" style="background:#fee2e2;color:#991b1b;font-size:11px;">{{ number_format($row['cancelled']) }}</span>
+                                            <td class="text-center">
+                                                <span class="dash-status-badge dash-status-badge--cancelled">{{ number_format($row['cancelled']) }}</span>
                                             </td>
-                                            <td class="text-center pe-0 py-3">
-                                                <span class="badge rounded-pill px-2 py-1" style="background:#f1f5f9;color:#475569;font-size:11px;">{{ number_format($row['total']) }}</span>
+                                            <td class="text-center pe-0">
+                                                <span class="dash-status-badge dash-status-badge--total">{{ number_format($row['total']) }}</span>
                                             </td>
                                         </tr>
                                     @empty
@@ -512,7 +580,7 @@
                     <div class="card-body p-4">
                         <div class="d-flex align-items-center justify-content-between mb-4">
                             <h3 class="fw-bold text-dark mb-0" style="font-size:1rem;">Payment Methods</h3>
-                            <span class="badge rounded-pill px-3 py-2" style="background:#f1f5f9;color:#475569;font-size:11px;">Gateways</span>
+                            <span class="badge rounded-pill px-3 py-2" style="background:#f1f5f9;color:#475569;font-size:11px;">{{ number_format($paymentMethodTotal ?? 0) }} total transaction</span>
                         </div>
 
                         @foreach ($paymentMethods ?? [] as $method)
@@ -536,7 +604,211 @@
         </div>
     </div>
 
-    @push('scripts')
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-xl-4">
+            <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h3 class="fw-bold text-dark mb-1" style="font-size:14px;">Recent Hotel Bookings</h3>
+                            <p class="text-muted mb-0" style="font-size:12px;">Latest hotel booking history</p>
+                        </div>
+                        <a href="{{ route('admin.bookings.index', ['type' => 'hotel']) }}" class="fw-semibold text-decoration-none" style="color:var(--clr-primary);font-size:12px;">View All &rarr;</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead><tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;"><th class="border-0 ps-0">Reference</th><th class="border-0 text-center">Total</th><th class="border-0 text-center">Status</th><th class="border-0 pe-0 text-end">Date</th></tr></thead>
+                            <tbody>
+                                @forelse ($recentHotelBookings ?? [] as $booking)
+                                    @php $rawStatus = strtolower($booking['status']); $statusColor = match($rawStatus) { 'completed', 'paid', 'confirmed' => '#14b8a6', 'pending', 'processing', 'draft' => '#f59e0b', 'cancelled', 'failed' => '#ef4444', default => '•' }; $statusLabel = ($rawStatus == 'draft') ? 'Pending' : ucfirst($booking['status']); @endphp
+                                    <tr><td class="ps-0 py-3 fw-semibold text-dark" style="font-size:12px;">{{ $booking['reference'] }}</td><td class="text-center py-3 fw-bold text-dark" style="font-size:12px;">{{ $booking['currency'] ?? ($stats['currency'] ?? 'USD') }} {{ $booking['total'] }}</td><td class="text-center py-3"><span class="fw-semibold" style="font-size:10px; color: {{ $statusColor }};">{{ ucfirst($statusLabel) }}</span></td><td class="pe-0 py-3 text-end text-muted" style="font-size:11px;">{{ $booking['date'] }}</td></tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-muted py-4 text-center">No hotel bookings found.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h3 class="fw-bold text-dark mb-1" style="font-size:14px;">Recent Activity Bookings</h3>
+                            <p class="text-muted mb-0" style="font-size:12px;">Latest activity booking history</p>
+                        </div>
+                        <a href="{{ route('admin.bookings.index', ['type' => 'activity']) }}" class="fw-semibold text-decoration-none" style="color:var(--clr-primary);font-size:12px;">View All &rarr;</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead><tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;"><th class="border-0 ps-0">Reference</th><th class="border-0 text-center">Total</th><th class="border-0 text-center">Status</th><th class="border-0 pe-0 text-end">Date</th></tr></thead>
+                            <tbody>
+                                @forelse ($recentActivityBookings ?? [] as $booking)
+                                    @php $rawStatus = strtolower($booking['status']); $statusColor = match($rawStatus) { 'completed', 'paid', 'confirmed' => '#14b8a6', 'pending', 'processing', 'draft' => '#f59e0b', 'cancelled', 'failed' => '#ef4444', default => '•' }; $statusLabel = ($rawStatus == 'draft') ? 'Pending' : ucfirst($booking['status']); @endphp
+                                    <tr><td class="ps-0 py-3 fw-semibold text-dark" style="font-size:12px;">{{ $booking['reference'] }}</td><td class="text-center py-3 fw-bold text-dark" style="font-size:12px;">{{ $booking['currency'] ?? ($stats['currency'] ?? 'USD') }} {{ $booking['total'] }}</td><td class="text-center py-3"><span class="fw-semibold" style="font-size:10px; color: {{ $statusColor }};">{{ ucfirst($statusLabel) }}</span></td><td class="pe-0 py-3 text-end text-muted" style="font-size:11px;">{{ $booking['date'] }}</td></tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-muted py-4 text-center">No activity bookings found.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-4">
+            <div class="card border rounded-4 shadow-sm h-100" style="border-color:rgba(0,0,0,0.06)!important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h3 class="fw-bold text-dark mb-1" style="font-size:14px;">Recent Flight Bookings</h3>
+                            <p class="text-muted mb-0" style="font-size:12px;">Latest flight booking history</p>
+                        </div>
+                        <a href="{{ route('admin.bookings.index', ['type' => 'flight']) }}" class="fw-semibold text-decoration-none" style="color:var(--clr-primary);font-size:12px;">View All &rarr;</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead><tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;"><th class="border-0 ps-0">Reference</th><th class="border-0 text-center">Total</th><th class="border-0 text-center">Status</th><th class="border-0 pe-0 text-end">Date</th></tr></thead>
+                            <tbody>
+                                @forelse ($recentFlightBookings ?? [] as $booking)
+                                    @php $rawStatus = strtolower($booking['status']); $statusColor = match($rawStatus) { 'completed', 'paid', 'confirmed' => '#14b8a6', 'pending', 'processing', 'draft' => '#f59e0b', 'cancelled', 'failed' => '#ef4444', default => '•' }; $statusLabel = ($rawStatus == 'draft') ? 'Pending' : ucfirst($booking['status']); @endphp
+                                    <tr><td class="ps-0 py-3 fw-semibold text-dark" style="font-size:12px;">{{ $booking['reference'] }}</td><td class="text-center py-3 fw-bold text-dark" style="font-size:12px;">{{ $booking['currency'] ?? ($stats['currency'] ?? 'USD') }} {{ $booking['total'] }}</td><td class="text-center py-3"><span class="fw-semibold" style="font-size:10px; color: {{ $statusColor }};">{{ ucfirst($statusLabel) }}</span></td><td class="pe-0 py-3 text-end text-muted" style="font-size:11px;">{{ $booking['date'] }}</td></tr>
+                                @empty
+                                    <tr><td colspan="4" class="text-muted py-4 text-center">No flight bookings found.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <div class="card border-0 rounded-4 shadow-sm mb-4">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center justify-content-between px-4 py-4 border-bottom">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-1" style="font-size:1rem;">Top Vendors by Hotel Bookings</h3>
+                        <p class="text-muted mb-0" style="font-size:12px;">Hotels only, ranked by completed and active hotel booking volume</p>
+                    </div>
+                    <a href="{{ route('admin.vendors.index') }}" class="btn btn-sm btn-light fw-semibold px-3 py-2" style="font-size:12px;">View All Vendors</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;border-bottom:1px solid #f1f5f9;">
+                                <th class="border-0 ps-4 py-3">#</th>
+                                <th class="border-0 py-3">Vendor</th>
+                                <th class="border-0 py-3">Business</th>
+                                <th class="border-0 py-3">Email</th>
+                                <th class="border-0 py-3">Phone</th>
+                                <th class="border-0 py-3">Hotel Bookings</th>
+                                <th class="border-0 py-3">Status</th>
+                                <th class="border-0 pe-4 py-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($topHotelVendors ?? [] as $vendor)
+                                @php
+                                    $status = strtolower((string) $vendor->vendor_status?->value ?? (string) $vendor->vendor_status ?? 'pending');
+                                    $statusStyles = match ($status) {
+                                        'verified' => ['bg' => '#dcfce7', 'fg' => '#166534', 'label' => 'Verified'],
+                                        'approved' => ['bg' => '#e0f2fe', 'fg' => '#0369a1', 'label' => 'Approved'],
+                                        'rejected' => ['bg' => '#fee2e2', 'fg' => '#991b1b', 'label' => 'Rejected'],
+                                        'docssubmitted', 'docs_submitted' => ['bg' => '#fef3c7', 'fg' => '#92400e', 'label' => 'Docs Submitted'],
+                                        default => ['bg' => '#f1f5f9', 'fg' => '#475569', 'label' => 'Pending'],
+                                    };
+                                    $displayName = $vendor->name ?: 'Vendor';
+                                @endphp
+                                <tr style="border-bottom:1px solid #f8fafc;">
+                                    <td class="ps-4 py-3 fw-semibold text-muted">{{ $loop->iteration }}</td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold flex-shrink-0" style="width:40px;height:40px;background:linear-gradient(135deg,#0f6fad,#14b8a6);font-size:14px;">{{ strtoupper(mb_substr($displayName, 0, 1)) }}</div>
+                                            <div>
+                                                <div class="fw-semibold text-dark" style="font-size:13px;">{{ $displayName }}</div>
+                                                <div class="text-muted" style="font-size:11px;">Joined {{ optional($vendor->created_at)->format('d M Y') }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-dark" style="font-size:13px;">{{ $vendor->business_name ?: '—' }}</td>
+                                    <td class="py-3"><a href="mailto:{{ $vendor->email }}" class="text-decoration-none text-dark" style="font-size:13px;">{{ $vendor->email }}</a></td>
+                                    <td class="py-3 text-dark" style="font-size:13px;">{{ $vendor->phone ?: '—' }}</td>
+                                    <td class="py-3 fw-bold text-dark" style="font-size:13px;">{{ number_format($vendor->hotel_bookings_count ?? 0) }}</td>
+                                    <td class="py-3"><span class="badge rounded-pill px-3 py-2" style="background:{{ $statusStyles['bg'] }};color:{{ $statusStyles['fg'] }};font-size:11px;">{{ $statusStyles['label'] }}</span></td>
+                                    <td class="pe-4 py-3 text-end"><a href="{{ route('admin.vendors.show', $vendor) }}" class="btn btn-sm btn-light fw-semibold me-2" style="font-size:11px;">View</a><a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-light fw-semibold" style="font-size:11px;color:#6366f1;">Edit</a></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="8" class="text-muted py-4 text-center">No vendor data available.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 rounded-4 shadow-sm">
+            <div class="card-body p-0">
+                <div class="d-flex align-items-center justify-content-between px-4 py-4 border-bottom">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-1" style="font-size:1rem;">Recent Vendor Registrations</h3>
+                        <p class="text-muted mb-0" style="font-size:12px;">Latest vendor signups. Verified vendors show green, otherwise they stay pending.</p>
+                    </div>
+                    <a href="{{ route('admin.vendors.index') }}" class="btn btn-sm btn-light fw-semibold px-3 py-2" style="font-size:12px;">View All Vendors</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr style="font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#94a3b8;border-bottom:1px solid #f1f5f9;">
+                                <th class="border-0 ps-4 py-3">#</th>
+                                <th class="border-0 py-3">Vendor</th>
+                                <th class="border-0 py-3">Business</th>
+                                <th class="border-0 py-3">Email</th>
+                                <th class="border-0 py-3">Phone</th>
+                                <th class="border-0 py-3">Status</th>
+                                <th class="border-0 py-3">Onboarding</th>
+                                <th class="border-0 pe-4 py-3 text-end">Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($recentVendorRegistrations ?? [] as $vendor)
+                                @php
+                                    $status = strtolower((string) $vendor->vendor_status?->value ?? (string) $vendor->vendor_status ?? 'pending');
+                                    $isVerified = in_array($status, ['verified', 'approved'], true);
+                                    $statusStyles = $isVerified ? ['bg' => '#dcfce7', 'fg' => '#166534', 'label' => 'Verified'] : ['bg' => '#fef3c7', 'fg' => '#92400e', 'label' => 'Pending'];
+                                    $onboardingStyles = $isVerified ? ['bg' => '#dcfce7', 'fg' => '#166534', 'label' => 'Completed'] : ['bg' => '#fef3c7', 'fg' => '#92400e', 'label' => 'Pending'];
+                                    $displayName = $vendor->name ?: 'Vendor';
+                                    $joinedAt = optional($vendor->created_at)->format('d M Y');
+                                @endphp
+                                <tr style="border-bottom:1px solid #f8fafc;">
+                                    <td class="ps-4 py-3 fw-semibold text-muted">{{ $loop->iteration }}</td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold flex-shrink-0" style="width:40px;height:40px;background:linear-gradient(135deg,#0f6fad,#14b8a6);font-size:14px;">{{ strtoupper(mb_substr($displayName, 0, 1)) }}</div>
+                                            <div>
+                                                <div class="fw-semibold text-dark" style="font-size:13px;">{{ $displayName }}</div>
+                                                <div class="text-muted" style="font-size:11px;">Joined {{ $joinedAt }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-dark" style="font-size:13px;">{{ $vendor->business_name ?: '—' }}</td>
+                                    <td class="py-3"><a href="mailto:{{ $vendor->email }}" class="text-decoration-none text-dark" style="font-size:13px;">{{ $vendor->email }}</a></td>
+                                    <td class="py-3 text-dark" style="font-size:13px;">{{ $vendor->phone ?: '—' }}</td>
+                                    <td class="py-3"><span class="badge rounded-pill px-3 py-2" style="background:{{ $statusStyles['bg'] }};color:{{ $statusStyles['fg'] }};font-size:11px;">{{ $statusStyles['label'] }}</span></td>
+                                    <td class="py-3"><span class="badge rounded-pill px-3 py-2" style="background:{{ $onboardingStyles['bg'] }};color:{{ $onboardingStyles['fg'] }};font-size:11px;">{{ $onboardingStyles['label'] }}</span></td>
+                                    <td class="pe-4 py-3 text-end text-dark" style="font-size:12px;">{{ $joinedAt }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="8" class="text-muted py-4 text-center">No vendor registrations found.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>    @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
         <script>
             const dashboardCurrency = @json($stats['currency'] ?? 'USD');
@@ -639,3 +911,4 @@
         </script>
     @endpush
 </x-admin::layouts.master>
+

@@ -23,12 +23,14 @@ use Modules\Admin\Http\Controllers\HotelDealSupplementController;
 use Modules\Admin\Http\Controllers\PromoCodeController;
 use Modules\Admin\Http\Controllers\RoomTypeController;
 use Modules\Admin\Http\Controllers\VendorRequestController;
+use Modules\Admin\Http\Controllers\AdminCrmController;
 
 Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth', 'verified', 'admin'])
     ->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/crm-dashboard', [AdminCrmController::class, 'index'])->name('crm-dashboard');
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -15,15 +15,25 @@
         </div>
     @endif
 
-    {{-- ── Status Tabs ── --}}
-    <div class="d-flex gap-2 flex-wrap mb-4">
+    {{-- Status Tabs --}}
+    <div class="d-flex gap-2 flex-nowrap overflow-auto pb-1 mb-4" style="scrollbar-width:thin;">
+        @php
+            $statusTabStyles = [
+                'pending' => ['bg' => '#fef3c7', 'fg' => '#92400e', 'active_bg' => '#111827', 'active_fg' => '#ffffff'],
+                'approved' => ['bg' => '#e0f2fe', 'fg' => '#0369a1', 'active_bg' => '#0369a1', 'active_fg' => '#ffffff'],
+                'docs_submitted' => ['bg' => '#ede9fe', 'fg' => '#5b21b6', 'active_bg' => '#5b21b6', 'active_fg' => '#ffffff'],
+                'rejected' => ['bg' => '#fee2e2', 'fg' => '#991b1b', 'active_bg' => '#dc2626', 'active_fg' => '#ffffff'],
+                'verified' => ['bg' => '#dcfce7', 'fg' => '#166534', 'active_bg' => '#16a34a', 'active_fg' => '#ffffff'],
+            ];
+        @endphp
         @foreach(['pending' => 'Pending', 'approved' => 'Approved', 'docs_submitted' => 'Docs Submitted', 'rejected' => 'Rejected', 'verified' => 'Verified'] as $key => $label)
+            @php $tab = $statusTabStyles[$key]; @endphp
             <a href="{{ route('admin.vendor-requests.index', ['status' => $key]) }}"
-               class="btn btn-sm fw-semibold rounded-3 {{ $activeStatus === $key ? 'btn-dark' : 'btn-outline-secondary' }}"
-               style="font-size:12px;">
-                {{ $label }}
-                <span class="badge ms-1 rounded-pill
-                    {{ $activeStatus === $key ? 'bg-white text-dark' : 'bg-secondary' }}">
+               class="btn fw-semibold rounded-4 d-inline-flex align-items-center gap-2 flex-shrink-0 {{ $activeStatus === $key ? '' : 'border' }}"
+               style="font-size:13px;padding:10px 16px;line-height:1;background:{{ $activeStatus === $key ? $tab['active_bg'] : $tab['bg'] }};color:{{ $activeStatus === $key ? $tab['active_fg'] : $tab['fg'] }};border-color:{{ $activeStatus === $key ? $tab['active_bg'] : 'rgba(15,23,42,.18)' }};">
+                <span>{{ $label }}</span>
+                <span class="badge rounded-pill"
+                      style="min-width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;background:rgba(255,255,255,.22);color:{{ $activeStatus === $key ? '#fff' : $tab['fg'] }};">
                     {{ $counts[$key] }}
                 </span>
             </a>
