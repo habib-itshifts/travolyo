@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Hotel\Models\Hotel;
 use Modules\Hotel\Models\Service;
+use Modules\Activity\Models\Activity;
 
 class AdminDashboardController extends Controller
 {
@@ -32,12 +33,17 @@ class AdminDashboardController extends Controller
         $revenue = $this->convertGroupedAmount($completedBookings->groupBy(fn (Booking $booking) => strtoupper((string) ($booking->currency ?: $selectedCurrency))), 'total', $selectedCurrency);
         $profit = $this->convertGroupedAmount($completedBookings->groupBy(fn (Booking $booking) => strtoupper((string) ($booking->currency ?: $selectedCurrency))), 'vendor_amount', $selectedCurrency);
 
+        // --- Agent / Vendor Stats ---
+        $totalVendors   = User::query()->where('user_type', UserType::Vendor->value)->count();
+        $pendingVendors = User::query()->where('user_type', UserType::Vendor->value)->where('vendor_status', VendorStatusEnum::Pending->value)->count();
+
         $stats = [
             'currency' => $selectedCurrency,
             'revenue' => $revenue,
             'profit' => $profit,
             'profit_margin' => $revenue > 0 ? round(($profit / $revenue) * 100, 1) : 0.0,
             'bookings' => Booking::query()->count(),
+            'completed_bookings' => Booking::query()->whereIn('status', $completedStatuses)->count(),
             'pending_bookings' => Booking::query()->whereIn('status', $pendingStatuses)->count(),
             'in_progress_payments' => Booking::query()
                 ->whereNotIn('status', array_merge($completedStatuses, $failedStatuses))
@@ -53,6 +59,8 @@ class AdminDashboardController extends Controller
             'cancelled_bookings' => Booking::query()
                 ->whereIn('status', $cancelledStatuses)
                 ->count(),
+            'total_vendors'    => $totalVendors,
+            'pending_vendors'  => $pendingVendors,
         ];
 
         $revenueBreakdownTypes = [
@@ -182,11 +190,75 @@ class AdminDashboardController extends Controller
             );
         }
 
-        $recentBookings = Booking::query()
-            ->with(['customer', 'vendor'])
-            ->whereIn('status', $completedStatuses)
+        $recentHotelBookings = Booking::query()
+            ->where('object_model', BookingObjectModelEnum::Hotel->value)
             ->latest()
-            ->take(4)
+            ->take(5)
+            ->get(['id', 'code', 'currency', 'total', 'status', 'created_at'])
+            ->map(function (Booking $booking) use ($selectedCurrency) {
+                $sourceCurrency = strtoupper((string) ($booking->currency ?: $selectedCurrency));
+                $amount = (float) $booking->total;
+
+                if ($sourceCurrency !== $selectedCurrency && $amount > 0) {
+                    $amount = (float) currency($amount, $sourceCurrency, $selectedCurrency, false);
+                }
+
+                return [
+                    'reference' => $booking->code ?? 'N/A',
+                    'total' => number_format($amount, 0),
+                    'currency' => $selectedCurrency,
+                    'status' => $booking->status,
+                    'date' => optional($booking->created_at)->format('d M Y'),
+                ];
+            });
+
+        $recentActivityBookings = Booking::query()
+            ->where('object_model', BookingObjectModelEnum::Activity->value)
+            ->latest()
+            ->take(5)
+            ->get(['id', 'code', 'currency', 'total', 'status', 'created_at'])
+            ->map(function (Booking $booking) use ($selectedCurrency) {
+                $sourceCurrency = strtoupper((string) ($booking->currency ?: $selectedCurrency));
+                $amount = (float) $booking->total;
+
+                if ($sourceCurrency !== $selectedCurrency && $amount > 0) {
+                    $amount = (float) currency($amount, $sourceCurrency, $selectedCurrency, false);
+                }
+
+                return [
+                    'reference' => $booking->code ?? 'N/A',
+                    'total' => number_format($amount, 0),
+                    'currency' => $selectedCurrency,
+                    'status' => $booking->status,
+                    'date' => optional($booking->created_at)->format('d M Y'),
+                ];
+            });
+
+        $recentFlightBookings = Booking::query()
+            ->where('object_model', BookingObjectModelEnum::Flight->value)
+            ->latest()
+            ->take(5)
+            ->get(['id', 'code', 'currency', 'total', 'status', 'created_at'])
+            ->map(function (Booking $booking) use ($selectedCurrency) {
+                $sourceCurrency = strtoupper((string) ($booking->currency ?: $selectedCurrency));
+                $amount = (float) $booking->total;
+
+                if ($sourceCurrency !== $selectedCurrency && $amount > 0) {
+                    $amount = (float) currency($amount, $sourceCurrency, $selectedCurrency, false);
+                }
+
+                return [
+                    'reference' => $booking->code ?? 'N/A',
+                    'total' => number_format($amount, 0),
+                    'currency' => $selectedCurrency,
+                    'status' => $booking->status,
+                    'date' => optional($booking->created_at)->format('d M Y'),
+                ];
+            });
+
+        $recentBookings = Booking::query()
+            ->latest()
+            ->take(5)
             ->get(['id', 'code', 'object_model', 'currency', 'total', 'status', 'created_at'])
             ->map(function (Booking $booking) use ($selectedCurrency) {
                 $label = match ($booking->object_model) {
@@ -210,15 +282,65 @@ class AdminDashboardController extends Controller
                     'item' => $label . ': ' . ($booking->code ?? 'N/A'),
                     'total' => number_format($amount, 0),
                     'currency' => $selectedCurrency,
-                    'status' => strtoupper(Booking::COMPLETED),
+                    'status' => $booking->status,
                     'date' => optional($booking->created_at)->format('M d'),
                 ];
             });
+
+        // --- 6-Month Trends ---
+        $monthlyTrendsLabels = [];
+        $monthlyBookingVolume = [
+            'hotel'    => [],
+            'activity' => [],
+            'flight'   => [],
+            'package'  => [],
+        ];
+        $monthlyRevenueTrend = [
+            'hotel'    => [],
+            'activity' => [],
+            'flight'   => [],
+        ];
+
+        $sixMonthsData = Booking::query()
+            ->where('created_at', '>=', now()->subMonths(5)->startOfMonth())
+            ->get(['currency', 'total', 'object_model', 'created_at', 'status']);
+
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $monthKey = $month->format('Y-m');
+            $monthlyTrendsLabels[] = strtoupper($month->format('M'));
+
+            $monthBookings = $sixMonthsData->filter(fn($b) => optional($b->created_at)->format('Y-m') === $monthKey);
+
+            // Volume (Counts)
+            $monthlyBookingVolume['hotel'][]    = $monthBookings->where('object_model', BookingObjectModelEnum::Hotel->value)->count();
+            $monthlyBookingVolume['activity'][] = $monthBookings->where('object_model', BookingObjectModelEnum::Activity->value)->count();
+            $monthlyBookingVolume['flight'][]   = $monthBookings->where('object_model', BookingObjectModelEnum::Flight->value)->count();
+            $monthlyBookingVolume['package'][]  = $monthBookings->whereIn('object_model', [BookingObjectModelEnum::Tour->value, BookingObjectModelEnum::Car->value])->count();
+
+            // Revenue (Converted)
+            $monthlyRevenueTrend['hotel'][] = $this->convertGroupedAmount(
+                $monthBookings->where('object_model', BookingObjectModelEnum::Hotel->value)->whereIn('status', $completedStatuses)->groupBy(fn($b) => strtoupper((string)($b->currency ?: $selectedCurrency))),
+                'total',
+                $selectedCurrency
+            );
+            $monthlyRevenueTrend['activity'][] = $this->convertGroupedAmount(
+                $monthBookings->where('object_model', BookingObjectModelEnum::Activity->value)->whereIn('status', $completedStatuses)->groupBy(fn($b) => strtoupper((string)($b->currency ?: $selectedCurrency))),
+                'total',
+                $selectedCurrency
+            );
+            $monthlyRevenueTrend['flight'][] = $this->convertGroupedAmount(
+                $monthBookings->where('object_model', BookingObjectModelEnum::Flight->value)->whereIn('status', $completedStatuses)->groupBy(fn($b) => strtoupper((string)($b->currency ?: $selectedCurrency))),
+                'total',
+                $selectedCurrency
+            );
+        }
 
         $summary = [
             'hotels' => Hotel::query()->count(),
             'pending_vendors' => User::query()->where('user_type', UserType::Vendor->value)->where('vendor_status', VendorStatusEnum::Pending->value)->count(),
             'verified_vendors' => User::query()->where('user_type', UserType::Vendor->value)->where('vendor_status', VendorStatusEnum::Verified->value)->count(),
+            'total_items' => Hotel::query()->count() + Activity::query()->count(),
         ];
 
         $paymentMethodCounts = Payment::query()
@@ -252,7 +374,56 @@ class AdminDashboardController extends Controller
         }
         unset($method);
 
-        return view('admin::dashboard', compact('stats', 'chartLabels', 'chartRevenue', 'chartEarnings', 'recentBookings', 'summary', 'revenueBreakdown', 'paymentMethods', 'bookingStatusBreakdown'));
+        $topHotelVendors = User::query()
+            ->where('user_type', UserType::Vendor->value)
+            ->whereIn('vendor_status', [
+                \App\Enums\VendorStatusEnum::Verified->value,
+                \App\Enums\VendorStatusEnum::Approved->value,
+            ])
+            ->withCount([
+                'bookingsAsVendor as hotel_bookings_count' => function ($query) {
+                    $query->where('object_model', BookingObjectModelEnum::Hotel->value);
+                },
+                'bookingsAsVendor as activity_bookings_count' => function ($query) {
+                    $query->where('object_model', BookingObjectModelEnum::Activity->value);
+                },
+            ])
+            ->orderByDesc('hotel_bookings_count')
+            ->take(5)
+            ->get(['id', 'name', 'business_name', 'email', 'phone', 'vendor_status', 'created_at']);
+
+        $recentVendorRegistrations = User::query()
+            ->whereNotNull('vendor_status')
+            ->withCount([
+                'bookingsAsVendor as hotel_bookings_count' => function ($query) {
+                    $query->where('object_model', BookingObjectModelEnum::Hotel->value);
+                },
+            ])
+            ->orderByRaw("CASE WHEN vendor_status = ? THEN 0 ELSE 1 END", [\App\Enums\VendorStatusEnum::Pending->value])
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get(['id', 'name', 'business_name', 'email', 'phone', 'vendor_status', 'created_at']);
+
+        return view('admin::dashboard', compact(
+            'stats',
+            'chartLabels',
+            'chartRevenue',
+            'chartEarnings',
+            'recentHotelBookings',
+            'recentActivityBookings',
+            'recentFlightBookings',
+            'recentBookings',
+            'summary',
+            'revenueBreakdown',
+            'paymentMethods',
+            'bookingStatusBreakdown',
+            'monthlyTrendsLabels',
+            'monthlyBookingVolume',
+            'monthlyRevenueTrend',
+            'paymentMethodTotal',
+            'topHotelVendors',
+            'recentVendorRegistrations'
+        ));
     }
 
     private function convertGroupedAmount($groupedBookings, string $field, string $targetCurrency): float

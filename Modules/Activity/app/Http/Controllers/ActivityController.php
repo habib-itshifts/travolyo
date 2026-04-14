@@ -227,10 +227,12 @@ class ActivityController extends Controller
         $participants = $this->limitParticipants($activity, $participants);
         $unitPrice = (float) ($activity->price_per_person ?: 0);
         $total = round($unitPrice * $participants, 2);
+        $vendorId = $activity->author_id ? (int) $activity->author_id : null;
 
         $booking = new Booking();
         $booking->object_model = 'activity';
         $booking->customer_id = auth()->id();
+        $booking->vendor_id = $vendorId;
         $booking->status = Booking::DRAFT;
         $booking->total = $total;
         $booking->pay_now = $total;
@@ -277,6 +279,9 @@ class ActivityController extends Controller
         $booking->total = $total;
         $booking->pay_now = $total;
         $booking->currency = strtoupper((string) ($activity->currency ?: 'AED'));
+        if (! $booking->vendor_id && $activity->author_id) {
+            $booking->vendor_id = (int) $activity->author_id;
+        }
         $booking->first_name = (string) ($leadPassenger['first_name'] ?? '');
         $booking->last_name = (string) ($leadPassenger['last_name'] ?? '');
         $booking->email = (string) $validated['contact_email'];

@@ -20,6 +20,8 @@ class BookingController extends Controller
 
         if ($type === 'flight') {
             $query->where('object_model', BookingObjectModelEnum::Flight->value);
+        } elseif ($type === 'activity') {
+            $query->where('object_model', BookingObjectModelEnum::Activity->value);
         } elseif ($type === 'hotel') {
             $query->where('object_model', BookingObjectModelEnum::Hotel->value);
         }
@@ -41,6 +43,7 @@ class BookingController extends Controller
         $counts = [
             'all'    => Booking::count(),
             'flight' => Booking::where('object_model', BookingObjectModelEnum::Flight->value)->count(),
+            'activity' => Booking::where('object_model', BookingObjectModelEnum::Activity->value)->count(),
             'hotel'  => Booking::where('object_model', BookingObjectModelEnum::Hotel->value)->count(),
         ];
 

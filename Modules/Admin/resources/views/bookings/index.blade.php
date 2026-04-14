@@ -15,7 +15,7 @@
 
     {{-- ── Type Tabs ── --}}
     <div class="d-flex gap-2 mb-4 flex-wrap">
-        @foreach (['all' => 'All Bookings', 'flight' => 'Flights', 'hotel' => 'Hotels'] as $key => $label)
+        @foreach (['all' => 'All Bookings', 'flight' => 'Flights', 'hotel' => 'Hotels', 'activity' => 'Activities'] as $key => $label)
             @php
                 $count = $counts[$key];
                 $isActive = $type === $key;
@@ -89,6 +89,7 @@
                                 @php
                                     $isFlightBooking = $booking->object_model === 'flight';
                                     $isHotelBooking  = $booking->object_model === 'hotel';
+                                    $isActivityBooking = $booking->object_model === 'activity';
                                     $statusColors = [
                                         'draft'          => ['bg' => 'rgba(107,114,128,0.1)',  'text' => '#374151'],
                                         'unpaid'         => ['bg' => 'rgba(234,179,8,0.12)',   'text' => '#a16207'],
@@ -123,6 +124,14 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                                 </svg>
                                                 Hotel
+                                            </span>
+                                        @elseif($isActivityBooking)
+                                            <span class="badge rounded-pill fw-semibold"
+                                                  style="font-size:11px;background:rgba(20,184,166,0.12);color:#0f766e;">
+                                                <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5v14"/>
+                                                </svg>
+                                                Activity
                                             </span>
                                         @else
                                             <span class="text-muted" style="font-size:11px;">{{ ucfirst($booking->object_model ?? '—') }}</span>
