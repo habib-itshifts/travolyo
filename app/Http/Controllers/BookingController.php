@@ -118,6 +118,43 @@ class BookingController extends Controller
             return redirect()->route('activities.booking.detail', ['code' => $booking->code]);
         }
 
+        // Space (Homes & Apts)
+        if ($booking->object_model === BookingObjectModelEnum::Space->value) {
+            $space = $booking->getJsonMeta('space_details');
+            $gateway = $booking->getMeta('payment_gateway', '');
+
+            $nights = (isset($space['check_in'], $space['check_out']))
+                ? max(1, (int) Carbon::parse($space['check_in'])->diffInDays($space['check_out']))
+                : 1;
+
+            $bookingData = [
+                'code'            => $booking->code,
+                'status'          => $booking->status,
+                'payment_status'  => $booking->payment?->status ?? '',
+                'space_name'      => $space['space_name'] ?? '-',
+                'space_type'      => $space['space_type'] ?? '-',
+                'city'            => $space['city'] ?? '',
+                'country'         => $space['country'] ?? '',
+                'address'         => $space['address'] ?? '',
+                'check_in'        => isset($space['check_in']) ? Carbon::parse($space['check_in']) : null,
+                'check_out'       => isset($space['check_out']) ? Carbon::parse($space['check_out']) : null,
+                'guests'          => (int) ($space['guests'] ?? 1),
+                'nights'          => $nights,
+                'gateway'         => $gateway,
+                'price_per_night' => (float) ($space['price_per_night'] ?? 0),
+                'cleaning_fee'    => (float) ($space['cleaning_fee'] ?? 0),
+                'service_fee'     => (float) ($space['service_fee'] ?? 0),
+                'total'           => (float) ($booking->total ?? $space['total_price'] ?? 0),
+                'currency'        => strtoupper($booking->currency ?? 'USD'),
+            ];
+
+            return view('bookings.space-confirmation', compact(
+                'booking',
+                'bookingData',
+                'financials',
+            ));
+        }
+
         // Fallback
         return view('bookings.show', compact('booking', 'financials'));
     }

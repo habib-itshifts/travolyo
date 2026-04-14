@@ -722,6 +722,7 @@
 }
 
 .trav-search-widget--hero #sw-hotels-form:has(.guests-picker.is-open),
+.trav-search-widget--hero #sw-hotels-form:has(.flight-passenger-picker.is-open),
 .trav-search-widget--hero #sw-flights-form-container:has(.guests-picker.is-open),
 .trav-search-widget--hero #sw-flights-form-container:has(.flight-passenger-picker.is-open),
 .trav-search-widget--hero #sw-hotels-form:has(.hotel-destination-suggest-list:not(.d-none)),
@@ -1238,7 +1239,7 @@
         </div>
 
         <div id="sw-hotels-form" class="{{ $isHotelLikeTab ? '' : 'd-none' }}">
-            <form id="hotelSearchForm" action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" method="GET" class="trav-search-form" data-hotel-destinations-url="{{ route('api.locations.search') }}">
+            <form id="hotelSearchForm" action="{{ ($activeTab === 'homes' && Route::has('homes.index')) ? route('homes.index') : (Route::has('hotels.index') ? route('hotels.index') : '#') }}" method="GET" class="trav-search-form" data-hotel-destinations-url="{{ route('api.locations.search') }}" data-hotels-action="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}" data-homes-action="{{ Route::has('homes.index') ? route('homes.index') : '#' }}">
                 <div class="trav-search-grid">
                     <div class="trav-field trav-field--wide">
                         <label class="trav-field__label">Destination</label>
@@ -1278,7 +1279,7 @@
                         </div>
                     </div>
 
-                    <div class="trav-field trav-field--third">
+                    <div class="trav-field trav-field--third" id="hotelGuestsField" style="{{ $activeTab === 'homes' ? 'display:none' : '' }}">
                         <label class="trav-field__label">Guests</label>
                         <div class="guests-picker" id="guestsPicker">
                             <div class="trav-field__surface">
@@ -1290,6 +1291,48 @@
                             <div class="guests-menu" id="guestsMenu">
                                 <div id="roomsContainer"></div>
                                 <button type="button" class="btn-add-room" id="addRoomBtn" style="display:none;">+ Add Room</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="trav-field trav-field--third" id="homesGuestsField" style="{{ $activeTab === 'homes' ? '' : 'display:none' }}">
+                        <label class="trav-field__label">Guests</label>
+                        <div class="flight-passenger-picker" data-flight-pax-picker id="homesGuestsPicker">
+                            <div class="trav-field__surface">
+                                <div class="input-icon-wrap flight-passenger-trigger" role="button" tabindex="0" aria-expanded="false">
+                                    <i class="bi bi-people input-icon"></i>
+                                    <input type="text" class="form-control search-input flight-passenger-summary" value="" readonly />
+                                </div>
+                            </div>
+                            <div class="flight-passenger-menu">
+                                <div class="flight-passenger-row" data-type="adults" data-min="1" data-max="9">
+                                    <div><div class="flight-passenger-label">Adult</div><div class="flight-passenger-sub">18+ years old</div></div>
+                                    <div class="flight-passenger-counter">
+                                        <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                        <span class="flight-passenger-val">1</span>
+                                        <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="flight-passenger-row" data-type="children" data-min="0" data-max="9">
+                                    <div><div class="flight-passenger-label">Child</div><div class="flight-passenger-sub">0-17 years old</div></div>
+                                    <div class="flight-passenger-counter">
+                                        <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                        <span class="flight-passenger-val">0</span>
+                                        <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="flight-passenger-row" data-type="infants" data-min="0" data-max="9">
+                                    <div><div class="flight-passenger-label">Infant</div><div class="flight-passenger-sub">Under 2 years old</div></div>
+                                    <div class="flight-passenger-counter">
+                                        <button type="button" class="flight-passenger-btn" data-delta="-1">-</button>
+                                        <span class="flight-passenger-val">0</span>
+                                        <button type="button" class="flight-passenger-btn" data-delta="1">+</button>
+                                    </div>
+                                </div>
+                                <div class="flight-child-ages-container"></div>
+                                <input type="hidden" name="adults" value="1" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
+                                <input type="hidden" name="children" value="0" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
+                                <input type="hidden" name="infants" value="0" {{ $activeTab !== 'homes' ? 'disabled' : '' }}>
                             </div>
                         </div>
                     </div>
@@ -1810,6 +1853,40 @@
             }
         } else {
             hideFlightSubtabs();
+
+            // Switch hotel/homes form action based on active tab
+            if (hotelSearchForm) {
+                hotelSearchForm.action = (tab === 'homes')
+                    ? (hotelSearchForm.dataset.homesAction || '#')
+                    : (hotelSearchForm.dataset.hotelsAction || '#');
+            }
+
+            // Toggle guest pickers: hotel (rooms) vs homes (adult/child/infant)
+            const hotelGuestsField = document.getElementById('hotelGuestsField');
+            const homesGuestsField = document.getElementById('homesGuestsField');
+            const guestsHiddenFields = document.getElementById('guestsHiddenFields');
+
+            if (hotelGuestsField) hotelGuestsField.style.display = (tab === 'homes') ? 'none' : '';
+            if (homesGuestsField) homesGuestsField.style.display = (tab === 'homes') ? '' : 'none';
+
+            // Disable hotel hidden guest fields when homes tab is active (prevent duplicate submission)
+            if (guestsHiddenFields) {
+                guestsHiddenFields.querySelectorAll('input').forEach((input) => {
+                    input.disabled = (tab === 'homes');
+                });
+            }
+            if (hotelSearchForm) {
+                hotelSearchForm.querySelectorAll('[data-hidden-guest-field="1"]').forEach((input) => {
+                    input.disabled = (tab === 'homes');
+                });
+            }
+
+            // Enable/disable homes picker hidden fields
+            if (homesGuestsField) {
+                homesGuestsField.querySelectorAll('.flight-passenger-menu input[type="hidden"]').forEach((input) => {
+                    input.disabled = (tab !== 'homes');
+                });
+            }
         }
     };
 
@@ -1988,6 +2065,7 @@
 
                 const fragment = document.createDocumentFragment();
                 const childAgesSnapshot = [];
+                const isHomesTab = activeTopTab === 'homes';
                 rooms.forEach((room) => {
                     const addHidden = (name, value) => {
                         const input = document.createElement('input');
@@ -1995,6 +2073,7 @@
                         input.name = name;
                         input.value = String(value);
                         input.setAttribute('data-hidden-guest-field', '1');
+                        if (isHomesTab) input.disabled = true;
                         fragment.appendChild(input);
                     };
 
@@ -2010,6 +2089,7 @@
                         input.name = 'child_ages[]';
                         input.value = String(Number(age) || 0);
                         input.setAttribute('data-hidden-guest-field', '1');
+                        if (isHomesTab) input.disabled = true;
                         fragment.appendChild(input);
                     });
                 });
@@ -2019,6 +2099,7 @@
                 childAgesJson.name = 'child_ages_json';
                 childAgesJson.value = JSON.stringify(childAgesSnapshot.map((ages) => ages.map((age) => Number(age) || 0)));
                 childAgesJson.setAttribute('data-hidden-guest-field', '1');
+                if (isHomesTab) childAgesJson.disabled = true;
                 fragment.appendChild(childAgesJson);
 
                 hotelSearchFormEl.appendChild(fragment);

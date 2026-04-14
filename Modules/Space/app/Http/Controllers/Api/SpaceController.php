@@ -4,6 +4,7 @@ namespace Modules\Space\Http\Controllers\Api;
 
 use App\Models\Booking;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -27,8 +28,11 @@ use Modules\Space\Resources\SpaceOrderResource;
 
 class SpaceController extends Controller
 {
-    public function search(SearchSpaceRequest $request): JsonResponse
+    public function search(Request $request): JsonResponse
     {
+        dd($request->all());
+        
+        
         try {
             $dto = SearchSpaceDto::fromArray($request->validated());
 
@@ -209,7 +213,7 @@ class SpaceController extends Controller
                 'currency'            => $baseCurrency,
                 'converted_price'     => $convertedPrice,
                 'converted_currency'  => $userCurrency,
-                'checkout_url'        => url('/spaces/checkout?token=' . $token),
+                'checkout_url'        => route('homes.checkout', ['token' => $token]),
                 'checkout_token'      => $token,
             ]);
 
