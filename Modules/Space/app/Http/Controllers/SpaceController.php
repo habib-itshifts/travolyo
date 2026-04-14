@@ -59,9 +59,13 @@ class SpaceController extends Controller
 
         $params = [
             'space_id'   => $space->id,
+            'destination'=> (string) $request->query('destination', $space->city ?? $space->name ?? ''),
+            'city'       => (string) $request->query('city', $space->city ?? ''),
             'check_in'   => (string) $request->query('check_in'),
             'check_out'  => (string) $request->query('check_out'),
-            'guests'     => max(1, (int) $request->query('guests', 1)),
+            'adults'     => max(1, (int) $request->query('adults', $request->query('guests', 1))),
+            'children'   => max(0, (int) $request->query('children', 0)),
+            'infants'    => max(0, (int) $request->query('infants', 0)),
             'currency'   => (string) $request->query('currency', 'USD'),
         ];
 

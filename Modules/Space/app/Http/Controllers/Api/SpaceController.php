@@ -30,9 +30,7 @@ class SpaceController extends Controller
 {
     public function search(Request $request): JsonResponse
     {
-        dd($request->all());
-        
-        
+            dd($request->all());
         try {
             $dto = SearchSpaceDto::fromArray($request->validated());
 
@@ -170,12 +168,19 @@ class SpaceController extends Controller
     {
         try {
             $validated = $request->validated();
+            $adults   = max(1, (int) ($validated['adults'] ?? 1));
+            $children = max(0, (int) ($validated['children'] ?? 0));
+            $infants  = max(0, (int) ($validated['infants'] ?? 0));
+            $guests   = max(1, $adults + $children + $infants);
 
             $dto = new BookSpaceDto(
                 spaceId:  (int) $validated['space_id'],
                 checkIn:  $validated['check_in'],
                 checkOut: $validated['check_out'],
-                guests:   (int) $validated['guests'],
+                adults:   $adults,
+                children: $children,
+                infants:  $infants,
+                guests:   $guests,
                 currency: $validated['currency'] ?? 'USD',
             );
 
@@ -190,7 +195,10 @@ class SpaceController extends Controller
                 'address'         => $offer->address,
                 'check_in'        => $validated['check_in'],
                 'check_out'       => $validated['check_out'],
-                'guests'          => (int) $validated['guests'],
+                'adults'          => $adults,
+                'children'        => $children,
+                'infants'         => $infants,
+                'guests'          => $guests,
                 'price_per_night' => $offer->basePricePerNight,
                 'cleaning_fee'    => $offer->cleaningFee,
                 'service_fee'     => $offer->serviceFee,

@@ -245,7 +245,9 @@
         <div class="space-card js-space-card"
              data-price="${price}"
              data-type="${s.type}"
-             data-name="${(s.name ?? '').toLowerCase()}">
+             data-name="${(s.name ?? '').toLowerCase()}"
+             data-city="${(s.city ?? '').replace(/"/g, '&quot;')}"
+             data-destination="${(s.destination ?? s.city ?? '').replace(/"/g, '&quot;')}">
             ${img}
             <div class="space-card__body">
                 <div>
@@ -314,7 +316,9 @@
                     city:        params.city,
                     check_in:    params.check_in,
                     check_out:   params.check_out,
-                    guests:      parseInt(params.guests ?? params.adults ?? 1, 10),
+                    adults:      parseInt(params.adults ?? params.guests ?? 1, 10),
+                    children:    parseInt(params.children ?? 0, 10),
+                    infants:     parseInt(params.infants ?? 0, 10),
                     page:        page,
                     currency:    document.querySelector('meta[name="currency"]')?.content ?? 'USD',
                 }),
@@ -477,11 +481,16 @@
         e.preventDefault();
 
         const spaceId = btn.dataset.spaceId;
+        const card = btn.closest('.js-space-card');
         const url = new URL(detailPageUrl, window.location.origin);
         url.searchParams.set('space_id',  spaceId);
         url.searchParams.set('check_in',  params.check_in ?? '');
         url.searchParams.set('check_out', params.check_out ?? '');
-        url.searchParams.set('guests',    params.guests ?? 1);
+        url.searchParams.set('destination', card?.dataset.destination || params.destination || params.city || '');
+        url.searchParams.set('city', card?.dataset.city || params.city || '');
+        url.searchParams.set('adults',    params.adults ?? params.guests ?? 1);
+        url.searchParams.set('children',  params.children ?? 0);
+        url.searchParams.set('infants',   params.infants ?? 0);
         url.searchParams.set('currency',  document.querySelector('meta[name="currency"]')?.content ?? 'USD');
 
         window.location.href = url.toString();

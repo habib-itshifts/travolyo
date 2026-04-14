@@ -8,7 +8,10 @@ class BookSpaceDto
         public readonly int     $spaceId,
         public readonly string  $checkIn,
         public readonly string  $checkOut,
-        public readonly int     $guests,
+        public readonly int     $adults,
+        public readonly int     $children = 0,
+        public readonly int     $infants = 0,
+        public readonly int     $guests = 1,
         public readonly string  $currency = 'USD',
     ) {}
 }

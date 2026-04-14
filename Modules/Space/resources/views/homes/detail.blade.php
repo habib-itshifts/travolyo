@@ -9,7 +9,10 @@
     }
     $nights   = max(1, (int) $nights);
     $currency = $params['currency'] ?? ($space->currency ?? 'USD');
-    $guests   = (int) ($params['guests'] ?? 1);
+    $adults   = max(1, (int) ($params['adults'] ?? $params['guests'] ?? 1));
+    $children = max(0, (int) ($params['children'] ?? 0));
+    $infants  = max(0, (int) ($params['infants'] ?? 0));
+    $guests   = $adults + $children + $infants;
 
     $pricePerNight = (float) ($space->sale_price ?: $space->price_per_night);
     $cleaningFee   = (float) ($space->cleaning_fee ?? 0);
@@ -75,7 +78,9 @@
                 <div class="detail-hero__meta">
                     <span class="type-label" style="background:rgba(255,255,255,.2);color:#fff">{{ ucfirst($space->type ?? 'Space') }}</span>
                     &nbsp;
-                    @if($space->city)
+                    @if(!empty($params['destination']))
+                        <i class="bi bi-geo-alt me-1"></i>{{ $params['destination'] }}
+                    @elseif($space->city)
                         <i class="bi bi-geo-alt me-1"></i>{{ $space->city }}{{ $space->country ? ', ' . $space->country : '' }}
                     @endif
                 </div>
@@ -126,7 +131,7 @@
             <i class="bi bi-people text-primary"></i>
             <div>
                 <div style="font-size:.7rem;color:#6c757d;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Guests</div>
-                <div style="font-weight:600;font-size:.9rem">{{ $guests }} Guest{{ $guests !== 1 ? 's' : '' }}</div>
+                <div style="font-weight:600;font-size:.9rem">{{ $adults }} Adult{{ $adults !== 1 ? 's' : '' }} {{ $children }} Child{{ $children !== 1 ? 'ren' : '' }} {{ $infants }} Infant{{ $infants !== 1 ? 's' : '' }}</div>
             </div>
         </div>
     </div>
@@ -222,7 +227,9 @@
                         data-space-id="{{ $space->id }}"
                         data-check-in="{{ $params['check_in'] }}"
                         data-check-out="{{ $params['check_out'] }}"
-                        data-guests="{{ $guests }}"
+                        data-adults="{{ $adults }}"
+                        data-children="{{ $children }}"
+                        data-infants="{{ $infants }}"
                         data-currency="{{ $currency }}">
                         <i class="bi bi-lightning-charge-fill"></i> Book Now
                     </button>
@@ -263,7 +270,9 @@
                     space_id:  parseInt(btn.dataset.spaceId, 10),
                     check_in:  btn.dataset.checkIn,
                     check_out: btn.dataset.checkOut,
-                    guests:    parseInt(btn.dataset.guests, 10),
+                    adults:    parseInt(btn.dataset.adults, 10),
+                    children:  parseInt(btn.dataset.children, 10),
+                    infants:   parseInt(btn.dataset.infants, 10),
                     currency:  btn.dataset.currency,
                 }),
             });
