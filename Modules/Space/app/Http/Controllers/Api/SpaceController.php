@@ -28,9 +28,8 @@ use Modules\Space\Resources\SpaceOrderResource;
 
 class SpaceController extends Controller
 {
-    public function search(Request $request): JsonResponse
+    public function search(SearchSpaceRequest $request): JsonResponse
     {
-            dd($request->all());
         try {
             $dto = SearchSpaceDto::fromArray($request->validated());
 
