@@ -62,7 +62,7 @@ class SearchSpaceAction
         $spaces = $query->get();
 
         $nights = $dto->nights();
-        $userCurrency = currency()->getUserCurrency();
+        $userCurrency = $dto->currency;
 
         $offers = [];
 
