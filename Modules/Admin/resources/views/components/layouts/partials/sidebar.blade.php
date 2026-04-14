@@ -1,9 +1,19 @@
 @php
+    $pendingActivityCount = \Modules\Activity\Models\Activity::query()
+        ->where('status', 'pending')
+        ->count();
+
+    $pendingHotelCount = \Modules\Hotel\Models\Hotel::query()
+        ->where('status', 'draft')
+        ->whereNotNull('author_id')
+        ->count();
+
     $hotelChildren = [
         [
             'route' => 'admin.hotels.index',
             'label' => __('admin.nav_hotel'),
             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>',
+            'badge' => $pendingHotelCount,
         ],
         [
             'route' => 'admin.hotel-rooms.index',
@@ -78,11 +88,21 @@
         ],
     ];
 
+    $pendingActivityCount = \Modules\Activity\Models\Activity::query()
+        ->where('status', 'pending')
+        ->count();
+
+    $pendingHotelCount = \Modules\Hotel\Models\Hotel::query()
+        ->where('status', 'draft')
+        ->whereNotNull('author_id')
+        ->count();
+
     $activityChildren = [
         [
             'route' => 'admin.activities.index',
             'label' => 'All Activities',
             'icon'  => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5v14"/>',
+            'badge' => $pendingActivityCount,
         ],
         [
             'route' => 'admin.activities.create',
@@ -140,7 +160,8 @@
             'label'   => __('admin.nav_flight'),
             'has_sub' => true,
             'icon'    => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>',
-        ],
+      
+            ],
         [
             'route'   => 'admin.bookings.index',
             'label'   => __('admin.nav_bookings'),
@@ -262,6 +283,12 @@
                     </svg>
                     <span>{{ $item['label'] }}</span>
                 </span>
+                @if (!empty($item['badge']))
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                          style="width:18px;height:18px;background:#2dd4bf;color:#fff;font-size:10px;line-height:1;font-weight:700;">
+                        {{ min(99, (int) $item['badge']) }}
+                    </span>
+                @endif
                 <svg class="sidebar-chevron"
                      style="width:12px;height:12px;color:{{ $active ? 'var(--clr-primary)' : 'var(--clr-sidebar-disabled)' }};"
                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,6 +306,12 @@
                                 {!! $child['icon'] !!}
                             </svg>
                             <span>{{ $child['label'] }}</span>
+                            @if (!empty($child['badge']))
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                                      style="width:18px;height:18px;background:#2dd4bf;color:#fff;font-size:10px;line-height:1;font-weight:700;">
+                                    {{ min(99, (int) $child['badge']) }}
+                                </span>
+                            @endif
                         </a>
                     @endforeach
                 </div>

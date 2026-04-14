@@ -705,6 +705,7 @@
                                 <th class="border-0 py-3">Email</th>
                                 <th class="border-0 py-3">Phone</th>
                                 <th class="border-0 py-3">Hotel Bookings</th>
+                                <th class="border-0 py-3">Activity Bookings</th>
                                 <th class="border-0 py-3">Status</th>
                                 <th class="border-0 pe-4 py-3 text-end">Actions</th>
                             </tr>
@@ -737,6 +738,7 @@
                                     <td class="py-3"><a href="mailto:{{ $vendor->email }}" class="text-decoration-none text-dark" style="font-size:13px;">{{ $vendor->email }}</a></td>
                                     <td class="py-3 text-dark" style="font-size:13px;">{{ $vendor->phone ?: '—' }}</td>
                                     <td class="py-3 fw-bold text-dark" style="font-size:13px;">{{ number_format($vendor->hotel_bookings_count ?? 0) }}</td>
+                                    <td class="py-3 fw-bold text-dark" style="font-size:13px;">{{ number_format($vendor->activity_bookings_count ?? 0) }}</td>
                                     <td class="py-3"><span class="badge rounded-pill px-3 py-2" style="background:{{ $statusStyles['bg'] }};color:{{ $statusStyles['fg'] }};font-size:11px;">{{ $statusStyles['label'] }}</span></td>
                                     <td class="pe-4 py-3 text-end"><a href="{{ route('admin.vendors.show', $vendor) }}" class="btn btn-sm btn-light fw-semibold me-2" style="font-size:11px;">View</a><a href="{{ route('admin.vendors.edit', $vendor) }}" class="btn btn-sm btn-light fw-semibold" style="font-size:11px;color:#6366f1;">Edit</a></td>
                                 </tr>

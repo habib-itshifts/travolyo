@@ -384,6 +384,9 @@ class AdminDashboardController extends Controller
                 'bookingsAsVendor as hotel_bookings_count' => function ($query) {
                     $query->where('object_model', BookingObjectModelEnum::Hotel->value);
                 },
+                'bookingsAsVendor as activity_bookings_count' => function ($query) {
+                    $query->where('object_model', BookingObjectModelEnum::Activity->value);
+                },
             ])
             ->orderByDesc('hotel_bookings_count')
             ->take(5)
