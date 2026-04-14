@@ -4,7 +4,7 @@ namespace Modules\Space\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class BookSpaceRequest extends FormRequest
+class PrebookSpaceRequest extends FormRequest
 {
     public function authorize(): bool
     {

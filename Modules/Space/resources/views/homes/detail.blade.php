@@ -246,7 +246,7 @@
 <script>
 (function () {
     const isLoggedIn = {{ auth()->check() ? 'true' : 'false' }};
-    const bookUrl    = '{{ route('api.spaces.book') }}';
+    const bookUrl    = '{{ route('api.spaces.prebook') }}';
 
     document.getElementById('bookNowBtn')?.addEventListener('click', async function () {
         if (!isLoggedIn) {

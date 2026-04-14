@@ -2,17 +2,16 @@
 
 namespace Modules\Space\Actions;
 
-use Modules\Space\DTOs\SearchSpaceDto;
+use Modules\Space\DTOs\PrebookSpaceDto;
 use Modules\Space\DTOs\SpaceOfferDto;
 use Modules\Space\Providers\SpaceProviderInterface;
 
-class SearchSpaceAction
+class PrebookSpaceAction
 {
     public function __construct(private SpaceProviderInterface $provider) {}
 
-    /** @return SpaceOfferDto[] */
-    public function handle(SearchSpaceDto $dto): array
+    public function handle(PrebookSpaceDto $dto): SpaceOfferDto
     {
-        return $this->provider->search($dto);
+        return $this->provider->prebook($dto);
     }
 }

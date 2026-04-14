@@ -36,6 +36,11 @@ class SpaceServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        $this->app->bind(
+            \Modules\Space\Providers\SpaceProviderInterface::class,
+            \Modules\Space\Providers\Local\LocalSpaceProvider::class,
+        );
     }
 
     /**

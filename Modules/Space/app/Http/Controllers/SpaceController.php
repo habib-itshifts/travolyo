@@ -8,10 +8,12 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Modules\Space\Models\Space;
+use Modules\Space\Services\SpaceService;
 
 class SpaceController extends Controller
 {
+    public function __construct(private SpaceService $service) {}
+
     /**
      * Space (Homes & Apts) search/listing page.
      * Actual search is handled by Api\SpaceController@search via AJAX.
@@ -42,34 +44,32 @@ class SpaceController extends Controller
      */
     public function detail(Request $request): View|RedirectResponse
     {
+        
+        
         $request->validate([
             'space_id'  => 'required|integer',
             'check_in'  => 'required|date_format:Y-m-d',
             'check_out' => 'required|date_format:Y-m-d|after:check_in',
         ]);
 
-        $space = Space::with('amenities')->active()->find($request->query('space_id'));
+        $space = $this->service->find((int) $request->query('space_id'));
 
         if (! $space) {
             return redirect()->route('homes.index')->with('error', 'Space not found.');
         }
 
-        $images = [];
-        if ($space->featured_image_url) {
-            $images[] = $space->featured_image_url;
-        }
-        $images = array_merge($images, $space->gallery_urls ?? []);
+        $images = $space->orderedImages();
 
         $params = [
-            'space_id'   => $space->id,
-            'destination'=> (string) $request->query('destination', $space->city ?? $space->name ?? ''),
-            'city'       => (string) $request->query('city', $space->city ?? ''),
-            'check_in'   => (string) $request->query('check_in'),
-            'check_out'  => (string) $request->query('check_out'),
-            'adults'     => max(1, (int) $request->query('adults', $request->query('guests', 1))),
-            'children'   => max(0, (int) $request->query('children', 0)),
-            'infants'    => max(0, (int) $request->query('infants', 0)),
-            'currency'   => (string) $request->query('currency', 'USD'),
+            'space_id'    => $space->id,
+            'destination' => (string) $request->query('destination', $space->city ?? $space->name ?? ''),
+            'city'        => (string) $request->query('city', $space->city ?? ''),
+            'check_in'    => (string) $request->query('check_in'),
+            'check_out'   => (string) $request->query('check_out'),
+            'adults'      => max(1, (int) $request->query('adults', $request->query('guests', 1))),
+            'children'    => max(0, (int) $request->query('children', 0)),
+            'infants'     => max(0, (int) $request->query('infants', 0)),
+            'currency'    => (string) $request->query('currency', 'USD'),
         ];
 
         return view('space::homes.detail', compact('space', 'images', 'params'));
@@ -81,7 +81,7 @@ class SpaceController extends Controller
     public function checkout(Request $request): View|RedirectResponse
     {
         $token = $request->get('token');
-        $sc = $token ? Cache::get('space_checkout_' . $token) : null;
+        $sc    = $token ? Cache::get('space_checkout_' . $token) : null;
 
         if (! $sc) {
             return redirect()->route('homes.index');
@@ -104,7 +104,7 @@ class SpaceController extends Controller
         }
 
         $spaceDetails = $booking->getJsonMeta('space_details') ?? [];
-        $gateway = $booking->getMeta('payment_gateway') ?? '-';
+        $gateway      = $booking->getMeta('payment_gateway') ?? '-';
 
         return view('space::homes.confirmation', compact('booking', 'spaceDetails', 'gateway'));
     }

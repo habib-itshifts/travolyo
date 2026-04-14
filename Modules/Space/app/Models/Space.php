@@ -192,6 +192,17 @@ class Space extends Model
     }
 
     // -------------------------------------------------------------------------
+    // Media helpers — ordered image list
+    // -------------------------------------------------------------------------
+
+    public function orderedImages(): array
+    {
+        $images = $this->featured_image_url ? [$this->featured_image_url] : [];
+
+        return array_merge($images, $this->gallery_urls ?? []);
+    }
+
+    // -------------------------------------------------------------------------
     // Scopes
     // -------------------------------------------------------------------------
 
