@@ -1,18 +1,18 @@
 @php
     $footerCompanyLinks = [
-        ['label' => 'About', 'href' => Route::has('about') ? route('about') : '#'],
-        ['label' => 'Contact', 'href' => Route::has('contact') ? route('contact') : '#'],
-        ['label' => 'Blog', 'href' => Route::has('blogs.index') ? route('blogs.index') : '#'],
-        ['label' => 'Privacy Policy', 'href' => Route::has('privacy') ? route('privacy') : '#'],
-        ['label' => 'Terms & Conditions', 'href' => Route::has('terms') ? route('terms') : '#'],
+        ['label' => __('website.footer_link_about'),   'href' => Route::has('about') ? route('about') : '#'],
+        ['label' => __('website.footer_link_contact'), 'href' => Route::has('contact') ? route('contact') : '#'],
+        ['label' => __('website.footer_link_blog'),    'href' => Route::has('blogs.index') ? route('blogs.index') : '#'],
+        ['label' => __('website.footer_link_privacy'), 'href' => Route::has('privacy') ? route('privacy') : '#'],
+        ['label' => __('website.footer_link_terms'),   'href' => Route::has('terms') ? route('terms') : '#'],
     ];
 
     $footerDestinationLinks = [
-        ['label' => 'Dubai', 'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Dubai']) : '#'],
-        ['label' => 'Maldives', 'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Maldives']) : '#'],
-        ['label' => 'Bali', 'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Bali']) : '#'],
-        ['label' => 'Japan', 'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Japan']) : '#'],
-        ['label' => 'Coaching', 'href' => Route::has('contact') ? route('contact') : '#'],
+        ['label' => __('website.footer_dest_dubai'),    'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Dubai']) : '#'],
+        ['label' => __('website.footer_dest_maldives'), 'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Maldives']) : '#'],
+        ['label' => __('website.footer_dest_bali'),     'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Bali']) : '#'],
+        ['label' => __('website.footer_dest_japan'),    'href' => Route::has('hotels.index') ? route('hotels.index', ['city' => 'Japan']) : '#'],
+        ['label' => __('website.footer_dest_coaching'), 'href' => Route::has('contact') ? route('contact') : '#'],
     ];
 
     $footerSocialLinks = [
@@ -277,21 +277,21 @@
         <div class="site-footer__inner">
             <div class="site-footer__grid">
                 <div class="site-footer__lead">
-                    <h2 class="site-footer__title">Empowering tour operators and travel agencies across four verticals.</h2>
+                    <h2 class="site-footer__title">{{ __('website.footer_tagline') }}</h2>
 
                     <form class="site-footer__subscribe" action="#" method="GET" onsubmit="return false;">
                         <input
                             type="email"
                             class="form-control site-footer__input"
-                            placeholder="Your Email Adress"
-                            aria-label="Your email address"
+                            placeholder="{{ __('website.footer_email_placeholder') }}"
+                            aria-label="{{ __('website.footer_email_aria') }}"
                         >
-                        <button type="button" class="btn site-footer__button">Subscribe</button>
+                        <button type="button" class="btn site-footer__button">{{ __('website.footer_subscribe') }}</button>
                     </form>
                 </div>
 
                 <div class="site-footer__menu-col">
-                    <h3 class="site-footer__menu-title">Company</h3>
+                    <h3 class="site-footer__menu-title">{{ __('website.footer_col_company') }}</h3>
                     <ul class="site-footer__menu">
                         @foreach ($footerCompanyLinks as $item)
                             <li><a href="{{ $item['href'] }}">{{ $item['label'] }}</a></li>
@@ -300,7 +300,7 @@
                 </div>
 
                 <div class="site-footer__menu-col">
-                    <h3 class="site-footer__menu-title">Destinations</h3>
+                    <h3 class="site-footer__menu-title">{{ __('website.footer_col_destinations') }}</h3>
                     <ul class="site-footer__menu">
                         @foreach ($footerDestinationLinks as $item)
                             <li><a href="{{ $item['href'] }}">{{ $item['label'] }}</a></li>
@@ -309,7 +309,7 @@
                 </div>
 
                 <div class="site-footer__menu-col">
-                    <h3 class="site-footer__menu-title">Social Media</h3>
+                    <h3 class="site-footer__menu-title">{{ __('website.footer_col_social') }}</h3>
                     <ul class="site-footer__menu">
                         @foreach ($footerSocialLinks as $item)
                             <li><a href="{{ $item['href'] }}" target="_blank" rel="noopener">{{ $item['label'] }}</a></li>
@@ -320,7 +320,7 @@
 
             <div class="site-footer__bottom">
                 <div class="site-footer__brand">
-                    <a href="{{ url('/') }}" aria-label="Travolyo home">
+                    <a href="{{ url('/') }}" aria-label="{{ __('website.footer_home_aria') }}">
                         <img
                             class="site-footer__logo"
                             src="{{ asset('assets/images/logo/travolyo-logo.svg') }}"
@@ -329,7 +329,7 @@
                     </a>
                 </div>
 
-                <p class="site-footer__copyright">&copy; {{ date('Y') }} Travolyo. All rights reserved.</p>
+                <p class="site-footer__copyright">{{ __('website.footer_copyright', ['year' => date('Y')]) }}</p>
             </div>
         </div>
     </div>

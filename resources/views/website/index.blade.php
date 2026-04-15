@@ -176,7 +176,7 @@
     ];
 @endphp
 
-@section('title', 'Travolyo - Where Your Journey Takes Off')
+@section('title', __('website.page_title'))
 
 @push('styles')
 <style>
@@ -1445,10 +1445,10 @@
         <div class="hero-panel">
             <div class="text-center text-white hero-shell">
                 <div class="hero-copy">
-                    <h1 class="hero-title text-white">Your Trip Starts Here</h1>
+                    <h1 class="hero-title text-white">{{ __('website.hero_title') }}</h1>
                     <div class="hero-trustbar">
-                        <span class="hero-trustbar__item"><i class="bi bi-check2"></i>Secure payment</span>
-                        <span class="hero-trustbar__item"><i class="bi bi-headset"></i>Support in approx. 30s</span>
+                        <span class="hero-trustbar__item"><i class="bi bi-check2"></i>{{ __('website.hero_trust_secure_payment') }}</span>
+                        <span class="hero-trustbar__item"><i class="bi bi-headset"></i>{{ __('website.hero_trust_support') }}</span>
                     </div>
                 </div>
 
@@ -1477,7 +1477,7 @@
                 <span class="uae-destination-pin">
                     <img src="{{ asset('assets/images/website/top-destination/location.png') }}" alt="Location">
                 </span>
-                <h2 class="uae-destination-title">Top Destinations in the {{ $destinationCountries }}</h2>
+                <h2 class="uae-destination-title">{{ __('website.top_destinations_title', ['countries' => $destinationCountries]) }}</h2>
             </div>
 
             <div class="uae-destination-slider">
@@ -1526,8 +1526,8 @@
             <div class="promotion-static-content">
                 <div class="promotion-static-block">
                     <div class="promotion-static-head">
-                        <h3 class="promotion-static-title">Accommodation Promotions</h3>
-                        <a class="promotion-static-view" href="javascript:void(0)">View all <i class="bi bi-chevron-right"></i></a>
+                        <h3 class="promotion-static-title">{{ __('website.accommodation_promotions') }}</h3>
+                        <a class="promotion-static-view" href="javascript:void(0)">{{ __('website.view_all') }} <i class="bi bi-chevron-right"></i></a>
                     </div>
 
                     <div class="promotion-static-row">
@@ -1547,8 +1547,8 @@
 
                 <div class="promotion-static-block">
                     <div class="promotion-static-head">
-                        <h3 class="promotion-static-title">Flights & Activities Promotions</h3>
-                        <a class="promotion-static-view" href="javascript:void(0)">View all <i class="bi bi-chevron-right"></i></a>
+                        <h3 class="promotion-static-title">{{ __('website.flights_activities_promotions') }}</h3>
+                        <a class="promotion-static-view" href="javascript:void(0)">{{ __('website.view_all') }} <i class="bi bi-chevron-right"></i></a>
                     </div>
 
                     <div class="promotion-static-row">
@@ -1578,7 +1578,7 @@
             <img class="inspire-static-cloud inspire-static-cloud--bottom" src="{{ asset('assets/images/website/accomodaion-pomotion/cloud-1.png') }}" alt="">
 
             <div class="inspire-static-content">
-            <h3 class="inspire-static-heading">Get inspired for your next trip</h3>
+            <h3 class="inspire-static-heading">{{ __('website.inspire_heading') }}</h3>
 
             <div class="inspire-trip-row">
                 <div class="inspire-trip-grid">
@@ -1599,8 +1599,8 @@
             </div>
 
             <div class="inspire-sights-head">
-                <h4 class="inspire-sights-title">Top sights you can't miss in Doha</h4>
-                <a class="inspire-sights-more" href="javascript:void(0)">More <i class="bi bi-chevron-right"></i></a>
+                <h4 class="inspire-sights-title">{{ __('website.inspire_top_sights') }}</h4>
+                <a class="inspire-sights-more" href="javascript:void(0)">{{ __('website.inspire_more') }} <i class="bi bi-chevron-right"></i></a>
             </div>
 
             <div class="inspire-sights-row">
@@ -1616,7 +1616,7 @@
                                     <span class="inspire-sight-score"><i class="bi bi-geo-alt-fill"></i> {{ $sight['score'] }}</span>
                                 </div>
                                 <h5 class="inspire-sight-name">{{ $sight['title'] }}</h5>
-                                <p class="inspire-sight-meta">{{ $sight['rating'] }} /5 · {{ $sight['reviews'] }} reviews</p>
+                                <p class="inspire-sight-meta">{{ __('website.inspire_reviews', ['rating' => $sight['rating'], 'count' => $sight['reviews']]) }}</p>
                                 <div class="inspire-sight-stars" aria-hidden="true">
                                     <i class="bi bi-star-fill"></i>
                                     <i class="bi bi-star-fill"></i>
@@ -1642,7 +1642,7 @@
 <section class="top-cities-directory-wrap">
     <div class="container">
         <div class="top-cities-directory">
-            <h2 class="top-cities-directory__heading">Explore Destinations</h2>
+            <h2 class="top-cities-directory__heading">{{ __('website.explore_destinations') }}</h2>
             @php
                 $exploreTopRow = $exploreRegions->take(2);
                 $exploreMiddleRow = $exploreRegions->slice(2, 3);

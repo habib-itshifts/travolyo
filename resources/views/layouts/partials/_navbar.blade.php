@@ -179,7 +179,7 @@
             <img src="{{ asset('assets/images/logo/travolyo-logo.svg') }}" alt="Travolyo">
         </a>
 
-        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="{{ __('website.nav_toggle') }}">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -187,25 +187,25 @@
             <div class="travolyo-nav d-flex flex-lg-row flex-column mx-lg-auto mt-3 mt-lg-0">
                 <span class="travolyo-nav__item">
                     <span class="travolyo-nav__label-row">
-                        <span class="travolyo-nav__badge">Bundle and save!</span>
+                        <span class="travolyo-nav__badge">{{ __('website.nav_badge_bundle') }}</span>
                     </span>
                     <a href="{{ Route::has('website') ? route('website') : url('/') }}" class="travolyo-nav__link travolyo-nav__promo">
-                        Flight + Hotel
+                        {{ __('website.nav_flight_hotel') }}
                     </a>
                 </span>
                 <span class="travolyo-nav__item">
                     <span class="travolyo-nav__label-row">
-                        <span class="travolyo-nav__badge">New!</span>
+                        <span class="travolyo-nav__badge">{{ __('website.nav_badge_new') }}</span>
                     </span>
                     <a class="travolyo-nav__link {{ request()->routeIs('hotels.*') ? 'is-active' : '' }}" href="{{ Route::has('hotels.index') ? route('hotels.index') : '#' }}">
-                        Hotels &amp; Homes
+                        {{ __('website.nav_hotels_homes') }}
                     </a>
                 </span>
-                <span class="travolyo-nav__ghost">Transport</span>
+                <span class="travolyo-nav__ghost">{{ __('website.nav_transport') }}</span>
                 <a class="travolyo-nav__link {{ request()->routeIs('activities.*') ? 'is-active' : '' }}" href="{{ Route::has('activities.index') ? route('activities.index') : '#' }}">
-                    Activities
+                    {{ __('website.nav_activities') }}
                 </a>
-                <span class="travolyo-nav__ghost">Coupons</span>
+                <span class="travolyo-nav__ghost">{{ __('website.nav_coupons') }}</span>
             </div>
 
             <div class="travolyo-actions d-flex ms-lg-auto mt-3 mt-lg-0">
@@ -214,12 +214,12 @@
                         <i class="bi bi-three-dots"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end travolyo-more-menu border-0">
-                        <a class="dropdown-item {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ Route::has('about') ? route('about') : '#' }}">About us</a>
-                        <a class="dropdown-item {{ request()->routeIs('blogs.*') ? 'active' : '' }}" href="{{ Route::has('blogs.index') ? route('blogs.index') : '#' }}">Blogs</a>
-                        <a class="dropdown-item {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ Route::has('contact') ? route('contact') : '#' }}">Contact us</a>
+                        <a class="dropdown-item {{ request()->routeIs('about') ? 'active' : '' }}" href="{{ Route::has('about') ? route('about') : '#' }}">{{ __('website.nav_about') }}</a>
+                        <a class="dropdown-item {{ request()->routeIs('blogs.*') ? 'active' : '' }}" href="{{ Route::has('blogs.index') ? route('blogs.index') : '#' }}">{{ __('website.nav_blogs') }}</a>
+                        <a class="dropdown-item {{ request()->routeIs('contact') ? 'active' : '' }}" href="{{ Route::has('contact') ? route('contact') : '#' }}">{{ __('website.nav_contact') }}</a>
                         <div class="travolyo-divider"></div>
                         @if (!empty($activeLanguage))
-                            <div class="px-2 pb-1 text-muted small text-uppercase fw-semibold">Language</div>
+                            <div class="px-2 pb-1 text-muted small text-uppercase fw-semibold">{{ __('website.nav_language') }}</div>
                             @foreach ($languages as $code => $language)
                                 <a class="dropdown-item d-flex align-items-center gap-2 {{ $activeLanguageCode === $code ? 'active' : '' }}" href="{{ route('locale.switch', $code) }}">
                                     <img src="https://flagcdn.com/w20/{{ $language['flag'] }}.png" alt="{{ $code }}" class="travolyo-lang">
@@ -231,9 +231,9 @@
                 </div>
 
                 @if(auth()->check())
-                    <a href="{{ $listYourPlaceUrl }}" class="travolyo-btn travolyo-btn--outline">List your place</a>
+                    <a href="{{ $listYourPlaceUrl }}" class="travolyo-btn travolyo-btn--outline">{{ __('website.nav_list_your_place') }}</a>
                 @else
-                    <button type="button" class="travolyo-btn travolyo-btn--outline" onclick="openAuthModal('register')">List your place</button>
+                    <button type="button" class="travolyo-btn travolyo-btn--outline" onclick="openAuthModal('register')">{{ __('website.nav_list_your_place') }}</button>
                 @endif
 
                 @if (!empty($activeCurrency))
@@ -268,26 +268,26 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end travolyo-more-menu border-0">
                             @if(auth()->user()->hasRole('customer'))
-                                <li><a class="dropdown-item" href="{{ route('customer.dashboard') }}">My dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ route('customer.dashboard') }}">{{ __('website.nav_my_dashboard') }}</a></li>
                             @endif
                             @if(auth()->user()->hasRole('vendor'))
-                                <li><a class="dropdown-item" href="{{ route('vendor.dashboard') }}">Vendor dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ route('vendor.dashboard') }}">{{ __('website.nav_vendor_dashboard') }}</a></li>
                             @endif
                             @if(auth()->user()->hasRole('admin'))
-                                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">Admin dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}">{{ __('website.nav_admin_dashboard') }}</a></li>
                             @endif
                             <li><div class="travolyo-divider"></div></li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
+                                    <button type="submit" class="dropdown-item text-danger">{{ __('website.nav_logout') }}</button>
                                 </form>
                             </li>
                         </ul>
                     </div>
                 @else
-                    <button type="button" onclick="openAuthModal('signin')" class="travolyo-btn travolyo-btn--plain">Sign in</button>
-                    <button type="button" onclick="openAuthModal('register')" class="travolyo-btn travolyo-btn--primary">Create account</button>
+                    <button type="button" onclick="openAuthModal('signin')" class="travolyo-btn travolyo-btn--plain">{{ __('website.nav_sign_in') }}</button>
+                    <button type="button" onclick="openAuthModal('register')" class="travolyo-btn travolyo-btn--primary">{{ __('website.nav_create_account') }}</button>
                 @endauth
             </div>
         </div>

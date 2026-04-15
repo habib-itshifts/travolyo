@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Hotel Search – Travolyo')
+@section('title', __('hotel::hotel.page_title'))
 
 @push('styles')
 <style>
@@ -106,43 +106,43 @@
     <div class="col-12 col-lg-3" id="filters-col">
         <div class="filter-card">
 
-            <div class="filter-title">Price per Night</div>
+            <div class="filter-title">{{ __('hotel::hotel.filter_price_per_night') }}</div>
             <div class="price-slider-wrap">
                 <input type="range" id="priceRange" min="0" max="9999" value="9999" step="1">
             </div>
             <div class="d-flex justify-content-between mt-2 small text-muted">
                 <span id="priceRangeMin">—</span>
-                <span>Up to <strong id="priceRangeVal">—</strong></span>
+                <span>{{ __('hotel::hotel.filter_up_to') }} <strong id="priceRangeVal">—</strong></span>
             </div>
 
             <div class="filter-divider"></div>
-            <div class="filter-title">Star Rating</div>
+            <div class="filter-title">{{ __('hotel::hotel.filter_star_rating') }}</div>
             <label class="filter-pill">
-                <input type="radio" name="starFilter" class="star-filter" value="all" checked> Any
+                <input type="radio" name="starFilter" class="star-filter" value="all" checked> {{ __('hotel::hotel.filter_any') }}
             </label>
             <label class="filter-pill">
                 <input type="radio" name="starFilter" class="star-filter" value="5">
-                <span>&#9733;&#9733;&#9733;&#9733;&#9733; 5 Stars</span>
+                <span>&#9733;&#9733;&#9733;&#9733;&#9733; {{ __('hotel::hotel.filter_5_stars') }}</span>
             </label>
             <label class="filter-pill">
                 <input type="radio" name="starFilter" class="star-filter" value="4">
-                <span>&#9733;&#9733;&#9733;&#9733; 4+ Stars</span>
+                <span>&#9733;&#9733;&#9733;&#9733; {{ __('hotel::hotel.filter_4_plus_stars') }}</span>
             </label>
             <label class="filter-pill">
                 <input type="radio" name="starFilter" class="star-filter" value="3">
-                <span>&#9733;&#9733;&#9733; 3+ Stars</span>
+                <span>&#9733;&#9733;&#9733; {{ __('hotel::hotel.filter_3_plus_stars') }}</span>
             </label>
 
             <div class="filter-divider"></div>
-            <div class="filter-title">Provider</div>
+            <div class="filter-title">{{ __('hotel::hotel.filter_provider') }}</div>
             <label class="filter-pill">
-                <input type="radio" name="providerFilter" class="provider-filter" value="all" checked> All
+                <input type="radio" name="providerFilter" class="provider-filter" value="all" checked> {{ __('hotel::hotel.filter_all') }}
             </label>
             <label class="filter-pill">
-                <input type="radio" name="providerFilter" class="provider-filter" value="local"> Local
+                <input type="radio" name="providerFilter" class="provider-filter" value="local"> {{ __('hotel::hotel.filter_local') }}
             </label>
             <label class="filter-pill">
-                <input type="radio" name="providerFilter" class="provider-filter" value="travolyo_b2b"> B2B
+                <input type="radio" name="providerFilter" class="provider-filter" value="travolyo_b2b"> {{ __('hotel::hotel.filter_b2b') }}
             </label>
 
         </div>
@@ -154,23 +154,23 @@
         @if(empty($hotelSearchKeyword))
             <div class="filter-card text-center py-5">
                 <i class="bi bi-building text-muted" style="font-size:3rem"></i>
-                <p class="text-muted mt-3 mb-0">Enter a destination above and click <strong>Search Hotels</strong>.</p>
+                <p class="text-muted mt-3 mb-0">{!! __('hotel::hotel.empty_state_hint', ['action' => __('hotel::hotel.empty_state_search')]) !!}</p>
             </div>
         @else
 
             {{-- Results header --}}
             <div class="results-header d-none d-flex justify-content-between align-items-center" id="results-header">
                 <div>
-                    <h6 class="mb-0 fw-semibold">Available Hotels</h6>
+                    <h6 class="mb-0 fw-semibold">{{ __('hotel::hotel.results_available') }}</h6>
                     <p class="text-muted small mb-0" id="results-count"></p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-arrow-down-up text-muted small"></i>
-                    <span class="text-muted small">Sort:</span>
+                    <span class="text-muted small">{{ __('hotel::hotel.sort_label') }}</span>
                     <select class="sort-select" id="sortSelect">
-                        <option value="price">Price</option>
-                        <option value="stars">Stars</option>
-                        <option value="name">Name</option>
+                        <option value="price">{{ __('hotel::hotel.sort_price') }}</option>
+                        <option value="stars">{{ __('hotel::hotel.sort_stars') }}</option>
+                        <option value="name">{{ __('hotel::hotel.sort_name') }}</option>
                     </select>
                 </div>
             </div>
@@ -200,7 +200,7 @@
             {{-- Load More button --}}
             <div id="load-more-wrap" class="d-none text-center mt-3 mb-4">
                 <button class="btn btn-outline-primary px-4 py-2 fw-semibold" id="load-more-btn">
-                    <span id="load-more-text">Load More Hotels</span>
+                    <span id="load-more-text">{{ __('hotel::hotel.load_more') }}</span>
                     <span id="load-more-spinner" class="d-none spinner-border spinner-border-sm ms-2" role="status"></span>
                 </button>
                 <p class="text-muted small mt-2" id="pagination-info"></p>
@@ -218,7 +218,7 @@
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="modalHotelName">Hotel Details</h5>
+                <h5 class="modal-title fw-bold" id="modalHotelName">{{ __('hotel::hotel.modal_title_default') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="modalBody">

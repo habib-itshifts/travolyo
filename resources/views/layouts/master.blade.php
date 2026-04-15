@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php $__dir = config('language.supported.' . app()->getLocale() . '.dir', 'ltr'); @endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ $__dir }}">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
